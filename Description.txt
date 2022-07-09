@@ -1,0 +1,134 @@
+v0.0.2
+
+# Breaking Game #
+This is a MOD for personal use, however, I upload it in case someone else is interested in the same changes.
+
+The code contains many comments in Spanish and it's easy to follow in case you want to learn how to make those changes or customize the mod.
+
+Some options of this MOD work independently, so you can activate the desired option without the others. The dependency will be indicated in [ ].
+
+### Compact objects [ ]
+Indicate the number of objects that can be compacted into a new one; the new object will be able to see increased benefits in the same amount of compacted objects, For example, if 50 coals whose combustion value is equal to 4MJ are compacted, then the new coal will have a combustion value of 200MJ.
+
+All objects that are buffed will have the callsign [ + ] in the name, otherwise they will have the callsign [ = ] in the name
+
+Some objects have the same functions as their uncompacted version, however, others may not have the same function or function incorrectly, For example, the base game's copper, green, and red wires; or SE core mining.
+
+The images, animations and sounds have been taken from the MOD
+**[Deadlock’s Stacking Beltboxes & Compact Loaders](https://mods.factorio.com/mod/deadlock-beltboxes-loaders “Deadlock’s Stacking Beltboxes & Compact Loaders”)**
+
+### Pollution free electricity [ Compact objects ]
+Make all entities on the map that run on electricity stop producing pollution, but will make the entities that run on combustion produce much more pollution.
+
+### Robots with unlimited electricity [ Compact objects ]
+Make robots consume no electricity when moving, but robots need to be charged before use.
+
+### Force production [ Compact objects ]
+Make all recipes affected by production modules.
+
+### Minimum consumption [ Compact objects ]
+Make entities that run on electricity consume a very low amount.
+
+### Maximum stack size [ ]
+Make stackable objects have at most the indicated value. For example, nuclear fuel can change its stack from 1 to 65000, but armor and remote controls will always be 1.
+
+### Equipment 1x1 [ ]
+Make all equipment take up a slot when placed on the grid.
+
+### Force a slot for module [ ]
+Make drills, furnaces, and other crafting machines that don't have module slots create one for them.
+
+### Armor with immunity [ ]
+Create armor with immunity to every damage type set in the game, and a armor immune to all damage types.
+
+The armors will be available from the beginning of the game and although they are not the best throughout the game, they can become very useful.
+
+### Free fluids [ ]
+Create a recipe that provides or destroys large amounts of every existing fluid in the game without the need for ingredients or technology.
+
+Although making use of these recipes requires an assembly machine that can make use of fluids, like the level 2 assembly machines in the base game.
+
+### Sort stock [ ]
+Organize the items in the inventory by opening the container.
+
+### Automatic investigation [ ]
+Create or load the sequence with which the available technologies will be investigated.
+
+
+# IMPORTANT #
+This MOD has not been tested in multiplayer, I would appreciate any feedback on it.
+
+
+**_I accept suggestions, observations, corrections, complaints, claims, congratulations. All in the discussions tab._**
+
+
+
+
+
+
+
+
+
+
+
+
+v0.0.2
+
+Breaking Game
+Este es un MOD de uso personal, sin embargo, lo subo por si alguien más está interesado en los mismos cambios.
+
+El código contiene muchos comentarios en español y es fácil hacerle un seguimiento por si se desea aprender a hacer esos cambios o personalizar el MOD.
+
+Algunas opciones de este MOD funcionan de forma independiente, por lo que se pueden activar la opción deseada sin las demás. La dependencia estará indicada en [ ].
+
+Compactar objetos [ ]
+Indicar el número de objetos que se pueden compactar en uno nuevo; el objeto nuevo podrá ver incrementados los beneficios en la misma cantidad de objetos compactados, Por ejemplo, si se compactan 50 carbones cuyo valor de combustión es igual a 4MJ, entonces el nuevo carbón tendrá un valor de combustión de 200MJ.
+
+Todos los objetos que se vean beneficiados tendrán el indicativo [ + ] en el nombre, de lo contrario tendrán el indicativo [ = ] en el nombre
+
+Algunos objetos poseen las mismas funciones que su versión sin compactar, sin embargo, otros pueden no tener la misma función o funcionar de forma incorrecta, Por ejemplo, los cables de cobre, verdes y rojos del juego base; o la minera de núcleo de SE.
+
+Las imágenes, las animaciones y sonidos, han sido tomados del MOD
+**[Deadlock’s Stacking Beltboxes & Compact Loaders](https://mods.factorio.com/mod/deadlock-beltboxes-loaders “Deadlock’s Stacking Beltboxes & Compact Loaders”)**
+
+Electricidad libre de contaminación [ Compactar objetos ]
+Hacer que todas las entidades en el mapa que funcionen con electricidad dejen de producir contaminación, pero hará que las entidades que funcionan con combustión produzcan mucha más contaminación.
+
+Robots con electricidad ilimitada [ Compactar objetos ]
+Hacer que los robots no consuman electricidad al moverse, pero es necesario cargar a los robots antes de usarlos.
+
+Producción forzada [ Compactar objetos ]
+Hacer que todas las recetas se vean afectadas por los módulos de producción.
+
+Tamaño máximo de las pilas [ ]
+Hacer que los objetos apilables tengan como máximo el valor indicado. Por ejemplo, el combustible nuclear puede cambiar su apilamiento de 1 a 65000, pero las armaduras y los controles remotos, siempre serán 1.
+
+Equipamiento 1x1 [ ]
+Hacer que todos los equipamientos ocupen un espacio de 1x1 al ser colocados en la cuadrícula.
+
+Forzar un espacio para módulos [ ]
+Hacer que los taladros, hornos y otras máquinas de fabricación que no tienen espacios para módulos se les cree uno.
+
+Consumo mínimo [ Compactar objetos ]
+Hacer que las entidades que funcionan con electricidad consuman una cantidad muy baja.
+
+Armaduras con inmunidad [ ]
+Crear una armadura con inmunidad a cada tipo de daño establecido en el juego y una armadura inmune a todos los tipos de daños.
+
+Las armaduras estarán disponibles desde el inicio del juego y aunque no son las mejores a lo largo del juego, pueden llegar a ser muy útiles.
+
+Fluidos gratis [ ]
+Crear una receta que proporcione grandes cantidades de cada fluido existente en el juego sin la necesidad de ingredientes o tecnología.
+
+Aunque para hacer uso de estas recetas se requiere una máquina de ensamblaje que pueda hacer uso de fluidos, como las máquinas de ensamblaje de nivel 2 en el juego base.
+
+Ordenador de inventario [ ]
+Organiza los objetos en el inventario al abrir el contenedor.
+
+Investigación automática [ ]
+Crear o cargar la secuencia con la cual se investigarán las tecnologías disponibles.
+
+IMPORTANTE
+Este MOD no se ha probado en multijugador, agradeceria cualuier comentario al respecto.
+
+Acepto sugerencias, observaciones, correcciones, quejas, reclamos, felicitaciones. Todo en la pestaña de discusiones.

@@ -1,0 +1,28 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.0.2
+Date: 2022.04.25
+  Created:
+    - auto-research
+    - Minimum consumption
+  Change:
+    - Force production
+        Add more recipes
+    - Compact objects
+        Now entitys campacted can by remplace entitys original 
+    - Free fluids
+        Add recipes to fluid whit diferents temperature
+        Add recipes to destroy the fluids
+---------------------------------------------------------------------------------------------------
+Version: 0.0.1
+Date: 2022.01.02
+  Created:
+    - Compact objects
+    - Pollution free electricity
+    - Robots with unlimited electricity
+    - Force production
+    - Maximum stack size
+    - Equipment 1x1
+    - Force a slot modules
+    - Armor with immunity
+    - Free fluids
+    - Sort stock
