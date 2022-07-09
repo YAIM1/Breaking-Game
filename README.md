@@ -62,15 +62,17 @@
 <p>Hacer que todas las recetas se vean afectadas por los módulos de producción compactados.</p>
 
 <p>Todos los objetos afectados por esta opción podran crear las entidades correspondientes.</p>
+-------------------------------------------------------------------------------------------
 
 <br>
 
 <h3>Tamaño máximo de las pilas</h3>
 
-<p>Cambiar el máximo valor de apilamiento de un objeto con un valor menor al indicado si le beneficia. Por ejemplo, el combustible nuclear puede cambiar su apilamiento de 1 a 50, pero las armaduras y los controles remotos, siempre serán 1.</p>
+<p>Establecer el número maximo de objectos que se pueden aplilar, si el cambio le benefica al objeto, por defecto el valor es de mil.</p>
+
+<p>Por ejemplo, el combustible nuclear puede cambiar su apilamiento, pero las armaduras y los controles remotos, siempre serán 1.</p>
 
 <br>
--------------------------------------------------------------------------------------------
 
 <h3>Equipamiento 1x1</h3>
 
