@@ -171,6 +171,9 @@ function ThisMOD.CreateRecipe( )
 
         -- Remplazar el objeto
         for _, Recipe in pairs( Recipes ) do
+            local Array = { Recipe, Recipe.normal, Recipe.expensive }
+            for _, Table in pairs( Array ) do Table.main_product = nil end
+
             GPrefix.addRecipe( Recipe, ThisMOD )
             GPrefix.addTechnology( nil, Recipe.name )
         end

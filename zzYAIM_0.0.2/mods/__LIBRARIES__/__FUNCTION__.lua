@@ -577,6 +577,12 @@ end
 
 function GPrefix.addLetter( Table, ThisMOD )
 
+    -- Inicializsar la variable
+    if GPrefix.isString( ThisMOD ) then
+        ThisMOD = { Char = ThisMOD }
+        ThisMOD.Create = true
+    end
+
     -- No existe el apodo
     if not Table.localised_name then
         local Tipe = ""
@@ -595,27 +601,36 @@ function GPrefix.addLetter( Table, ThisMOD )
     if Table.localised_name[ 1 ] ~= "" then
         Table.localised_name = { "", Table.localised_name, " [", " ]" }
     end
-
-    -- Guardar el nombre de la entidad
-    local OldItemName = Table.name
+    -- Inicializar la variable contenedora
+    local Array = { }   Array.Name = Table.name
+    if ThisMOD.Create then goto JumpAdd end
 
     -- Nombre del prototipo
-    local StringFind = string.gsub( GPrefix.Prefix_, "-", "%%-" )
-    Table.name = string.gsub( Table.name, StringFind, "" )
+    Array.StringFind = string.gsub( GPrefix.Prefix_, "-", "%%-" )
+    Table.name = string.gsub( Table.name, Array.StringFind, "" )
     Table.name = ThisMOD.Prefix_MOD_ .. Table.name
 
     -- Remplazar el objeto a minar
-    local Flag = Table
-    Flag = Flag and Table.minable
-    Flag = Flag and Table.minable.result
-    Flag = Flag and Table.minable.result == OldItemName
-    if Flag then Flag = Table.minable
-        Flag.result = Table.name
+    Array.Flag = Table
+    Array.Flag = Array.Flag and Table.minable
+    Array.Flag = Array.Flag and Table.minable.result
+    Array.Flag = Array.Flag and Table.minable.result == Array.Name
+    if Array.Flag then
+        Array.Flag = Table.minable
+        Array.Flag.result = Table.name
+    end
+
+    if Table.minable and Table.minable.results then
+        for _, Result in pairs( Table.minable.results ) do
+            if Result.name == Array.Name then
+                Result.name = Table.name
+            end
+        end
     end
 
     -- Remplazar el objeto de la receta
     if Table.type == "recipe" then
-        GPrefix.ReplaceResult( Table, OldItemName, Table.name )
+        GPrefix.ReplaceResult( Table, Array.Name, Table.name )
     end
 
     -- Remplazar la entidad a crear
@@ -627,6 +642,9 @@ function GPrefix.addLetter( Table, ThisMOD )
     if Table.placed_as_equipment_result then
         Table.placed_as_equipment_result = Table.name
     end
+
+    -- Recepción del salto
+    :: JumpAdd ::
 
     -- Agregar la letra en su posición
     local Position = GPrefix.getKey( Table.localised_name, " ]" ) or ""

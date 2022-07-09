@@ -2,16 +2,23 @@
 Version: 0.0.2
 Date: 2022.04.25
   Created:
-    - auto-research
+    - Queue to research
     - Minimum consumption
   Change:
+	- All
+		Restructure code
     - Force production
         Add more recipes
     - Compact objects
-        Now entitys campacted can by remplace entitys original 
+        Now entities campacted can by remplace entities original 
+    - Armor with immunity
+		Remove fish to icon
+		Add fish to recipes
     - Free fluids
         Add recipes to fluid whit diferents temperature
         Add recipes to destroy the fluids
+        Remove recipes to menu of player
+        Add a machine to create or destroy the fluids
 ---------------------------------------------------------------------------------------------------
 Version: 0.0.1
 Date: 2022.01.02

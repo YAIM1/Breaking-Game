@@ -59,8 +59,8 @@ table.insert( MODs, "sort-items" )
 table.insert( MODs, "force-a-slot-module" )
 -- table.insert( MODs, "minimum-consumption" )
 -- table.insert( MODs, "pollution-free-electricity" )
--- table.insert( MODs, "maximum-stack-size" )
 table.insert( MODs, "queue-to-research" )
+table.insert( MODs, "maximum-stack-size" )
 -- table.insert( MODs, "start-with-items" )
 
 GPrefix.MODs = GPrefix.MODs or { }
