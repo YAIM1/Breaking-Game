@@ -1,91 +1,142 @@
---------------------------------------
+---------------------------------------------------------------------------------------------------
 
--- force-production.lua
+--> force-production.lua <--
 
---------------------------------------
---------------------------------------
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
--- Identifica el mod que se está usando
-local MOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
+-- Contenedor de este MOD
+local ThisMOD = { }
 
--- Crear la vareble si no existe
-GPrefix.MODs[ MOD ] = GPrefix.MODs[ MOD ] or { }
+-- Cargar información de este MOD
+if true then
 
--- Guardar en el acceso rapido
-GPrefix.MOD = GPrefix.MODs[ MOD ]
+    -- Identifica el mod que se está usando
+    local NameMOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
 
---------------------------------------
---------------------------------------
+    -- Crear la vareble si no existe
+    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
 
-local Files = { }
-table.insert( Files, "settings" )
-
--- Cargar la configuración
-if GPrefix.getKey( Files, GPrefix.File ) then
-
-    -- Preparar la configuración de este mod
-    local SettingOption =  {
-        type           = "bool-setting",
-        setting_type   = "startup",
-        allowed_values = {"true", "false"},
-        default_value  = true
-    }
-
-    -- Construir valores
-    SettingOption.name  = GPrefix.MOD.Prefix_MOD
-    SettingOption.order = GPrefix.SettingOrder[ SettingOption.type ]
-	SettingOption.order = SettingOption.order .. "-" .. SettingOption.name
-    SettingOption.localised_name  = { GPrefix.MOD.Local .. "setting-name"}
-    SettingOption.localised_description  = { GPrefix.MOD.Local .. "setting-description"}
-
-    -- Cargar configuración del mod al juego
-    data:extend( { SettingOption } )
-    return
+    -- Guardar en el acceso rapido
+    ThisMOD = GPrefix.MODs[ NameMOD ]
 end
 
---------------------------------------
---------------------------------------
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-Files = { }
-table.insert( Files, "data-final-fixes" )
+-- Configuración del MOD
+function ThisMOD.Settings( )
+    if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
 
--- Es necesario ejecutar este codigo??
-if not GPrefix.getKey( Files, GPrefix.File ) then return end
+    local SettingOption =  { }
+    SettingOption.name  = ThisMOD.Prefix_MOD
+    SettingOption.type  = "bool-setting"
+    SettingOption.order = ThisMOD.Index
+    SettingOption.setting_type   = "startup"
+    SettingOption.default_value  = true
+    SettingOption.allowed_values = { "true", "false" }
+    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
--- MOD Inactivo
-if not GPrefix.MOD.Active then return end
+    local List = { }
+    table.insert( List, "" )
+    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
+    table.insert( List, { ThisMOD.Local .. "setting-name" } )
+    SettingOption.localised_name = List
 
---------------------------------------
---------------------------------------
+    data:extend( { SettingOption } )
+end
 
--- Identificar el modelo
-local Module = GPrefix.Items[ "productivity-module" ]
+-- Cargar la configuración
+ThisMOD.Settings( )
 
--- El modelo no existe
-if not Module then return end
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
--- Variable contenedora
-local recipes = Module.limitation
+-- Cargar las infomación del modulo de producción
+function ThisMOD.LoadInformation( )
 
--- Guardar el nombre de las recetas que afecta
-for _, Recipe in pairs( GPrefix.Recipes ) do
-    for _, recipe in pairs( Recipe ) do
-        if not GPrefix.getKey( recipes, recipe.name ) then
-          table.insert( recipes, recipe.name )
+    -- Renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    local Modules = Info.Modules or { }
+    Info.Modules = Modules
+
+    local Recipes = Info.Recipes or { }
+    Info.Recipes = Recipes
+
+    -- Duplicar los modulos de producción
+    for _, Item in pairs( GPrefix.Items ) do
+        if Item.limitation then
+            Modules[ Item.name ] = GPrefix.DeepCopy( Item )
+        end
+    end
+
+    -- Variable contenedora
+    local limitation = { }
+
+    -- Guardar el nombre de las recetas que afecta
+    for _, Recipe in pairs( GPrefix.Recipes ) do
+        for _, recipe in pairs( Recipe ) do
+            if not GPrefix.getKey( limitation, recipe.name ) then
+                table.insert( limitation, recipe.name )
+            end
+        end
+    end
+
+    -- Duplicar las recestas de los modulos
+    for _, Module in pairs( Modules ) do
+        Recipes[ Module.name ] = GPrefix.Recipes[ Module.name ]
+        Recipes[ Module.name ] = GPrefix.DeepCopy( Recipes[ Module.name ] )
+        Module.limitation = limitation
+    end
+end
+
+-- Create los objetos
+function ThisMOD.CreateItems( )
+
+    -- Renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    local Modules = Info.Modules or { }
+    Info.Modules = Modules
+
+    -- Crear los modulos
+    for _, Module in pairs( Modules ) do
+        GPrefix.addItem( Module, ThisMOD )
+    end
+end
+
+-- Create los objetos
+function ThisMOD.CreateRecipe( )
+
+    -- Renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    local Recipes = Info.Recipes or { }
+    Info.Recipes = Recipes
+
+    -- Crear las recetas de los modulos
+    for OldModuleName, Tables in pairs( Recipes ) do
+        for _, Recipe in pairs( Tables ) do
+            GPrefix.addRecipe( Recipe, ThisMOD )
+            GPrefix.addTechnology( OldModuleName, Recipe.name )
         end
     end
 end
 
--- Parametro a buscar
-local PrefixFind = string.gsub( GPrefix.Prefix, "-", "%%-" )
+-- Configuración del MOD
+function ThisMOD.DataFinalFixes( )
+    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if not ThisMOD.Active then return end
 
--- Buscar los modulos de producción
-for _, Item in pairs( GPrefix.Items ) do
-    repeat
-        if not string.find( Item.name, PrefixFind ) then break end
-        if not Item.limitation then break end
-        Item.limitation = recipes
-    until true
+    ThisMOD.LoadInformation( )
+    ThisMOD.CreateItems( )   ThisMOD.CreateRecipe( )
 end
 
---------------------------------------
+-- Cargar la configuración
+ThisMOD.DataFinalFixes( )
+
+---------------------------------------------------------------------------------------------------
