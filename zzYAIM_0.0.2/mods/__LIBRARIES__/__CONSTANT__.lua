@@ -49,19 +49,19 @@ end
 -- Crear los espacio para los MODs
 local MODs = { }
 table.insert( MODs, "pruebas" )
--- table.insert( MODs, "compact-items" )
+table.insert( MODs, "queue-to-research" )
+-- table.insert( MODs, "start-with-items" )
 table.insert( MODs, "free-fluids" )
 table.insert( MODs, "armor-with-immunity" )
 table.insert( MODs, "equipament-1x1" )
 table.insert( MODs, "sort-items" )
 -- table.insert( MODs, "robots-with-unlimited-electricity" )
--- table.insert( MODs, "force-production" )
 table.insert( MODs, "force-a-slot-module" )
 -- table.insert( MODs, "minimum-consumption" )
 -- table.insert( MODs, "pollution-free-electricity" )
-table.insert( MODs, "queue-to-research" )
+table.insert( MODs, "force-production" )
+-- table.insert( MODs, "compact-items" )
 table.insert( MODs, "maximum-stack-size" )
--- table.insert( MODs, "start-with-items" )
 
 GPrefix.MODs = GPrefix.MODs or { }
 for Index, NameMOD in pairs( MODs ) do
