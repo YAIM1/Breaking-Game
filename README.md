@@ -54,15 +54,13 @@
 <h3>Robots con electricidad ilimitada [ Compactar objetos ]</h3>
 
 <p>Hacer que los robots no consuman electricidad al moverse, pero es necesario cargar a los robots antes de usarlos.</p>
+-------------------------------------------------------------------------------------------
 
 <br>
 
-<h3>Producción forzada [ Compactar objetos ]</h3>
+<h3>Producción forzada</h3>
 
-<p>Hacer que todas las recetas se vean afectadas por los módulos de producción compactados.</p>
-
-<p>Todos los objetos afectados por esta opción podran crear las entidades correspondientes.</p>
--------------------------------------------------------------------------------------------
+<p>Crear una copis de modulos de producción que afectan a TODAS las recetas del juego.</p>
 
 <br>
 
