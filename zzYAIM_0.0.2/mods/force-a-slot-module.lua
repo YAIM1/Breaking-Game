@@ -65,8 +65,13 @@ function ThisMOD.LoadInformation( )
     local Entities = Info.Entities or { }
     Info.Entities = Entities
 
+    local Recipes = Info.Recipes or { }
+    Info.Recipes = Recipes
+
     local Items = Info.Items or { }
     Info.Items = Items
+
+    local Array = { }
 
     -- Tipos a afectar
     table.insert( Types, "lab" )
@@ -76,107 +81,60 @@ function ThisMOD.LoadInformation( )
 
     -- Buscar las entidades a afectar
     for _, Entity in pairs( GPrefix.Entities ) do
-        repeat
 
-            -- Renombrar la variable
-            local Module = Entity.module_specification
+        -- Renombrar la variable
+        local Module = Entity.module_specification
 
-            -- Validación básica
-            if not GPrefix.getKey( Types, Entity.type ) then break end
-            if Module and Module.module_slots > 0 then break end
+        -- Validación básica
+        if not GPrefix.getKey( Types, Entity.type ) then goto JumpEntity end
+        if Module and Module.module_slots > 0 then goto JumpEntity end
 
-            -- Posible afectados
-            Entity = GPrefix.DeepCopy( Entity )
-            Entities[ Entity.name ] = Entity
+        -- Posible afectados
+        Entity = GPrefix.DeepCopy( Entity )
+        Entities[ Entity.name ] = Entity
 
-            -- Cambiar el objeto al minar
-            local Flag = Entity
-            Flag = Flag and Entity.minable
-            Flag = Flag and Entity.minable.result
-            if Flag then
-                Flag = Entity.minable.result
-                Flag = GPrefix.Items[ Flag ]
-                Flag = GPrefix.DeepCopy( Flag )
-                Items[ Flag.name ] = Flag
-            end
+        -- Cambiar el objeto al minar
+        Array.Minable = Entity and true or false
+        Array.Minable = Array.Minable and Entity.minable
+        Array.Minable = Array.Minable and Entity.minable.result
+        if Array.Minable then
+            Array.Name = Entity.minable.result
 
-        until true
+            Array.Item = GPrefix.Items[ Array.Name ]
+            Array.Item = GPrefix.DeepCopy( Array.Item )
+            Items[ Array.Name ] = Array.Item
+
+            Array.Recipe = GPrefix.Recipes[ Array.Name ]
+            Array.Recipe = GPrefix.DeepCopy( Array.Recipe )
+            Recipes[ Array.Name ] = Array.Recipe
+        end
+
+        -- Recepción del salto
+        :: JumpEntity ::
     end
-end
 
--- Create los objetos
-function ThisMOD.CreateItems( )
+    -- Crear los efectos
+    Array.Effects = { }
+    table.insert( Array.Effects, "speed" )
+    table.insert( Array.Effects, "pollution" )
+    table.insert( Array.Effects, "consumption" )
+    table.insert( Array.Effects, "productivity" )
 
-    -- Renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    local Items = Info.Items or { }
-    Info.Items = Items
-
-    -- Cambiar los objetos
-    for _, Item in pairs( Items ) do
-        GPrefix.addItem( Item, ThisMOD )
-    end
-end
-
--- Create las entidades
-function ThisMOD.CreateEntities( )
-
-    -- Renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    local Entities = Info.Entities or { }
-    Info.Entities = Entities
-
-    -- Cambiar las entidades
+    -- Hacer los cambios
     for _, Entity in pairs( Entities ) do
 
         -- Crear el slot
-        local Module = { }
-        Module.module_slots = 1
+        local Module = { module_slots = 1 }
         Entity.module_specification = Module
 
-        -- Hacer la entidad predispuesta
-        -- a los efectos de los modulos
-        Entity.allowed_effects = { }
-        table.insert( Entity.allowed_effects, "speed" )
-        table.insert( Entity.allowed_effects, "pollution" )
-        table.insert( Entity.allowed_effects, "consumption" )
-        table.insert( Entity.allowed_effects, "productivity" )
-
-        -- Cargar los datos al juego
-        GPrefix.addEntity( Entity, ThisMOD )
+        -- Hacer la entidad predispuesta a los efectos de los modulos
+        Entity.allowed_effects = GPrefix.DeepCopy( Array.Effects )
     end
-end
 
--- Create las recetas de las entidades
-function ThisMOD.CreateRecipe( )
-
-    -- Renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    local Items = Info.Items or { }
-    Info.Items = Items
-
-    -- Cambiar los objetos
-    for ItemName, _ in pairs( Items ) do
-
-        -- Identificar y duplicar las recetas
-        local Recipes = GPrefix.Recipes
-        Recipes = Recipes[ ItemName ]
-        Recipes = GPrefix.DeepCopy( Recipes )
-
-        -- Remplazar el objeto
-        for _, Recipe in pairs( Recipes ) do
-            local Array = { Recipe, Recipe.normal, Recipe.expensive }
-            for _, Table in pairs( Array ) do Table.main_product = nil end
-
-            GPrefix.addRecipe( Recipe, ThisMOD )
-            GPrefix.addTechnology( nil, Recipe.name )
-        end
+    -- Modificar las recetas
+    for _, Recipe in pairs( Recipes ) do
+        Array = { Recipe, Recipe.normal, Recipe.expensive }
+        for _, Table in pairs( Array ) do Table.main_product = nil end
     end
 end
 
@@ -185,8 +143,13 @@ function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
     if not ThisMOD.Active then return end
 
+    -- Cargar las infomación
     ThisMOD.LoadInformation( )
-    ThisMOD.CreateItems( )   ThisMOD.CreateEntities( )    ThisMOD.CreateRecipe( )
+
+    -- Crear los prototipos
+    GPrefix.createItem( ThisMOD )
+    GPrefix.createRecipe( ThisMOD )
+    GPrefix.createEntity( ThisMOD )
 end
 
 -- Cargar la configuración

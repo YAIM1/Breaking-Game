@@ -504,7 +504,7 @@ function ThisMOD.CreateSprite( )
     Array = { }
     table.insert( Array, GPrefix.Items )
     table.insert( Array, GPrefix.Entities )
-    table.insert( Array, GPrefix.Equipments )
+    table.insert( Array, GPrefix.Equipaments )
     table.insert( Array, data.raw[ "combat-robot" ] )
 
     Items = { }
@@ -548,7 +548,7 @@ function ThisMOD.CreateSprite( )
     Array = { }
     table.insert( Array, GPrefix.Items )
     table.insert( Array, GPrefix.Entities )
-    table.insert( Array, GPrefix.Equipments )
+    table.insert( Array, GPrefix.Equipaments )
     table.insert( Array, data.raw[ "combat-robot" ] )
 
     Items = { }

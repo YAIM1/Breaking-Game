@@ -52,7 +52,7 @@ ThisMOD.Settings( )
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Cargar la información para crear las armaduras
+-- Cargar las infomación
 function ThisMOD.LoadInformation(  )
 
     -- Renombrar la variable
@@ -160,7 +160,6 @@ function ThisMOD.CreateRecipe( )
     for _, Armor in pairs( Info.Armors ) do
 
         -- Copiar la receta de la armadura de muestra
-        local Item = GPrefix.Items[ Info.Base ]
         local OldRecipe = GPrefix.Recipes[ Info.Base ][ 1 ]
         local NewRecipe = GPrefix.DeepCopy( OldRecipe )
         NewRecipe.localised_name = Armor.Localised_name
@@ -190,8 +189,12 @@ function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
     if not ThisMOD.Active then return end
 
+    -- Cargar las infomación
     ThisMOD.LoadInformation( )
-    ThisMOD.CreateArmors( )   ThisMOD.CreateRecipe( )
+
+    -- Crear los prototipos
+    ThisMOD.CreateArmors( )
+    ThisMOD.CreateRecipe( )
 end
 
 -- Cargar la configuración

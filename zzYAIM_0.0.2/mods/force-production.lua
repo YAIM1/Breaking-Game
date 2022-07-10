@@ -52,15 +52,15 @@ ThisMOD.Settings( )
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Cargar las infomación del modulo de producción
+-- Cargar las infomación
 function ThisMOD.LoadInformation( )
 
     -- Renombrar la variable
     local Info = ThisMOD.Information or { }
     ThisMOD.Information = Info
 
-    local Modules = Info.Modules or { }
-    Info.Modules = Modules
+    local Items = Info.Items or { }
+    Info.Items = Items
 
     local Recipes = Info.Recipes or { }
     Info.Recipes = Recipes
@@ -68,7 +68,7 @@ function ThisMOD.LoadInformation( )
     -- Duplicar los modulos de producción
     for _, Item in pairs( GPrefix.Items ) do
         if Item.limitation then
-            Modules[ Item.name ] = GPrefix.DeepCopy( Item )
+            Items[ Item.name ] = GPrefix.DeepCopy( Item )
         end
     end
 
@@ -85,45 +85,10 @@ function ThisMOD.LoadInformation( )
     end
 
     -- Duplicar las recestas de los modulos
-    for _, Module in pairs( Modules ) do
+    for _, Module in pairs( Items ) do
         Recipes[ Module.name ] = GPrefix.Recipes[ Module.name ]
         Recipes[ Module.name ] = GPrefix.DeepCopy( Recipes[ Module.name ] )
         Module.limitation = limitation
-    end
-end
-
--- Create los objetos
-function ThisMOD.CreateItems( )
-
-    -- Renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    local Modules = Info.Modules or { }
-    Info.Modules = Modules
-
-    -- Crear los modulos
-    for _, Module in pairs( Modules ) do
-        GPrefix.addItem( Module, ThisMOD )
-    end
-end
-
--- Create los objetos
-function ThisMOD.CreateRecipe( )
-
-    -- Renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    local Recipes = Info.Recipes or { }
-    Info.Recipes = Recipes
-
-    -- Crear las recetas de los modulos
-    for OldModuleName, Tables in pairs( Recipes ) do
-        for _, Recipe in pairs( Tables ) do
-            GPrefix.addRecipe( Recipe, ThisMOD )
-            GPrefix.addTechnology( OldModuleName, Recipe.name )
-        end
     end
 end
 
@@ -132,8 +97,12 @@ function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
     if not ThisMOD.Active then return end
 
+    -- Cargar las infomación
     ThisMOD.LoadInformation( )
-    ThisMOD.CreateItems( )   ThisMOD.CreateRecipe( )
+
+    -- Crear los prototipos
+    GPrefix.createItem( ThisMOD )
+    GPrefix.createRecipe( ThisMOD )
 end
 
 -- Cargar la configuración

@@ -485,16 +485,50 @@ local function addRecipe( NewRecipe, ThisMOD )
     data:extend( { NewRecipe } )
 end
 
+-- Funciones para crear los prototipos
+local function create( Type, ThisMOD )
+
+    -- Renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    local Tables = Info[ Type ] or { }
+    Info[ Type ] = Tables
+
+    -- Cambiar los objetos
+    for _, Table in pairs( Tables ) do
+        add( Type, Table, ThisMOD )
+    end
+end
+
+local function createRecipe( ThisMOD )
+
+    -- Renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    local Recipes = Info.Recipes or { }
+    Info.Recipes = Recipes
+
+    -- Cambiar los objetos
+    for ItemName, Table in pairs( Recipes ) do
+        for _, Recipe in pairs( Table ) do
+            GPrefix.addRecipe( Recipe, ThisMOD )
+            GPrefix.addTechnology( ItemName, Recipe.name )
+        end
+    end
+end
+
 -- Cargar la información desde data.raw
 local function LoadData( )
 
     -- Crear las variables
-    GPrefix.Items      = { }
-    GPrefix.Tiles      = { }
-    GPrefix.Fluids     = { }
-    GPrefix.Recipes    = { }
-    GPrefix.Entities   = { }
-    GPrefix.Equipments = { }
+    GPrefix.Items = { }
+    GPrefix.Tiles = { }
+    GPrefix.Fluids = { }
+    GPrefix.Recipes = { }
+    GPrefix.Entities = { }
+    GPrefix.Equipaments = { }
 
     -- Cargar las recetas
     for _, recipe in pairs( data.raw.recipe ) do
@@ -658,7 +692,7 @@ local function LoadData( )
 
                 -- Guardar el equipable
                 if Item.placed_as_equipment_result then
-                    GPrefix.Equipments[ ItemName ] = ItemName
+                    GPrefix.Equipaments[ ItemName ] = ItemName
                 end
 
             until true
@@ -699,7 +733,7 @@ local function LoadData( )
     end
 
     -- Cargar los equipables
-    for ItemName, _ in pairs( GPrefix.Equipments ) do
+    for ItemName, _ in pairs( GPrefix.Equipaments ) do
         for _, subGrupo in pairs( data.raw ) do
             repeat
 
@@ -710,7 +744,7 @@ local function LoadData( )
                 if not Equipment.sprite then break end
 
                 -- Guardar objeto
-                GPrefix.Equipments[ ItemName ] = Equipment
+                GPrefix.Equipaments[ ItemName ] = Equipment
 
             until true
         end
@@ -721,15 +755,15 @@ end
 local function DeleteData( )
 
     -- Variable contenedora
-    local Deleted   = { }
-    local String    = ""
-    local List      = { }
-    List.Items      = GPrefix.Items
-    List.Tiles      = GPrefix.Tiles
-    List.Fluids     = GPrefix.Fluids
-    List.Entities    = GPrefix.Entities
-    List.Recipes    = GPrefix.Recipes
-    List.Equipments = GPrefix.Equipments
+    local Deleted = { }
+    local String = ""
+    local List = { }
+    List.Items = GPrefix.Items
+    List.Tiles = GPrefix.Tiles
+    List.Fluids = GPrefix.Fluids
+    List.Entities = GPrefix.Entities
+    List.Recipes = GPrefix.Recipes
+    List.Equipaments = GPrefix.Equipaments
 
     -- Identificar valores vacios
     for name, list in pairs( List ) do
@@ -776,6 +810,12 @@ local function DataFinalFixes( )
     GPrefix.addEntity = function( NewEntity, ThisMOD ) add( "Entities", NewEntity, ThisMOD ) end
     GPrefix.addRecipe = function( NewRecipe, ThisMOD ) addRecipe( NewRecipe, ThisMOD ) end
     GPrefix.addEquipament = function( NewEquipament, ThisMOD ) add( "Equipments", NewEquipament, ThisMOD ) end
+
+    GPrefix.createItem = function( ThisMOD ) create( "Items", ThisMOD ) end
+    GPrefix.createFluid = function( ThisMOD ) create( "Fluids", ThisMOD ) end
+    GPrefix.createEntity = function( ThisMOD ) create( "Entities", ThisMOD ) end
+    GPrefix.createRecipe = function( ThisMOD ) createRecipe( ThisMOD ) end
+    GPrefix.createEquipament = function( ThisMOD ) create( "Equipaments", ThisMOD ) end
 end
 
 -- Cargar los datos desde los prototipos

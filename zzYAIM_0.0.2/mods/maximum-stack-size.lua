@@ -92,6 +92,10 @@ function ThisMOD.DataFinalFixes( )
         Item.stack_size = ThisMOD.Value
         GPrefix.addLetter( Item, ThisMOD.Char )
 
+        for _, Recipe in pairs( GPrefix.Recipes[ Item.name ] or { } ) do
+            GPrefix.addLetter( Recipe, ThisMOD.Char )
+        end
+
         -- Recepción del salto
         :: JumpItem ::
     end

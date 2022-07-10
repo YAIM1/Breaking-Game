@@ -588,7 +588,7 @@ function GPrefix.addLetter( Table, ThisMOD )
         local Tipe = ""
         if GPrefix.Items[ Table.name ] then Tipe = "item" end
         if GPrefix.Entities[ Table.name ] then Tipe = "entity" end
-        if GPrefix.Equipments[ Table.name ] then Tipe = "equipment" end
+        if GPrefix.Equipaments[ Table.name ] then Tipe = "equipment" end
         Table.localised_name = { "", { Tipe .. "-name." .. Table.name }, " [", " ]" }
     end
 
@@ -603,7 +603,7 @@ function GPrefix.addLetter( Table, ThisMOD )
     end
     -- Inicializar la variable contenedora
     local Array = { }   Array.Name = Table.name
-    if ThisMOD.Create then goto JumpAdd end
+    if ThisMOD.Create then goto JumpPrefix end
 
     -- Nombre del prototipo
     Array.StringFind = string.gsub( GPrefix.Prefix_, "-", "%%-" )
@@ -644,7 +644,7 @@ function GPrefix.addLetter( Table, ThisMOD )
     end
 
     -- Recepción del salto
-    :: JumpAdd ::
+    :: JumpPrefix ::
 
     -- Agregar la letra en su posición
     local Position = GPrefix.getKey( Table.localised_name, " ]" ) or ""

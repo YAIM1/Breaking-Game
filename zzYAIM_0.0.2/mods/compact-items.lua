@@ -1322,7 +1322,7 @@ local function BetterEquipament( itemNew )
 	-- Variable contenedora
 	local Equipment = itemNew
 	Equipment = Equipment.placed_as_equipment_result
-	Equipment = GPrefix.Equipments[ Equipment ]
+	Equipment = GPrefix.Equipaments[ Equipment ]
 	Equipment = GPrefix.DeepCopy( Equipment )
 
 	-- Validación de datos
@@ -1434,7 +1434,7 @@ local function BetterEquipament( itemNew )
 
 	-- Guardar el nuevo suelo
 	data:extend( { Equipment } )
-	GPrefix.Equipments[ Equipment.name ] = Equipment
+	GPrefix.Equipaments[ Equipment.name ] = Equipment
 
 	-- Establecer el equipamento en el nuevo objeto
 	itemNew.placed_as_equipment_result = Equipment.name
