@@ -120,11 +120,11 @@
 
 <p>El MOD informa de cualquier cambio en la cola o el estado del mismo</p>
 
-<p></p>
+<br>
 
-<p></p>
+<br>
 
-<p></p>
+<br>
 
 <br>
 
