@@ -48,13 +48,13 @@
 <p>Hacer que todas las entidades en el mapa que funcionen con electricidad funcione sin producir contaminación.</p>
 
 <p>Todos los objetos afectados por esta opción podran crear las entidades correspondientes.</p>
+-------------------------------------------------------------------------------------------
 
 <br>
 
-<h3>Robots con electricidad ilimitada [ Compactar objetos ]</h3>
+<h3>Robots con electricidad ilimitada</h3>
 
-<p>Hacer que los robots no consuman electricidad al moverse, pero es necesario cargar a los robots antes de usarlos.</p>
--------------------------------------------------------------------------------------------
+<p>Hacer que los robots de construcción y logistica no consuman electricidad al moverse, pero es necesario cargar a los robots antes de usarlos.</p>
 
 <br>
 

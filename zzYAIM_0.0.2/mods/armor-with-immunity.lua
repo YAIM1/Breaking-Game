@@ -52,7 +52,7 @@ ThisMOD.Settings( )
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Cargar las infomación
+-- Cargar la información para crear las armaduras
 function ThisMOD.LoadInformation(  )
 
     -- Renombrar la variable

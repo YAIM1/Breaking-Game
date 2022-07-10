@@ -94,7 +94,7 @@ function ThisMOD.LoadInformation( )
         Entities[ Entity.name ] = Entity
 
         -- Cambiar el objeto al minar
-        Array.Minable = Entity and true or false
+        Array.Minable = true
         Array.Minable = Array.Minable and Entity.minable
         Array.Minable = Array.Minable and Entity.minable.result
         if Array.Minable then
