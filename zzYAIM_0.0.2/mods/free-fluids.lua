@@ -383,61 +383,89 @@ end
 -- Cargar la información de la maquina
 function ThisMOD.LoadMachine( )
 
-    -- Renombrar la variable
-    local Info = ThisMOD.InformationMachine or { }
-    ThisMOD.InformationMachine = Info
-
-    local Machine = Info.Machine or { }
-    Info.Machine = Machine
-
     -- Inicializar las variables
     local Base = "assembling-machine-2"
-    Machine.Item = GPrefix.DeepCopy( GPrefix.Items[ Base ] )
-    Machine.Entity = GPrefix.DeepCopy( GPrefix.Entities[ Base ] )
-    Machine.Recipe = GPrefix.DeepCopy( GPrefix.Recipes[ Base ][ 1 ] )
-    Machine.Category = { type = "recipe-category", name = ThisMOD.Prefix_MOD }
-    Machine.Recipes = { Machine.Recipe, Machine.Recipe.normal, Machine.Recipe.expensive }
-
-    -- Modificar la entidad
-    Machine.Entity.energy_usage = "1W"
-    Machine.Entity.next_upgrade = nil
-    Machine.Entity.energy_source = { type = "void" }
-    Machine.Entity.crafting_categories = { ThisMOD.Prefix_MOD }
-    Machine.Entity.resource_categories = nil
-    Machine.Entity.fast_replaceable_group = nil
-
-    -- Establecer el apodo
+    local Entity = GPrefix.Entities[ Base ]
+    local Category = { type = "recipe-category", name = ThisMOD.Prefix_MOD }
     local Localised = "machine"
-    Machine.Item.localised_name = { ThisMOD.Local .. Localised }
-    Machine.Entity.localised_name = { ThisMOD.Local .. Localised }
-    Machine.Recipe.localised_name = { ThisMOD.Local .. Localised }
-end
 
--- Crear el objeto, la receta y la entidad
-function ThisMOD.CreateMachine( )
-
-    -- Renombrar la variable
-    local Info = ThisMOD.InformationMachine or { }
-    ThisMOD.InformationMachine = Info
-
-    local Machine = Info.Machine or { }
-    Info.Machine = Machine
+    -- Duplicar la información relacionada
+    GPrefix.duplicateEntity( Entity, ThisMOD )
 
     -- Crear la nueva categoria
-    data:extend( { Machine.Category } )
+    data:extend( { Category } )
+
+    ---> <---     ---> <---     ---> <---
+
+    -- Inicializar y renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    ---> <---     ---> <---     ---> <---
+
+    -- Inicializar y renombrar la variable
+    local Entities = Info.Entities or { }
+    Info.Entities = Entities
+
+    -- Modificar la entidad
+    Entity = Entities[ Base ]
+    Entity.energy_usage = "1W"
+    Entity.next_upgrade = nil
+    Entity.energy_source = { type = "void" }
+    Entity.crafting_categories = { ThisMOD.Prefix_MOD }
+    Entity.resource_categories = nil
+    Entity.fast_replaceable_group = nil
+
+    ---> <---     ---> <---     ---> <---
+
+    -- Inicializar y renombrar la variable
+    local Recipes = Info.Recipes or { }
+    Info.Recipes = Recipes
 
     -- Eliminar los ingredientes
-    for _, Recipe in pairs( Machine.Recipes ) do
+    for _, Recipe in pairs( Recipes ) do
         if Recipe.ingredient or Recipe.ingredients then
             Recipe.ingredient = nil   Recipe.ingredients = { }
         end
     end
 
-    -- Preparar los datos
-    GPrefix.addItem( Machine.Item, ThisMOD )
-    GPrefix.addEntity( Machine.Entity, ThisMOD )
-    GPrefix.addRecipe( Machine.Recipe, ThisMOD )
-    GPrefix.addTechnology( nil, Machine.Recipe.name )
+    ---> <---     ---> <---     ---> <---
+
+    local function Change( Table )
+        local Localised_name = { ThisMOD.Local .. Localised }
+        if not Table.localised_name then return Localised_name end
+        if not GPrefix.isTable( Table.localised_name ) then return Localised_name end
+        if Table.localised_name[ 1 ] ~= "" then return Localised_name end
+        local Start = GPrefix.getKey( Table.localised_name, " [" )
+        if not Start then return Localised_name end
+
+        Localised_name = { "", Localised_name }
+        for i = Start, #Table.localised_name, 1 do
+            table.insert( Localised_name, Table.localised_name[ i ] )
+        end return Localised_name
+    end
+
+    -- Establecer el apodo
+    local Localised_name = Change( Info.Items[ Base ] )
+    local Result = GPrefix.getKey( Localised_name, " [" ) or ""
+    local Position = tonumber( Result, 10 )
+
+    for _, Table in pairs( { Info.Items[ Base ], Info.Entities[ Base ] } ) do
+        Table.localised_name = GPrefix.DeepCopy( Localised_name )
+    end
+
+    for _, Recipe in pairs( Recipes[ Base ] ) do
+        Recipe.localised_name = GPrefix.DeepCopy( Localised_name )
+        if GPrefix.getLength( Recipes ) > 1 then
+            table.insert( Recipe.localised_name, Position, " " .. #Recipes )
+        end
+    end
+
+    ---> <---     ---> <---     ---> <---
+
+    -- Habilitar la receta desde el inicia de la partida
+    Recipes[ "" ] = Recipes[ Base ]
+    Recipes[ Base ] = nil
 end
 
 -- Configuración del MOD
@@ -449,7 +477,7 @@ function ThisMOD.DataFinalFixes( )
     ThisMOD.TemperatureRange( )   ThisMOD.TemperatureDefault( )
     ThisMOD.CreateFluidRecipe( )
 
-    ThisMOD.LoadMachine( )   ThisMOD.CreateMachine( )
+    ThisMOD.LoadMachine( )   GPrefix.createInformation( ThisMOD )
 end
 
 -- Cargar la configuración

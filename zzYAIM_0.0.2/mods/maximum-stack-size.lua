@@ -71,6 +71,8 @@ function ThisMOD.DataFinalFixes( )
     -- Hacer el camnbio en los items del juego, si le favorece
     for _, Item in pairs( GPrefix.Items ) do
 
+        local Entity = { }
+
         -- Evitar este tipo
         if GPrefix.getKey( AvoidTypes, Item.type ) then goto JumpItem end
 
@@ -91,6 +93,9 @@ function ThisMOD.DataFinalFixes( )
         -- Hacer el cambio
         Item.stack_size = ThisMOD.Value
         GPrefix.addLetter( Item, ThisMOD.Char )
+
+        Entity = GPrefix.Entities[ Item.name ]
+        if Entity then GPrefix.addLetter( Entity, ThisMOD.Char ) end
 
         for _, Recipe in pairs( GPrefix.Recipes[ Item.name ] or { } ) do
             GPrefix.addLetter( Recipe, ThisMOD.Char )

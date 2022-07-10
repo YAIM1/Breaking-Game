@@ -443,6 +443,9 @@ local function addRecipe( NewRecipe, ThisMOD )
         if Result then return end
     end
 
+    -- Agregar la letra a la nueva receta
+    if ThisMOD then GPrefix.addLetter( NewRecipe, ThisMOD ) end
+
     -- Consolidar los resultados de la recera
     local Results = { }
     for _, Recipe in pairs( Recipes ) do
@@ -480,8 +483,7 @@ local function addRecipe( NewRecipe, ThisMOD )
         end
     end
 
-    -- Cargar los datos al juego
-    if ThisMOD then GPrefix.addLetter( NewRecipe, ThisMOD ) end
+    -- Cargar el prototipo al juego
     data:extend( { NewRecipe } )
 end
 
@@ -517,6 +519,44 @@ local function createRecipe( ThisMOD )
             GPrefix.addTechnology( ItemName, Recipe.name )
         end
     end
+end
+
+-- Duplicar la entidad, objeto y recestas
+local function duplicateEntity( Entity, ThisMOD )
+
+    -- Inicializar y renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    local Entities = Info.Entities or { }
+    Info.Entities = Entities
+
+    local Recipes = Info.Recipes or { }
+    Info.Recipes = Recipes
+
+    local Items = Info.Items or { }
+    Info.Items = Items
+
+    -- Posible afectados
+    Entity = GPrefix.DeepCopy( Entity )
+    Entities[ Entity.name ] = Entity
+
+    -- Cambiar el objeto al minar
+    if not Entity.minable then return end
+    if not Entity.minable.result then return end
+
+    -- Nombre del objeto
+    local Name = Entity.minable.result
+
+    -- Cargar el objeto
+    local Item = GPrefix.Items[ Name ]
+    Item = GPrefix.DeepCopy( Item )
+    Items[ Name ] = Item
+
+    -- Cargar las recetas
+    local Recipe = GPrefix.Recipes[ Name ]
+    Recipe = GPrefix.DeepCopy( Recipe )
+    Recipes[ Name ] = Recipe
 end
 
 -- Cargar la información desde data.raw
@@ -811,11 +851,18 @@ local function DataFinalFixes( )
     GPrefix.addRecipe = function( NewRecipe, ThisMOD ) addRecipe( NewRecipe, ThisMOD ) end
     GPrefix.addEquipament = function( NewEquipament, ThisMOD ) add( "Equipments", NewEquipament, ThisMOD ) end
 
-    GPrefix.createItem = function( ThisMOD ) create( "Items", ThisMOD ) end
-    GPrefix.createFluid = function( ThisMOD ) create( "Fluids", ThisMOD ) end
-    GPrefix.createEntity = function( ThisMOD ) create( "Entities", ThisMOD ) end
-    GPrefix.createRecipe = function( ThisMOD ) createRecipe( ThisMOD ) end
-    GPrefix.createEquipament = function( ThisMOD ) create( "Equipaments", ThisMOD ) end
+    GPrefix.duplicateEntity = function ( Entity, ThisMOD ) duplicateEntity( Entity, ThisMOD ) end
+
+    GPrefix.createInformation = function( ThisMOD )
+        if not ThisMOD.Information then return end
+
+        if ThisMOD.Information.Items then create( "Items", ThisMOD ) end
+        if ThisMOD.Information.Fluids then create( "Fluids", ThisMOD ) end
+        if ThisMOD.Information.Entities then create( "Entities", ThisMOD ) end
+        if ThisMOD.Information.Equipaments then create( "Equipaments", ThisMOD ) end
+
+        if ThisMOD.Information.Recipes then createRecipe( ThisMOD ) end
+    end
 end
 
 -- Cargar los datos desde los prototipos

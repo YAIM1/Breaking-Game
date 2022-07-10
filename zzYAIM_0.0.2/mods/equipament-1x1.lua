@@ -96,13 +96,7 @@ function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
     if not ThisMOD.Active then return end
 
-    -- Cargar las infomación
-    ThisMOD.LoadInformation( )
-
-    -- Crear los prototipos
-    GPrefix.createItem( ThisMOD )
-    GPrefix.createRecipe( ThisMOD )
-    GPrefix.createEquipament( ThisMOD )
+    ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
 end
 
 -- Cargar la configuración

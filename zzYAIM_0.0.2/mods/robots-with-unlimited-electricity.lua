@@ -52,24 +52,9 @@ ThisMOD.Settings( )
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Cargar las infomación de los robots de contrucción y
+-- Cargar la infomación de los robots de contrucción y
 -- de los robots logisticos
 function ThisMOD.LoadInformation( )
-
-    -- Renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    local Entities = Info.Entities or { }
-    Info.Entities = Entities
-
-    local Recipes = Info.Recipes or { }
-    Info.Recipes = Recipes
-
-    local Items = Info.Items or { }
-    Info.Items = Items
-
-    local Array = { }
 
     -- Buscar las entidades a afectar
     for _, Entity in pairs( GPrefix.Entities ) do
@@ -77,29 +62,24 @@ function ThisMOD.LoadInformation( )
         -- Identificar a los robots
         if not Entity.energy_per_move then goto JumpEntity end
 
-        -- Posible afectados
-        Entity = GPrefix.DeepCopy( Entity )
-        Entities[ Entity.name ] = Entity
-
-        -- Cambiar el objeto al minar
-        Array.Minable = true
-        Array.Minable = Array.Minable and Entity.minable
-        Array.Minable = Array.Minable and Entity.minable.result
-        if Array.Minable then
-            Array.Name = Entity.minable.result
-
-            Array.Item = GPrefix.Items[ Array.Name ]
-            Array.Item = GPrefix.DeepCopy( Array.Item )
-            Items[ Array.Name ] = Array.Item
-
-            Array.Recipe = GPrefix.Recipes[ Array.Name ]
-            Array.Recipe = GPrefix.DeepCopy( Array.Recipe )
-            Recipes[ Array.Name ] = Array.Recipe
-        end
+        -- Duplicar la información relacionada
+        GPrefix.duplicateEntity( Entity, ThisMOD )
 
         -- Recepción del salto
         :: JumpEntity ::
     end
+
+    ---> <---     ---> <---     ---> <---
+
+    -- Inicializar y renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    ---> <---     ---> <---     ---> <---
+
+    -- Inicializar y renombrar la variable
+    local Entities = Info.Entities or { }
+    Info.Entities = Entities
 
     -- Hacer los cambios
     for _, Entity in pairs( Entities ) do
@@ -113,13 +93,7 @@ function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
     if not ThisMOD.Active then return end
 
-    -- Cargar las infomación
-    ThisMOD.LoadInformation( )
-
-    -- Crear los prototipos
-    GPrefix.createItem( ThisMOD )
-    GPrefix.createRecipe( ThisMOD )
-    GPrefix.createEntity( ThisMOD )
+    ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
 end
 
 -- Cargar la configuración

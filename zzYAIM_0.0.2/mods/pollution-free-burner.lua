@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 
---> force-a-slot-module.lua <--
+--> pollution-free-burner.lua <--
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
@@ -52,25 +52,21 @@ ThisMOD.Settings( )
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Cargar las entidades
+-- Cargar la infomación
 function ThisMOD.LoadInformation( )
-
-    -- Tipos a afectar
-    local Types = { }
-    table.insert( Types, "lab" )
-    table.insert( Types, "furnace" )
-    table.insert( Types, "mining-drill" )
-    table.insert( Types, "assembling-machine" )
 
     -- Buscar las entidades a afectar
     for _, Entity in pairs( GPrefix.Entities ) do
 
-        -- Renombrar la variable
-        local Module = Entity.module_specification
-
         -- Validación básica
-        if not GPrefix.getKey( Types, Entity.type ) then goto JumpEntity end
-        if Module and Module.module_slots > 0 then goto JumpEntity end
+        local Flag = Entity
+        if not Flag.energy_source then goto JumpEntity end
+
+        Flag = Flag.energy_source
+        if not Flag.type then goto JumpEntity end
+        if Flag.type ~= "burner" then goto JumpEntity end
+
+        if not Flag.emissions_per_minute then goto JumpEntity end
 
         -- Duplicar la información relacionada
         GPrefix.duplicateEntity( Entity, ThisMOD )
@@ -91,34 +87,9 @@ function ThisMOD.LoadInformation( )
     local Entities = Info.Entities or { }
     Info.Entities = Entities
 
-    -- Crear los efectos
-    local Effects = { }
-    table.insert( Effects, "speed" )
-    table.insert( Effects, "pollution" )
-    table.insert( Effects, "consumption" )
-    table.insert( Effects, "productivity" )
-
     -- Hacer los cambios
     for _, Entity in pairs( Entities ) do
-
-        -- Crear el slot
-        local Module = { module_slots = 1 }
-        Entity.module_specification = Module
-
-        -- Hacer la entidad predispuesta a los efectos de los modulos
-        Entity.allowed_effects = GPrefix.DeepCopy( Effects )
-    end
-
-    ---> <---     ---> <---     ---> <---
-
-    -- Inicializar y renombrar la variable
-    local Recipes = Info.Recipes or { }
-    Info.Recipes = Recipes
-
-    -- Modificar las recetas
-    for _, Recipe in pairs( Recipes ) do
-        Array = { Recipe, Recipe.normal, Recipe.expensive }
-        for _, Table in pairs( Array ) do Table.main_product = nil end
+        Entity.energy_source.emissions_per_minute = nil
     end
 end
 

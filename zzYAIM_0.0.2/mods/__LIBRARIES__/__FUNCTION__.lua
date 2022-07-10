@@ -532,7 +532,7 @@ function GPrefix.addTechnology( OldItemName, NewRecipeName )
     local Array = { }
     Array.NewRecipe = data.raw.recipe[ NewRecipeName ]
     Array.Enabled = { Array.NewRecipe, Array.NewRecipe.normal, Array.NewRecipe.expensive }
-    Array.Technologies = OldItemName and data.raw.technology or { }
+    Array.Technologies = ( OldItemName and OldItemName ~= "" ) and data.raw.technology or { }
 
     -- Revisar cada tecnología
     for _, Technology in pairs( Array.Technologies ) do
@@ -597,32 +597,37 @@ function GPrefix.addLetter( Table, ThisMOD )
         Table.localised_name = { "", Table.localised_name, " [", " ]" }
     end
 
-    -- El apodo es contruido
+    -- El apodo no es contruido
     if Table.localised_name[ 1 ] ~= "" then
         Table.localised_name = { "", Table.localised_name, " [", " ]" }
     end
+
+    -- El apodo es contruido
+    local Flag = not GPrefix.getKey( Table.localised_name, " [" )
+    if Flag and Table.localised_name[ 1 ] == "" then
+        table.insert( Table.localised_name, " [" )
+        table.insert( Table.localised_name, " ]" )
+    end
+
     -- Inicializar la variable contenedora
-    local Array = { }   Array.Name = Table.name
+    local OldName = Table.name   local StringFind = ""
     if ThisMOD.Create then goto JumpPrefix end
 
     -- Nombre del prototipo
-    Array.StringFind = string.gsub( GPrefix.Prefix_, "-", "%%-" )
-    Table.name = string.gsub( Table.name, Array.StringFind, "" )
+    StringFind = string.gsub( GPrefix.Prefix_, "-", "%%-" )
+    Table.name = string.gsub( Table.name, StringFind, "" )
     Table.name = ThisMOD.Prefix_MOD_ .. Table.name
 
     -- Remplazar el objeto a minar
-    Array.Flag = Table
-    Array.Flag = Array.Flag and Table.minable
-    Array.Flag = Array.Flag and Table.minable.result
-    Array.Flag = Array.Flag and Table.minable.result == Array.Name
-    if Array.Flag then
-        Array.Flag = Table.minable
-        Array.Flag.result = Table.name
-    end
+    Flag = true
+    Flag = Flag and Table.minable
+    Flag = Flag and Table.minable.result
+    Flag = Flag and Table.minable.result == OldName
+    if Flag then Table.minable.result = Table.name end
 
     if Table.minable and Table.minable.results then
         for _, Result in pairs( Table.minable.results ) do
-            if Result.name == Array.Name then
+            if Result.name == OldName then
                 Result.name = Table.name
             end
         end
@@ -630,7 +635,7 @@ function GPrefix.addLetter( Table, ThisMOD )
 
     -- Remplazar el objeto de la receta
     if Table.type == "recipe" then
-        GPrefix.ReplaceResult( Table, Array.Name, Table.name )
+        GPrefix.ReplaceResult( Table, OldName, Table.name )
     end
 
     -- Remplazar la entidad a crear

@@ -32,23 +32,19 @@
 <p>Hacer que las entidades que funcionan con electricidad consuman una cantidad muy baja.</p>
 
 <p>Todos los objetos afectados por esta opción podran crear las entidades correspondientes.</p>
-
-<br>
-
-<h3>Conbustion sin contaminación [ Compactar objetos ]</h3>
-
-<p>Hacer que todas las entidades en el mapa que funcionen con combustion funcione sin producir contaminación.</p>
-
-<p>Todos los objetos afectados por esta opción podran crear las entidades correspondientes.</p>
-
-<br>
-
-<h3>Electricidad sin contaminación [ Compactar objetos ]</h3>
-
-<p>Hacer que todas las entidades en el mapa que funcionen con electricidad funcione sin producir contaminación.</p>
-
-<p>Todos los objetos afectados por esta opción podran crear las entidades correspondientes.</p>
 -------------------------------------------------------------------------------------------
+
+<br>
+
+<h3>Conbustion sin contaminación</h3>
+
+<p>Crea una copia de las entidades que funcionan con combustion y hacer que no generen contaminación </p>
+
+<br>
+
+<h3>Electricidad sin contaminación</h3>
+
+<p>Crea una copia de las entidades que funcionan con electridcidad y hacer que no generen contaminación </p>
 
 <br>
 
@@ -60,7 +56,7 @@
 
 <h3>Producción forzada</h3>
 
-<p>Crear una copis de modulos de producción que afectan a TODAS las recetas del juego.</p>
+<p>Crear una copias de modulos de producción que afectan a TODAS las recetas del juego.</p>
 
 <br>
 
@@ -68,7 +64,7 @@
 
 <p>Establecer el número maximo de objectos que se pueden aplilar, si el cambio le benefica al objeto, por defecto el valor es de mil.</p>
 
-<p>Por ejemplo, el combustible nuclear puede cambiar su apilamiento, pero las armaduras y los controles remotos, siempre serán 1.</p>
+<p>Por ejemplo: el combustible nuclear puede cambiar su apilamiento, pero las armaduras y los controles remotos, siempre serán 1.</p>
 
 <br>
 
@@ -94,7 +90,7 @@
 
 <h3>Fluidos gratis</h3>
 
-<p>Crea una maquina para la cual se crean unas recetas que proporcionan o destruyen grandes cantidades de los fluidos existentes en el juego sin la necesidad de ingredientes o tecnología adicionales.</p>
+<p>Crea una maquina para la cual se proporcionan o destruyen grandes cantidades de los fluidos existentes en el juego, sin la necesidad de ingredientes o tecnología adicionales.</p>
 
 <br>
 

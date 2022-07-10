@@ -1,128 +1,107 @@
---------------------------------------
+---------------------------------------------------------------------------------------------------
 
--- pollution-free-electricity.lua
+--> pollution-free-electricity.lua <--
 
---------------------------------------
---------------------------------------
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
--- Identifica el mod que se está usando
-local MOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
+-- Contenedor de este MOD
+local ThisMOD = { }
 
--- Crear la vareble si no existe
-GPrefix.MODs[ MOD ] = GPrefix.MODs[ MOD ] or { }
+-- Cargar información de este MOD
+if true then
 
--- Guardar en el acceso rapido
-GPrefix.MOD = GPrefix.MODs[ MOD ]
+    -- Identifica el mod que se está usando
+    local NameMOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
 
---------------------------------------
---------------------------------------
+    -- Crear la vareble si no existe
+    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
 
-local Files = { }
-table.insert( Files, "settings" )
-
--- Cargar la configuración
-if GPrefix.getKey( Files, GPrefix.File ) then
-
-    -- Preparar la configuración de este mod
-    local SettingOption =  {
-        type           = "bool-setting",
-        setting_type   = "startup",
-        allowed_values = {"true", "false"},
-        default_value  = true
-    }
-
-    -- Construir valores
-    SettingOption.name  = GPrefix.MOD.Prefix_MOD
-    SettingOption.order = GPrefix.SettingOrder[ SettingOption.type ]
-	SettingOption.order = SettingOption.order .. "-" .. SettingOption.name
-    SettingOption.localised_name  = { GPrefix.MOD.Local .. "setting-name"}
-    SettingOption.localised_description  = { GPrefix.MOD.Local .. "setting-description"}
-
-    -- Cargar configuración del mod al juego
-    data:extend( { SettingOption } )
-    return
+    -- Guardar en el acceso rapido
+    ThisMOD = GPrefix.MODs[ NameMOD ]
 end
 
---------------------------------------
---------------------------------------
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-Files = { }
-table.insert( Files, "data-final-fixes" )
+-- Configuración del MOD
+function ThisMOD.Settings( )
+    if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
 
--- Es necesario ejecutar este codigo??
-if not GPrefix.getKey( Files, GPrefix.File ) then return end
+    local SettingOption =  { }
+    SettingOption.name  = ThisMOD.Prefix_MOD
+    SettingOption.type  = "bool-setting"
+    SettingOption.order = ThisMOD.Char
+    SettingOption.setting_type   = "startup"
+    SettingOption.default_value  = true
+    SettingOption.allowed_values = { "true", "false" }
+    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
--- MOD Inactivo
-if not GPrefix.MOD.Active then return end
+    local List = { }
+    table.insert( List, "" )
+    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
+    table.insert( List, { ThisMOD.Local .. "setting-name" } )
+    SettingOption.localised_name = List
 
---------------------------------------
---------------------------------------
+    data:extend( { SettingOption } )
+end
 
--- Variable contenedora
-local Count = 0
+-- Cargar la configuración
+ThisMOD.Settings( )
 
--- Parametro a buscar
-local PrefixFind = string.gsub( GPrefix.Prefix, "-", "%%-" )
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
--- Buscar entidades que emiten contaminación
--- y funcinan con electricidad
-for _, Entity in pairs( GPrefix.Entities ) do
-    repeat
+-- Cargar la infomación
+function ThisMOD.LoadInformation( )
+
+    -- Buscar las entidades a afectar
+    for _, Entity in pairs( GPrefix.Entities ) do
 
         -- Validación básica
         local Flag = Entity
-        if not Flag.energy_source then break end
+        if not Flag.energy_source then goto JumpEntity end
+
         Flag = Flag.energy_source
-        if not Flag.type then break end
-        if Flag.type ~= "electric" then break end
-        if not Flag.emissions_per_minute then break end
+        if not Flag.type then goto JumpEntity end
+        if Flag.type ~= "electric" then goto JumpEntity end
 
-        -- Incrementar conteo y eliminar contaminación
-        if Flag.emissions_per_minute > 0 then
-            if string.find( Entity.name, PrefixFind ) then
+        if not Flag.emissions_per_minute then goto JumpEntity end
 
-                -- Agregar el idicador de mejora
-                GPrefix.addPlus( Entity )
+        -- Duplicar la información relacionada
+        GPrefix.duplicateEntity( Entity, ThisMOD )
 
-                Flag.emissions_per_minute = nil
-            end Count = Count + 1
-        end
+        -- Recepción del salto
+        :: JumpEntity ::
+    end
 
-    until true
-end
+    ---> <---     ---> <---     ---> <---
 
--- Buscar entidades que
--- Queman conbustibles para generar enegia
--- Queman conbustibles para funcionar
-for _, Entity in pairs( GPrefix.Entities ) do
-    if string.find( Entity.name, PrefixFind ) then
-        repeat
+    -- Inicializar y renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
 
-            -- Validación básica
-            local Flag = Entity
-            if not Flag.burner then break end
-            Flag = Entity.burner
-            if not Flag.emissions_per_minute then break end
+    ---> <---     ---> <---     ---> <---
 
-            -- Potenciar valor
-            Flag.emissions_per_minute = Flag.emissions_per_minute * Count
+    -- Inicializar y renombrar la variable
+    local Entities = Info.Entities or { }
+    Info.Entities = Entities
 
-        until true
-        repeat
-
-            -- Validación básica
-            local Flag = Entity
-            if not Flag.energy_source then break end
-            Flag = Flag.energy_source
-            if not Flag.type then break end
-            if Flag.type ~= "burner" then break end
-            if not Flag.emissions_per_minute then break end
-
-            -- Potenciar valor
-            Flag.emissions_per_minute = Flag.emissions_per_minute * Count
-
-        until true
+    -- Hacer los cambios
+    for _, Entity in pairs( Entities ) do
+        Entity.energy_source.emissions_per_minute = nil
     end
 end
 
---------------------------------------
+-- Configuración del MOD
+function ThisMOD.DataFinalFixes( )
+    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if not ThisMOD.Active then return end
+
+    ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
+end
+
+-- Cargar la configuración
+ThisMOD.DataFinalFixes( )
+
+---------------------------------------------------------------------------------------------------

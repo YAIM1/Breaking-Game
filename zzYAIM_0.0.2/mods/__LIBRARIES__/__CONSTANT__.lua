@@ -60,7 +60,8 @@ table.insert( MODs, "sort-items" )
 table.insert( MODs, "robots-with-unlimited-electricity" )
 table.insert( MODs, "force-a-slot-module" )
 -- table.insert( MODs, "minimum-consumption" )
--- table.insert( MODs, "pollution-free-electricity" )
+table.insert( MODs, "pollution-free-burner" )
+table.insert( MODs, "pollution-free-electricity" )
 table.insert( MODs, "force-production" )
 
 GPrefix.MODs = GPrefix.MODs or { }
