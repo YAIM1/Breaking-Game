@@ -30,12 +30,11 @@ function ThisMOD.Settings( )
 
     local SettingOption =  { }
     SettingOption.name  = ThisMOD.Prefix_MOD
-    SettingOption.type  = "int-setting"
-    SettingOption.order = ThisMOD.Index
-    SettingOption.setting_type  = "startup"
-    SettingOption.default_value = 1000
-    SettingOption.minimum_value = 1
-    SettingOption.maximum_value = 65000
+    SettingOption.type  = "bool-setting"
+    SettingOption.order = ThisMOD.Char
+    SettingOption.setting_type   = "startup"
+    SettingOption.default_value  = true
+    SettingOption.allowed_values = { "true", "false" }
     SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
     local List = { }

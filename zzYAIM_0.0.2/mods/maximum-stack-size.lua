@@ -31,7 +31,7 @@ function ThisMOD.Settings( )
     local SettingOption =  { }
     SettingOption.name  = ThisMOD.Prefix_MOD
     SettingOption.type  = "int-setting"
-    SettingOption.order = ThisMOD.Index
+    SettingOption.order = ThisMOD.Char
     SettingOption.setting_type  = "startup"
     SettingOption.default_value = 1000
     SettingOption.minimum_value = 1

@@ -31,7 +31,7 @@ function ThisMOD.Settings( )
     local SettingOption =  { }
     SettingOption.name  = ThisMOD.Prefix_MOD
     SettingOption.type  = "bool-setting"
-    SettingOption.order = ThisMOD.Index
+    SettingOption.order = ThisMOD.Char
     SettingOption.setting_type   = "startup"
     SettingOption.default_value  = true
     SettingOption.allowed_values = { "true", "false" }
