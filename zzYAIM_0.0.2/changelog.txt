@@ -1,35 +1,52 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.0.2
+Version: 0.2.0
 Date: 2022.04.25
   Created:
-    - Queue to research
-    - Minimum consumption
+    - queue-to-research
+    - minimum-electrical-consumption
   Change:
 	- All
 		Restructure code
-    - Force production
+        Each duplicated entity and object creates its respective recipes
+        Replaced the plus sign with a letter that can be seen in the MOD settings
+    - force-production
         Add more recipes
-    - Compact objects
-        Now entities campacted can by remplace entities original 
-    - Armor with immunity
-		Remove fish to icon
-		Add fish to recipes
-    - Free fluids
+    - compact
+        Name change to "compact-objects"
+        Now entities campacted can by remplace entities original
+    - force-a-slot-modules
+        Name change to "force-a-modules-slot"
+        Duplicate each affected items
+	- unlimited-robot
+        Name change to "Robots-with-unlimited-electricity"
+        Duplicate each affected entities
+	- stack-size
+        Name change to "Maximum-stack-size"
+    - equipment-1x1
+        Duplicate each affected equipments
+    - force-a-slot-modules
+        Duplicate each affected entities
+    - immune-armors
+        Name change to "Armor-with-immunity"
+        Remove fish to icon
+        Add fish to recipes
+    - free-fluids
         Add recipes to fluid whit diferents temperature
-        Add recipes to destroy the fluids
-        Remove recipes to menu of player
+        Remove recipes of menu the player
         Add a machine to create or destroy the fluids
+    - inventory-sort
+        Name change to "sort-item"
 ---------------------------------------------------------------------------------------------------
-Version: 0.0.1
+Version: 0.1.1
 Date: 2022.01.02
   Created:
-    - Compact objects
-    - Pollution free electricity
-    - Robots with unlimited electricity
-    - Force production
-    - Maximum stack size
-    - Equipment 1x1
-    - Force a slot modules
-    - Armor with immunity
-    - Free fluids
-    - Sort stock
+    - compact
+    - equipment-1x1
+    - force-production
+    - force-a-slot-modules
+    - free-fluids
+	- immune-armors
+    - inventory-sort
+    - pollution-free-electricity
+	- stack-size
+	- unlimited-robot

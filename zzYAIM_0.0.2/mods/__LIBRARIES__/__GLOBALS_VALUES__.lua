@@ -547,6 +547,7 @@ local function duplicateEntity( Entity, ThisMOD )
 
     -- Nombre del objeto
     local Name = Entity.minable.result
+    if Name ~= Entity.name then return end
 
     -- Cargar el objeto
     local Item = GPrefix.Items[ Name ]

@@ -398,9 +398,9 @@ end
 
 function GPrefix.ReplaceRecipe( Recipe, OldNameItem, NewNameItem )
 	for _, Result in pairs( Recipe ) do
-		if Result.name and Result.name == OldNameItem then Result.name = NewNameItem return true
-		elseif Result[ 1 ] == OldNameItem then Result.name = NewNameItem return true end
-	end return false
+		if Result.name and Result.name == OldNameItem then Result.name = NewNameItem return
+		elseif Result[ 1 ] == OldNameItem then Result[ 1 ] = NewNameItem return end
+	end
 end
 
 -- Call example. GPrefix.ReplaceIngredient( Recipe, OldNameItem, NewNameItem )
