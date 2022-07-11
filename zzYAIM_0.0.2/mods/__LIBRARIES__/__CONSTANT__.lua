@@ -50,9 +50,11 @@ end
 local MODs = { }
 table.insert( MODs, "pruebas" )
 -- table.insert( MODs, "compact-items" )
+-- table.insert( MODs, "improve-compaction" )
 table.insert( MODs, "maximum-stack-size" )
 table.insert( MODs, "queue-to-research" )
 -- table.insert( MODs, "start-with-items" )
+-- table.insert( MODs, "miniloader" )
 table.insert( MODs, "free-fluids" )
 table.insert( MODs, "armor-with-immunity" )
 table.insert( MODs, "equipament-1x1" )

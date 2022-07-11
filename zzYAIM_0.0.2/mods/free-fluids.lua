@@ -408,7 +408,7 @@ function ThisMOD.LoadMachine( )
     Info.Entities = Entities
 
     -- Modificar la entidad
-    Entity = Entities[ Base ]
+    Entity = Entities[ Entity.name ]
     Entity.energy_usage = "1W"
     Entity.next_upgrade = nil
     Entity.energy_source = { type = "void" }
@@ -423,10 +423,16 @@ function ThisMOD.LoadMachine( )
     Info.Recipes = Recipes
 
     -- Eliminar los ingredientes
-    for _, Recipe in pairs( Recipes ) do
-        if Recipe.ingredient or Recipe.ingredients then
-            Recipe.ingredient = nil   Recipe.ingredients = { }
-        end
+    local Recipe = Recipes[ Base ][ 1 ]
+    for _, Table in ipairs( { Recipe, Recipe.normal, Recipe.expensive } ) do
+        if not( Table.ingredient or Table.ingredients ) then goto Jump end
+        Table.ingredient = nil   Table.ingredients = { }
+        :: Jump ::
+    end
+
+    -- Eliminar las demas recetas
+    for i = 2, #Recipes[ Base ], 1 do
+        Recipes[ Base ][ i ] = nil
     end
 
     ---> <---     ---> <---     ---> <---
