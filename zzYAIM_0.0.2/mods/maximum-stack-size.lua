@@ -94,9 +94,36 @@ function ThisMOD.DataFinalFixes( )
         Item.stack_size = ThisMOD.Value
         GPrefix.addLetter( Item, ThisMOD.Char )
 
+        -- Efecto en los compactado
+        while true do
+
+            -- El MOD se cargó
+            if not GPrefix.Compact then break end
+
+            -- La descripción puede ser la que se busca
+            local Array = Item.localised_description
+            if not Array then break end
+            if not GPrefix.isTable( Array ) then break end
+            if #Array < 2 then break end
+            if Array[ 1 ] ~= "" then break end
+
+            -- La descripción es la que se busca
+            local Find = GPrefix.Compact.Prefix_MOD .. ".item-description"
+            if not GPrefix.isTable( Array[ 2 ] ) then break end
+            local Found = Array[ 2 ][ 1 ] == Find
+            if not Found then break end
+
+            -- Se actualiza el cambio
+            local Table = { localised_name = Array }
+            GPrefix.addLetter( Table, ThisMOD.Char )
+            break
+        end
+
+        -- Actualizar la entidad
         Entity = GPrefix.Entities[ Item.name ]
         if Entity then GPrefix.addLetter( Entity, ThisMOD.Char ) end
 
+        -- Actualizar sus recestas
         for _, Recipe in pairs( GPrefix.Recipes[ Item.name ] or { } ) do
             GPrefix.addLetter( Recipe, ThisMOD.Char )
         end

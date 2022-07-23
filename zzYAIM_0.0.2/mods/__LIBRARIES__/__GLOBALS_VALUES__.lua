@@ -36,7 +36,7 @@ local OnTick = { }
 
 -- Call example: GPrefix.AddOnTick( Event, ThisMOD )
 
-local function AddOnTick( Data )
+local function addOnTick( Data )
 
     -- Here = {
     --     Name = "" <-- Nombre del evento
@@ -131,7 +131,7 @@ end
 
 -- Call example: GPrefix.AddLocalised( Data )
 
-function AddLocalised( Data )
+local function addLocalised( Data )
 
     -- Cargar espacio de respuesta
     local Up = GPrefix.DeepCopy( Data.Temporal[ #Data.Temporal ] )
@@ -367,8 +367,8 @@ end
 local function LoadOnTick( )
 
     -- Renombrar las funciones principales
-    GPrefix.AddOnTick = AddOnTick
-    GPrefix.AddLocalised  = AddLocalised
+    GPrefix.addOnTick = addOnTick
+    GPrefix.addLocalised  = addLocalised
 
     ---> <---     ---> <---     ---> <---
 
@@ -391,7 +391,7 @@ local function LoadOnTick( )
     table.insert( Data.Temporal, Here )
 
     -- Cargar el evento
-    GPrefix.AddOnTick( Data )
+    GPrefix.addOnTick( Data )
 
     ---> <---     ---> <---     ---> <---
 
@@ -426,10 +426,27 @@ Control( )
 
 -- Funciones para agregar informacion a las tablas
 local function add( Type, Table, ThisMOD )
+    -- Agregar a la lista de objestos del juego
     if ThisMOD then GPrefix.addLetter( Table, ThisMOD ) end
     GPrefix[ Type ][ Table.name ] = GPrefix[ Type ][ Table.name ] or { }
     GPrefix[ Type ][ Table.name ] = Table
     data:extend( { Table } )
+end
+
+-- Funciones para crear los prototipos
+local function create( Type, ThisMOD )
+
+    -- Renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    local Tables = Info[ Type ] or { }
+    Info[ Type ] = Tables
+
+    -- Cambiar los objetos
+    for _, Table in pairs( Tables ) do
+        add( Type, Table, ThisMOD )
+    end
 end
 
 local function addRecipe( NewRecipe, ThisMOD )
@@ -487,22 +504,6 @@ local function addRecipe( NewRecipe, ThisMOD )
     data:extend( { NewRecipe } )
 end
 
--- Funciones para crear los prototipos
-local function create( Type, ThisMOD )
-
-    -- Renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    local Tables = Info[ Type ] or { }
-    Info[ Type ] = Tables
-
-    -- Cambiar los objetos
-    for _, Table in pairs( Tables ) do
-        add( Type, Table, ThisMOD )
-    end
-end
-
 local function createRecipe( ThisMOD )
 
     -- Renombrar la variable
@@ -558,6 +559,11 @@ local function duplicateEntity( Entity, ThisMOD )
     local Recipe = GPrefix.Recipes[ Name ]
     Recipe = GPrefix.DeepCopy( Recipe )
     Recipes[ Name ] = Recipe
+
+    -- Eliminar un posible problema
+    for _, recipe in pairs( Recipe ) do
+        recipe.main_product = nil
+    end
 end
 
 -- Cargar la información desde data.raw
@@ -581,7 +587,7 @@ local function LoadData( )
             -- Validar si la receta esta oculta
             local Hidden = 1
             for _, _recipe in pairs( _recipes ) do
-                local Result = GPrefix.getKey( _recipe.flags, "hidden" ) or ""
+                local Result = ( GPrefix.getKey( _recipe.flags, "hidden" ) or "" ) .. ""
                 Hidden = tonumber( Result, 10 )
                 if Hidden then break end
             end if Hidden then break end
@@ -863,6 +869,19 @@ local function DataFinalFixes( )
         if ThisMOD.Information.Equipaments then create( "Equipaments", ThisMOD ) end
 
         if ThisMOD.Information.Recipes then createRecipe( ThisMOD ) end
+
+        -- Commpactar el objeto de ser posible
+        local Flag = GPrefix.Compact and true or false
+        Flag = Flag and ( ThisMOD.Information.Items and true or false )
+        if Flag and not ThisMOD.Information.Break then
+            local Items = ThisMOD.Information.Items
+            Items = GPrefix.DeepCopy( Items )
+
+            GPrefix.Compact.Information = nil
+            for _, Item in pairs( Items ) do
+                GPrefix.Compact.Compact( Item, GPrefix.Compact )
+            end create( "Items", GPrefix.Compact )
+        end
     end
 end
 

@@ -159,65 +159,6 @@ function ThisMOD.CreateSprite( )
                 table.insert( Image, DuplicateIcon( Constant ) )
             end
         end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        -- local ThisEffect = Effects[ Effect ] or { }
-        -- Effects[ Effect ] = ThisEffect
-
-        -- local URL = "__core__/graphics/bonus-icon.png"
-        -- local Name = string.gsub( Effect, "-", "_" )
-        -- local ModifierIcon = Patch[ Name .. "_modifier_icon" ]
-        -- local ModifierConstant = Patch[ Name .. "_modifier_constant" ]
-
-        -- if ModifierIcon and ModifierIcon.filename ~= URL then
-        --     local Image = { }
-        --     table.insert( ThisEffect, Image )
-
-        --     table.insert( Image, DuplicateIcon( ModifierIcon ) )
-        --     table.insert( Image, DuplicateIcon( ModifierConstant ) )
-        -- end
-
-        -- if not ModifierIcon or ModifierIcon.filename == URL then
-        --     for _, Source in pairs( Sources or { } ) do
-        --         local Image = { }
-
-        --         if Key then
-        --             ThisEffect[ Key ] = ThisEffect[ Key ] or { }
-        --             table.insert( ThisEffect[ Key ], Image )
-        --         else table.insert( ThisEffect, Image ) end
-
-        --         if Source.icons then
-        --             for _, Icon in pairs( Source.icons ) do
-        --                 local NewIcon = DuplicateIcon( Icon )
-        --                 if not( Icon.icon_size or Icon.size ) then
-        --                     NewIcon.size = Source.icon_size
-        --                 end table.insert( Image, NewIcon )
-        --             end
-        --         end
-
-        --         if Source.icon or Source.filename then
-        --             table.insert( Image, DuplicateIcon( Source ) )
-        --         end
-
-        --         table.insert( Image, DuplicateIcon( ModifierConstant ) )
-        --     end
-        -- end
     end
 
     ---> <---     ---> <---     ---> <---
@@ -3604,6 +3545,7 @@ function ThisMOD.ShowTimeStatus( Data )
 
     -- Inicializar las variables
     local Tooltip = { "" }
+    local Array = { }
     local Part = ""
 
     -- No hay un tooltip
@@ -3614,8 +3556,8 @@ function ThisMOD.ShowTimeStatus( Data )
     Part = Part .. "[color=254,222,169]"
     table.insert( Tooltip, Part )
 
-    Part = { Data.GMOD.Local .. "factor"}
-    table.insert( Tooltip, Part )
+    Array = { Data.GMOD.Local .. "factor"}
+    table.insert( Tooltip, Array )
 
     Part = ""
     Part = Part .. ":[/color] "
@@ -4279,6 +4221,7 @@ function ThisMOD.FrameTimeSingle( Data )
 
     -- Inicializar las variables
     local Tooltip = { "" }
+    local Array = { }
     local Part = ""
 
     Part = ""
@@ -4286,8 +4229,8 @@ function ThisMOD.FrameTimeSingle( Data )
     Part = Part .. "[color=254,222,169]"
     table.insert( Tooltip, Part )
 
-    Part = { Data.GMOD.Local .. "factor"}
-    table.insert( Tooltip, Part )
+    Array = { Data.GMOD.Local .. "factor"}
+    table.insert( Tooltip, Array )
 
     Part = ""
     Part = Part .. ":[/color] "
@@ -4303,8 +4246,8 @@ function ThisMOD.FrameTimeSingle( Data )
         Part = Part .. "[color=254,222,169]"
         table.insert( Tooltip, Part )
 
-        Part = { Data.GMOD.Local .. "tooltip-default"}
-        table.insert( Tooltip, Part )
+        Array = { Data.GMOD.Local .. "tooltip-default"}
+        table.insert( Tooltip, Array )
 
         Part = ":[/color] "
         local Times = ThisMOD.FormatTime( Up.Default )
@@ -4454,6 +4397,7 @@ function ThisMOD.FrameTimeAccumulated( Data )
 
     -- Inicializar las variables
     local Tooltip = { "" }
+    local Array = { }
     local Part = ""
 
     Part = ""
@@ -4461,8 +4405,8 @@ function ThisMOD.FrameTimeAccumulated( Data )
     Part = Part .. "[color=254,222,169]"
     table.insert( Tooltip, Part )
 
-    Part = { Data.GMOD.Local .. "factor"}
-    table.insert( Tooltip, Part )
+    Array = { Data.GMOD.Local .. "factor"}
+    table.insert( Tooltip, Array )
 
     Part = ""
     Part = Part .. ":[/color] "
@@ -4490,8 +4434,8 @@ function ThisMOD.FrameTimeAccumulated( Data )
         Part = Part .. "[color=254,222,169]"
         table.insert( Tooltip, Part )
 
-        Part = { Data.GMOD.Local .. Table.Local }
-        table.insert( Tooltip, Part )
+        Array = { Data.GMOD.Local .. Table.Local }
+        table.insert( Tooltip, Array )
 
         Part = ":[/color] "
         local Times = ThisMOD.FormatTime( Table.Cost )
@@ -4862,14 +4806,14 @@ function ThisMOD.Initialize( )
     Here.Table.Name = ThisMOD.Prefix_MOD_ .. "StartInitialize"
     Here.Table.Function = ThisMOD.StartInitialize
     table.insert( Data.Temporal, Here.Table )
-    GPrefix.AddOnTick( Data )
+    GPrefix.addOnTick( Data )
 
     -- Hacer cada tick que se esta investigando
     Here.Table = { }
     Here.Table.Name = ThisMOD.Prefix_MOD_ .. "OnForcesResearchTick"
     Here.Table.Function = ThisMOD.OnForcesResearchTick
     table.insert( Data.Temporal, Here.Table )
-    GPrefix.AddOnTick( Data )
+    GPrefix.addOnTick( Data )
 end
 
 
@@ -5222,13 +5166,13 @@ function ThisMOD.LoadTranslation( Data )
 
     -- Crear los textos a traducir
     Down.Localised = { "locale-identifier" }
-    GPrefix.AddLocalised( Data )
+    GPrefix.addLocalised( Data )
     for _, Technology in pairs( Data.Technologies.All ) do
         Down.Localised = Technology.Localised_name
-        GPrefix.AddLocalised( Data )
+        GPrefix.addLocalised( Data )
         for _, Effect in pairs( Technology.Effects ) do
             Down.Localised = Effect.Localised
-            GPrefix.AddLocalised( Data )
+            GPrefix.addLocalised( Data )
         end
     end
 end
@@ -5368,6 +5312,7 @@ function ThisMOD.UpdateWindowStatus( Data )
 
         -- Inicializar las variables
         local Tooltip = { "" }
+        local Array = { }
         local Part = ""
 
         -- Validar la siguiente tecnología
@@ -5395,8 +5340,8 @@ function ThisMOD.UpdateWindowStatus( Data )
         Part = Part .. "[color=254,222,169]"
         table.insert( Tooltip, Part )
 
-        Part = { Data.GMOD.Local .. "next"}
-        table.insert( Tooltip, Part )
+        Array = { Data.GMOD.Local .. "next"}
+        table.insert( Tooltip, Array )
 
         Part = ""
         Part = Part .. ":[/color] "
@@ -5407,7 +5352,6 @@ function ThisMOD.UpdateWindowStatus( Data )
 
         Part = ""
         Part = Part .. "[/color]"
-        Part = Part .. "[color=254,222,169]%[/color]"
         Part = Part .. "[/font]"
         table.insert( Tooltip, Part )
 
@@ -5928,7 +5872,7 @@ function ThisMOD.RemoveTechnologyAndDependence( Data, TechnologyName )
 
         -- Cuaquier tecnología
         if not GPrefix.isTable( Key ) then
-            local Position = tonumber( Key, 10 )
+            local Position = tonumber( Key .. "", 10 )
             table.remove( Data.Queue, Position )
         end
 
@@ -6007,7 +5951,7 @@ function ThisMOD.PrioritizeTechnologyAndPrerequisites( Data, TechnologyName )
 
         -- Tecnología finita
         if not GPrefix.isTable( Key ) then
-            local Position = tonumber( Key, 10 )
+            local Position = tonumber( Key .. "", 10 )
             table.remove( Data.Queue, Position )
         end
 
@@ -6208,7 +6152,7 @@ function ThisMOD.ResearchFinished( Event )
     -- Remover la tecnología de la cola
     local Key = GPrefix.getKey( Data.Queue, Technology.Name ) or { }
     if GPrefix.isTable( Key ) then Key = Key[ 1 ] end
-    table.remove( Data.Queue, tonumber( Key or "", 10 ) )
+    table.remove( Data.Queue, tonumber( ( Key or "" ) .. "", 10 ) )
 
     -- Marcar la tecnología como investigada
     if not Technology.Infinite then

@@ -266,49 +266,6 @@ function GPrefix.addEvent( Table )
 end
 
 
--- Call example. GPrefix.addSubGroup( String, ThisMOD )
-
-function GPrefix.addSubGroup( SubGroups, ThisMOD )
-
-    -- Inicializar la variable
-    local Array = { Result = { } }
-
-    for SubGroup, _ in pairs( SubGroups ) do
-
-        -- Evitar bucle
-        Array.PrefixFind = string.gsub( GPrefix.Prefix, "-", "%%-" )
-        Array.Find = string.find( SubGroup, Array.PrefixFind )
-        if Array.Find then goto JumpSubGroup end
-
-        -- Renombrar la variable
-        Array.SubGroup = data.raw[ "item-subgroup" ]
-
-        -- Validar si el nuevo grupo existe
-        Array.SubGroupExist = ThisMOD.Prefix_MOD_ .. SubGroup
-        Array.SubGroupExist = Array.SubGroup[ Array.SubGroupExist ]
-        if Array.SubGroupExist then goto JumpSubGroup end
-
-        -- Cargar el grupo de muestra
-        Array.NewSubGroup = Array.SubGroup[ SubGroup ]
-
-        -- Duplicar el subgrupo
-        Array.NewSubGroup = GPrefix.DeepCopy( Array.NewSubGroup )
-
-        -- Hacer los cambios en el subgrupo
-        Array.NewSubGroup.name = ThisMOD.Prefix_MOD_ .. Array.NewSubGroup.name
-        Array.NewSubGroup.order = ThisMOD.Prefix_MOD_ .. Array.NewSubGroup.order
-        table.insert( Array.Result, Array.NewSubGroup )
-
-        -- Recepción del salto
-        :: JumpSubGroup ::
-    end
-
-    -- Cargar los datos al juego
-    if #Array.Result > 0 then
-        data:extend( Array.Result )
-    end
-end
-
 -- Call example. GPrefix.getNumber( String )
 
 function GPrefix.getNumber( String )
@@ -585,11 +542,11 @@ function GPrefix.addLetter( Table, ThisMOD )
 
     -- No existe el apodo
     if not Table.localised_name then
-        local Tipe = ""
-        if GPrefix.Items[ Table.name ] then Tipe = "item" end
-        if GPrefix.Entities[ Table.name ] then Tipe = "entity" end
-        if GPrefix.Equipaments[ Table.name ] then Tipe = "equipment" end
-        Table.localised_name = { "", { Tipe .. "-name." .. Table.name }, " [", " ]" }
+        local Type = ""
+        if GPrefix.Items[ Table.name ] then Type = "item" end
+        if GPrefix.Entities[ Table.name ] then Type = "entity" end
+        if GPrefix.Equipaments[ Table.name ] then Type = "equipment" end
+        Table.localised_name = { "", { Type .. "-name." .. Table.name }, " [", " ]" }
     end
 
     -- El apodo es un texto
@@ -620,8 +577,8 @@ function GPrefix.addLetter( Table, ThisMOD )
 
     -- Remplazar el objeto a minar
     Flag = true
-    Flag = Flag and Table.minable
-    Flag = Flag and Table.minable.result
+    Flag = Flag and ( Table.minable and true or false )
+    Flag = Flag and ( Table.minable.result and true or false )
     Flag = Flag and Table.minable.result == OldName
     if Flag then Table.minable.result = Table.name end
 
@@ -652,9 +609,35 @@ function GPrefix.addLetter( Table, ThisMOD )
     :: JumpPrefix ::
 
     -- Agregar la letra en su posición
-    local Position = GPrefix.getKey( Table.localised_name, " ]" ) or ""
-    local Index = tonumber( Position, 10 )
-    table.insert( Table.localised_name, Index, " " .. ThisMOD.Char )
+    local Array = Table.localised_name
+    if not GPrefix.getKey( Array, " " .. ThisMOD.Char ) then
+
+        -- Agregar la letra
+        Position = GPrefix.getKey( Array, " ]" )
+        local Index = tonumber( ( Position or "" ) .. "", 10 )
+        table.insert( Array, Index, " " .. ThisMOD.Char )
+
+        -- Ordenar las letras
+        local Position = GPrefix.getKey( Array, " [" )
+        Position = ( Position or 0 ) or 0
+        if Position > 0 then
+            local List = { }
+            Position = Position + 1
+            local Start = Position
+
+            while Array[ Position ] ~= " ]" do
+                table.insert( List, Array[ Position ] )
+                Position = Position + 1
+            end
+
+            table.sort( List )
+            local End = Start + #List - 1
+
+            for i = Start, End, 1 do
+                Array[ i ] = List[ i - Start + 1 ]
+            end
+        end
+    end
 end
 
 ---> <---     ---> <---     ---> <---

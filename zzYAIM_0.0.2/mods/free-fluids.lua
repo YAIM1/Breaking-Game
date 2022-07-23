@@ -453,7 +453,7 @@ function ThisMOD.LoadMachine( )
 
     -- Establecer el apodo
     local Localised_name = Change( Info.Items[ Base ] )
-    local Result = GPrefix.getKey( Localised_name, " [" ) or ""
+    local Result = ( GPrefix.getKey( Localised_name, " [" ) or "" ) .. ""
     local Position = tonumber( Result, 10 )
 
     for _, Table in pairs( { Info.Items[ Base ], Info.Entities[ Base ] } ) do

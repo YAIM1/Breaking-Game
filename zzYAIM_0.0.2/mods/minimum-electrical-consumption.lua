@@ -63,6 +63,7 @@ function ThisMOD.LoadInformation( )
     Info.Entities = Entities
 
     local Table = { }
+    local String = ""
 
     -- Agregar a los prototipos del juego
     local function add( Entity )
@@ -88,61 +89,61 @@ function ThisMOD.LoadInformation( )
 
         if Entity.energy_usage then
             Entity = add( Entity )
-            Table = Entity.energy_usage
-            Entity.energy_usage = tostring( 10 ^ -2 ) .. GPrefix.getUnit( Table )
+            String = Entity.energy_usage
+            Entity.energy_usage = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
         end
 
         -- Entidades logicas
         if Entity.active_energy_usage then
             Entity = add( Entity )
-            Table = Entity.active_energy_usage
-            Entity.active_energy_usage = tostring( 10 ^ -2 ) .. GPrefix.getUnit( Table )
+            String = Entity.active_energy_usage
+            Entity.active_energy_usage = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
         end
 
         -- Radar
         if Entity.energy_per_nearby_scan then
             Entity = add( Entity )
-            Table = Entity.energy_per_nearby_scan
-            Entity.energy_per_nearby_scan = tostring( 10 ^ -2 ) .. GPrefix.getUnit( Table )
+            String = Entity.energy_per_nearby_scan
+            Entity.energy_per_nearby_scan = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
         end
 
         if Entity.energy_per_sector then
             Entity = add( Entity )
-            Table = Entity.energy_per_sector
-            Entity.energy_per_sector = tostring( 10 ^ -2 ) .. GPrefix.getUnit( Table )
+            String = Entity.energy_per_sector
+            Entity.energy_per_sector = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
         end
 
         -- Insertador
         if Entity.energy_per_movement then
             Entity = add( Entity )
-            Table = Entity.energy_per_movement
-            Entity.energy_per_movement = tostring( 10 ^ -2 ) .. GPrefix.getUnit( Table )
+            String = Entity.energy_per_movement
+            Entity.energy_per_movement = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
         end
 
         if Entity.energy_per_rotation then
             Entity = add( Entity )
-            Table = Entity.energy_per_rotation
-            Entity.energy_per_rotation = tostring( 10 ^ -2 ) .. GPrefix.getUnit( Table )
+            String = Entity.energy_per_rotation
+            Entity.energy_per_rotation = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
         end
 
         -- Lamaparas y altavoz
         if Entity.energy_usage_per_tick then
             Entity = add( Entity )
-            Table = Entity.energy_usage_per_tick
-            Entity.energy_usage_per_tick = tostring( 10 ^ -2 ) .. GPrefix.getUnit( Table )
+            String = Entity.energy_usage_per_tick
+            Entity.energy_usage_per_tick = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
         end
 
         -- Spidertron
         if Entity.movement_energy_consumption then
             Entity = add( Entity )
-            Table = Entity.movement_energy_consumption
-            Entity.movement_energy_consumption = tostring( 10 ^ -2 ) .. GPrefix.getUnit( Table )
+            String = Entity.movement_energy_consumption
+            Entity.movement_energy_consumption = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
         end
 
         if Entity.braking_power then
             Entity = add( Entity )
-            Table = Entity.braking_power
-            Entity.braking_power = tostring( 10 ^ -2 ) .. GPrefix.getUnit( Table )
+            String = Entity.braking_power
+            Entity.braking_power = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
         end
 
         -- Arma de energía
