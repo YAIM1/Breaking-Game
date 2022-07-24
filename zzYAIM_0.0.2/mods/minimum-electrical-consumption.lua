@@ -77,7 +77,6 @@ function ThisMOD.LoadInformation( )
 
         -- Todos
         repeat
-            if Entity.type == "roboport" then goto JumpEntity end
             if not Entity.energy_source then break end
             Table = Entity.energy_source
             if not Table.type then goto JumpEntity end
@@ -138,12 +137,6 @@ function ThisMOD.LoadInformation( )
             Entity = add( Entity )
             String = Entity.movement_energy_consumption
             Entity.movement_energy_consumption = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
-        end
-
-        if Entity.braking_power then
-            Entity = add( Entity )
-            String = Entity.braking_power
-            Entity.braking_power = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
         end
 
         -- Arma de energía

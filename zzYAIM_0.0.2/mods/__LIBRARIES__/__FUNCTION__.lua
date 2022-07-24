@@ -640,6 +640,27 @@ function GPrefix.addLetter( Table, ThisMOD )
     end
 end
 
+-- Call example: GPrefix.newItemSubgroup( OldItem, ThisMOD )
+
+function GPrefix.newItemSubgroup( OldItem, ThisMOD )
+
+    -- Existe el subgrupo
+    local SubGroup = string.gsub( GPrefix.Prefix_, "-", "%%-" )
+    SubGroup = string.gsub( OldItem.subgroup, SubGroup, "" )
+    SubGroup = ThisMOD.Prefix_MOD_ .. SubGroup
+    local newSubGroup = data.raw[ "item-subgroup" ][ SubGroup ]
+    if newSubGroup then return end
+
+    -- Crear el subgrupo
+    newSubGroup = data.raw[ "item-subgroup" ][ OldItem.subgroup ]
+    newSubGroup = GPrefix.DeepCopy( newSubGroup )
+    newSubGroup.name = SubGroup
+    newSubGroup.order = string.gsub( GPrefix.Prefix_, "-", "%%-" )
+    newSubGroup.order = string.gsub( OldItem.order, newSubGroup.order, "" )
+    newSubGroup.order = ThisMOD.Prefix_MOD_ .. OldItem.order
+    data:extend( { newSubGroup } )
+end
+
 ---> <---     ---> <---     ---> <---
 
 -- Call example: GPrefix.ClickRight( Data )

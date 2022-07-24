@@ -74,7 +74,6 @@ function ThisMOD.LoadInformation( )
     ThisMOD.doChange( Info )
 end
 
-
 -- Crear el prototipo
 function ThisMOD.LoadEntities( Info )
 
@@ -1070,7 +1069,7 @@ function ThisMOD.LoadRecipes( Info )
 
     -- Crear los prototipos
     Info.Recipes = {
-        [ 'loader' ] = {
+        [ 'underground-belt' ] = {
             [ 1 ] = {
                 [ 'type' ] = 'recipe',
                 [ 'name' ] = 'loader',
@@ -1092,7 +1091,7 @@ function ThisMOD.LoadRecipes( Info )
                 [ 'energy_required' ] = 2,
             },
         },
-        [ 'fast-loader' ] = {
+        [ 'fast-underground-belt' ] = {
             [ 1 ] = {
                 [ 'type' ] = 'recipe',
                 [ 'name' ] = 'fast-loader',
@@ -1114,7 +1113,7 @@ function ThisMOD.LoadRecipes( Info )
                 [ 'energy_required' ] = 2,
             },
         },
-        [ 'express-loader' ] = {
+        [ 'express-underground-belt' ] = {
             [ 1 ] = {
                 [ 'type' ] = 'recipe',
                 [ 'name' ] = 'express-loader',
@@ -1168,32 +1167,12 @@ function ThisMOD.doChange( Info )
     end
 end
 
-
--- Asignar las recetas a una tecnología
-function ThisMOD.addTechnologie( )
-
-    -- Inicializar el contenedor
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    local Table = { }
-    table.insert( Table, { "underground-belt", "loader" } )
-    table.insert( Table, { "fast-underground-belt", "fast-loader" } )
-    table.insert( Table, { "express-underground-belt", "express-loader" } )
-
-    -- Modificar los prototipos
-    for _, Value in pairs( Table ) do
-        GPrefix.addTechnology( Value[ 1 ], ThisMOD.Prefix_MOD_ .. Value[ 2 ] )
-    end
-end
-
 -- Configuración del MOD
 function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
     if not ThisMOD.Active then return end
 
     ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
-    ThisMOD.addTechnologie( )
 end
 
 -- Cargar la configuración

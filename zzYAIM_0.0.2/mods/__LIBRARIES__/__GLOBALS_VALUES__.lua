@@ -467,7 +467,7 @@ local function addRecipe( NewRecipe, ThisMOD )
     local Results = { }
     for _, Recipe in pairs( Recipes ) do
 
-        -- La receta solo dará un unico objeto
+        -- La receta dará un unico objeto
         if Recipe.result then
             local Result = { }
             table.insert( Results, Result )
@@ -475,7 +475,7 @@ local function addRecipe( NewRecipe, ThisMOD )
             table.insert( Result, Recipe.result_count or 1 )
         end
 
-        -- La receta solo dará varios objetos
+        -- La receta dará varios objetos
         if Recipe.results then
             for _, Result in pairs( Recipe.results ) do
                 table.insert( Results, Result )
@@ -559,6 +559,28 @@ local function duplicateEntity( Entity, ThisMOD )
     local Recipe = GPrefix.Recipes[ Name ]
     Recipe = GPrefix.DeepCopy( Recipe )
     Recipes[ Name ] = Recipe
+
+    -- Iliminar las recetas
+    if GPrefix.Compact then
+        for position, recipe in pairs( Recipe ) do
+
+            -- Variable temporal
+            local Category = ""
+
+            -- La receta es de compactado??
+            Category = GPrefix.Compact.Prefix_MOD_ .. "compact"
+            local Compact = recipe.category == Category
+
+            -- La receta es de descompactado??
+            Category = GPrefix.Compact.Prefix_MOD_ .. "uncompact"
+            local Uncompact = recipe.category == Category
+
+            -- De serlo, elimnar el duplicado
+            if Compact or Uncompact then
+                table.remove( Recipe, position )
+            end
+        end
+    end
 
     -- Eliminar un posible problema
     for _, recipe in pairs( Recipe ) do
@@ -881,6 +903,11 @@ local function DataFinalFixes( )
             for _, Item in pairs( Items ) do
                 GPrefix.Compact.Compact( Item, GPrefix.Compact )
             end create( "Items", GPrefix.Compact )
+
+            GPrefix.Compact.Information = nil
+            for _, Item in pairs( Items ) do
+                GPrefix.Compact.CreateRecipe( Item )
+            end createRecipe( GPrefix.Compact )
         end
     end
 end

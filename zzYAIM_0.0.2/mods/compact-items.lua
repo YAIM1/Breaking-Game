@@ -33,7 +33,7 @@ function ThisMOD.Settings( )
     SettingOption.type  = "int-setting"
     SettingOption.order = ThisMOD.Char
     SettingOption.setting_type  = "startup"
-    SettingOption.default_value = 10
+    SettingOption.default_value = 1000
     SettingOption.minimum_value = 1
     SettingOption.maximum_value = 65000
     SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
@@ -1032,7 +1032,7 @@ function ThisMOD.LoadRecipes( Info )
                 [ 'result' ] = 'express-compact',
                 [ 'energy_required' ] = 3,
             },
-        },		
+        },
     }
 
     -- Modificar los prototipos
@@ -1079,15 +1079,21 @@ end
 
 
 -- Identificar los objetos a compactar
-function ThisMOD.FindItem( )
+function ThisMOD.StartItems( )
 
     -- Contenedor de los items
     local Items = GPrefix.DeepCopy( GPrefix.Items )
 
     -- Crear los objetos compactados
+    ThisMOD.Information = { Break = true }
     for _, Item in pairs( Items ) do
         ThisMOD.Compact( Item, ThisMOD )
-    end
+    end GPrefix.createInformation( ThisMOD )
+
+    ThisMOD.Information = { Break = true }
+    for _, Item in pairs( Items ) do
+        ThisMOD.CreateRecipe( Item )
+    end GPrefix.createInformation( ThisMOD )
 end
 
 -- Crear un item compactado
@@ -1098,7 +1104,6 @@ function ThisMOD.Compact( OldItem, TheMOD )
     table.insert( AvoidTypes, "car" )
     table.insert( AvoidTypes, "gun" )
     table.insert( AvoidTypes, "armor" )
-    table.insert( AvoidTypes, "rail-planner" )
     table.insert( AvoidTypes, "selection-tool" )
     table.insert( AvoidTypes, "spider-vehicle" )
     table.insert( AvoidTypes, "belt-immunity-equipment" )
@@ -1106,9 +1111,6 @@ function ThisMOD.Compact( OldItem, TheMOD )
     -- Patrones a evitar
     local AvoidPatterns = { }
     table.insert( AvoidPatterns, "%-remote" )
-
-    -- Evitar los rieles
-    if OldItem.curved_rail then return end
 
     -- Evitar estos tipos
     if GPrefix.getKey( AvoidTypes, OldItem.type ) then return end
@@ -1122,25 +1124,11 @@ function ThisMOD.Compact( OldItem, TheMOD )
         if string.find( OldItem.name, Pattern ) then return end
     end
 
-    -- Existe el subgrupo
-    local SubGroup = ThisMOD.Prefix_MOD_ .. OldItem.subgroup
-    local Table = data.raw[ "item-subgroup" ][ SubGroup ]
-    if Table then goto JumpSubGroup end
-
-    -- Crear el subgrupo
-    SubGroup = OldItem.subgroup
-    Table = data.raw[ "item-subgroup" ][ SubGroup ]
-    Table = GPrefix.DeepCopy( Table )
-    Table.name = ThisMOD.Prefix_MOD_ .. OldItem.subgroup
-    Table.order = ThisMOD.Prefix_MOD_ .. OldItem.order
-    data:extend( { Table } )
-
-    -- Recepción del salto
-    :: JumpSubGroup ::
+    -- Crear el nuevo subgrupo
+    GPrefix.newItemSubgroup( OldItem, ThisMOD )
 
     -- Crear los prototipos
     ThisMOD.CreateItem( OldItem, TheMOD )
-    -- ThisMOD.CreateRecipe( Item, TheMOD )
 end
 
 -- Crear los objetos compactados
@@ -1163,7 +1151,11 @@ function ThisMOD.CreateItem( OldItem, TheMOD )
     table.insert( Properties, "localised_name" )
     for _, Property in pairs( Properties ) do
         NewItem[ Property ] = GPrefix.DeepCopy( OldItem[ Property ] )
-    end NewItem.subgroup = ThisMOD.Prefix_MOD_ .. OldItem.subgroup
+    end
+
+    NewItem.subgroup = string.gsub( GPrefix.Prefix_, "-", "%%-" )
+    NewItem.subgroup = string.gsub( OldItem.subgroup, NewItem.subgroup, "" )
+    NewItem.subgroup = ThisMOD.Prefix_MOD_ .. NewItem.subgroup
 
     -- Ya tiene un apodo
     if OldItem.localised_name then goto JumpLocalised end
@@ -1183,15 +1175,14 @@ function ThisMOD.CreateItem( OldItem, TheMOD )
     :: JumpLocalised ::
 
     -- Sobre escribir las descripciones
-    local Array = GPrefix.DeepCopy( NewItem.localised_name )
-    if Array[ 1 ] ~= "" then Array = { "", Array } end
-    NewItem.localised_description = Array
-    table.insert( Array, 2, { ThisMOD.Local .. "item-description" } )
-    table.insert( Array, 3, " " .. ThisMOD.Value .. " " )
-    table.insert( Array, 4, "[item=" .. NewItem.name .. "] " )
+    ThisMOD.addDescription( NewItem )
+    local Icon = { icon = "" }
+    Icon.icon = Icon.icon .. ThisMOD.Patch
+    Icon.icon = Icon.icon .. "icons/status.png"
+    Icon.icon_size = 32
 
     -- Agregar el pez de referencia
-    GPrefix.addIcon( OldItem, NewItem )
+    GPrefix.addIcon( OldItem, NewItem, Icon )
 
     ---> <---     ---> <---     ---> <---
 
@@ -1206,86 +1197,118 @@ function ThisMOD.CreateItem( OldItem, TheMOD )
     Items[ NewItem.name ] = NewItem
 end
 
+
 -- Crear las recetas de compactado
-function ThisMOD.CreateRecipe( OldItem, TheMOD )
+function ThisMOD.CreateRecipe( OldItem )
 
     -- Inicializar y renombrar la variable
     local Info = ThisMOD.Information or { }
     ThisMOD.Information = Info
 
-    local Items = Info.Items or { }
-    Info.Items = Items
+    local Recipes = Info.Recipes or { }
+    Info.Recipes = Recipes
 
-    -- Guardar el nuevo objeto
-    Items[ NewItem.name ] = NewItem
-
-    -- Variable contenedora
-    local NewItem = GPrefix.Items[ ThisMOD.Prefix_MOD_ .. OldItem.name ]
-
-    -- Valdación básica
-    if not NewItem then return end
-
-    -- Valores para la receta
-    local recipes      = { }
-    recipes.compact    = { }
-    recipes.uncompact  = { }
-
-    -- Valores para la descompresion
-    recipes.uncompact.name        = ThisMOD.Local .. "uncompact-" .. OldItem.name
-    recipes.uncompact.results     = { { type = "item", amount = ThisMOD.Value, name = OldItem.name } }
-    recipes.uncompact.ingredients = { { type = "item", amount = 1 , name = ThisMOD.Prefix_MOD_ .. OldItem.name } }
-    recipes.uncompact.action      = true
-
-    -- Valores para la compresion
-    recipes.compact.name        = ThisMOD.Local .. "compact-" .. OldItem.name
-    recipes.compact.results     = { { type = "item", amount = 1 , name = ThisMOD.Prefix_MOD_ .. OldItem.name } }
-    recipes.compact.ingredients = { { type = "item", amount = ThisMOD.Value, name = OldItem.name  } }
+    -- Es compactable??
+    local NameWithOutPrefix = string.gsub( GPrefix.Prefix_, "-", "%%-" )
+    NameWithOutPrefix = string.gsub( OldItem.name, NameWithOutPrefix, "" )
+    local NewName = ThisMOD.Prefix_MOD_ .. NameWithOutPrefix
+    local Item = GPrefix.Items[ NewName ]
+    if not Item then return end
 
     ---> <---     ---> <---     ---> <---
 
-    for Category, Recipe in pairs( recipes ) do
+    -- Valores para la receta
+    local Table      = { }
+    Table.compact    = { }
+    Table.uncompact  = { }
+
+    -- Valores para la descompresion
+    Table.uncompact.name        = GPrefix.Prefix_ .. "uncompact-" .. NameWithOutPrefix
+    Table.uncompact.results     = { { type = "item", amount = ThisMOD.Value, name = OldItem.name } }
+    Table.uncompact.ingredients = { { type = "item", amount = 1 , name = Item.name } }
+    Table.uncompact.action      = true
+
+    -- Valores para la compresion
+    Table.compact.name        = GPrefix.Prefix_ .. "compact-" .. NameWithOutPrefix
+    Table.compact.results     = { { type = "item", amount = 1 , name = Item.name } }
+    Table.compact.ingredients = { { type = "item", amount = ThisMOD.Value, name = OldItem.name } }
+
+    for Category, Recipe in pairs( Table ) do
 
         -- Copiar el objeto
-        local recipeNew = { }
+        local NewRecipe = { }
 
         -- Crear las recetas
-        recipeNew.name = Recipe.name
-        recipeNew.type = "recipe"
+        NewRecipe.name = Recipe.name
+        NewRecipe.type = "recipe"
 
-        recipeNew.order    = OldItem.order
-        recipeNew.enabled  = false
-        recipeNew.category = Category
-        recipeNew.subgroup = ThisMOD.Prefix_MOD_ .. OldItem.subgroup
+        NewRecipe.order    = Item.order
+        NewRecipe.enabled  = false
+        NewRecipe.category = ThisMOD.Prefix_MOD_ .. Category
+        local Find = string.gsub( GPrefix.Prefix_, "-", "%%-" )
+        NewRecipe.subgroup = string.gsub( Item.subgroup, Find, "" )
+        NewRecipe.subgroup = GPrefix.Prefix_ .. NewRecipe.subgroup
 
-        recipeNew.results      = Recipe.results
-        recipeNew.ingredients  = Recipe.ingredients
-        recipeNew.main_product = ""
+        NewRecipe.results      = Recipe.results
+        NewRecipe.ingredients  = Recipe.ingredients
+        NewRecipe.main_product = ""
 
-        recipeNew.energy_required     = 10
-        recipeNew.allow_decomposition = true
-        recipeNew.always_show_made_in = true
+        NewRecipe.energy_required = ThisMOD.Value
+        NewRecipe.hide_from_player_crafting = not Recipe.action
+        NewRecipe.localised_name = GPrefix.DeepCopy( Item.localised_name )
+        table.insert( NewRecipe.localised_name, 2, { ThisMOD.Local .. Category .. "-process" } )
+        table.insert( NewRecipe.localised_name, 3, " " )
 
-        recipeNew.hide_from_player_crafting = Recipe.action or false
+        -- Agregar la flecha
+        local Icon = { icon = "" }
+        Icon.icon = Icon.icon .. ThisMOD.Patch
+        Icon.icon = Icon.icon .. "icons/stacking-arrow-"
+        Icon.icon = Icon.icon .. ( Recipe.action and "u" or "d" )
+        Icon.icon = Icon.icon .. ".png"
 
-        -- Sobre escribir los nombres
-        local recipeName = { }
-        recipeNew.localised_name = recipeName
-        table.insert( recipeName, "" )
-        table.insert( recipeName, { "recipe-name." .. ThisMOD.Prefix_MOD_ .. Category } )
-        table.insert( recipeName, NewItem.localised_name )
+        Icon.scale = 0.3
+        Icon.icon_size = 64
+        Icon.icon_mipmaps = 1
 
-        -- Añadir el pez
-        GPrefix.addIcon( OldItem, recipeNew, Recipe.action )
+        GPrefix.addIcon( OldItem, NewRecipe, Icon )
 
         ---> <---     ---> <---     ---> <---
 
-        -- Guardar la nueva receta
-        data:extend( { recipeNew } )
-        GPrefix.addTechnology( OldItem.name, recipeNew.name )
-        local Result = recipeNew.results[ 1 ].name
-        GPrefix.Recipes[ Result ] = GPrefix.Recipes[ Result ] or { }
-        table.insert( GPrefix.Recipes[ Result ], recipeNew )
+        -- Guardar la nueva recera
+        Recipes[ OldItem.name ] = Recipes[ OldItem.name ] or { }
+        table.insert( Recipes[ OldItem.name ], NewRecipe )
     end
+end
+
+
+-- Establecer la descricción
+function ThisMOD.addDescription( Table )
+    local Array = GPrefix.DeepCopy( Table.localised_name )
+    if Array[ 1 ] ~= "" then Array = { "", Array } end
+    Table.localised_description = Array
+    table.insert( Array, 2, { ThisMOD.Local .. "item-description" } )
+    table.insert( Array, 3, " " .. ThisMOD.Value .. " " )
+    table.insert( Array, 4, "[" .. Table.type .. "=" .. Table.name .. "] " )
+end
+
+-- Verificar si el objeto o la receta esta compactado
+function ThisMOD.UpdateDescription( Table, TheMOD )
+
+    -- La descripción puede ser la que se busca
+    local Array = Table.localised_description
+    if not Array then return end
+    if not GPrefix.isTable( Array ) then return end
+    if #Array < 2 then return end
+    if Array[ 1 ] ~= "" then return end
+
+    -- La descripción es la que se busca
+    if not GPrefix.isTable( Array[ 2 ] ) then return end
+    local Find = ThisMOD.Prefix_MOD .. ".item-description"
+    if Array[ 2 ][ 1 ] ~= Find then return end
+
+    -- Se actualiza el cambio
+    Array = { localised_name = Array }
+    GPrefix.addLetter( Array, TheMOD.Char )
 end
 
 
@@ -1297,10 +1320,7 @@ function ThisMOD.DataFinalFixes( )
     ThisMOD.LoadCompact( )   GPrefix.createInformation( ThisMOD )
     ThisMOD.addTechnologie( )
 
-    ThisMOD.Information = { Break = true }
-    ThisMOD.FindItem( )   GPrefix.createInformation( ThisMOD )
-    GPrefix.Compact = function( OldItem, TheMOD ) ThisMOD.Compact( OldItem, TheMOD ) end
-    GPrefix.Compact = ThisMOD
+    ThisMOD.StartItems( )   GPrefix.Compact = ThisMOD
 end
 
 -- Cargar la configuración
