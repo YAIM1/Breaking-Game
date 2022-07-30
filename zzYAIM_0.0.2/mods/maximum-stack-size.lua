@@ -90,6 +90,16 @@ function ThisMOD.DataFinalFixes( )
         -- No se puede crear
         if GPrefix.getKey( Item.flags, "spawnable" ) then goto JumpItem end
 
+        -- Establecer el apodo
+        if Item.name == "solid-fuel" then
+            local Recipes = GPrefix.Recipes[ Item.name ]
+            for _, Recipe in pairs( Recipes or { } ) do
+                if not Recipe.localised_name then
+                    Recipe.localised_name = { "item-name." .. Item.name }
+                end
+            end
+        end
+
         -- Hacer el cambio
         Item.stack_size = ThisMOD.Value
         GPrefix.addLetter( Item, ThisMOD.Char )

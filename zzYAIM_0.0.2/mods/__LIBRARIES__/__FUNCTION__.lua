@@ -51,7 +51,7 @@ function GPrefix.getLength( Table )
     local Output = 0
 
     -- Contar campos
-    for _, _ in pairs( Table ) do
+    for _ in pairs( Table ) do
         Output = Output + 1
     end
 

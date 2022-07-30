@@ -48,43 +48,53 @@ end
 
 -- Crear los espacio para los MODs
 local MODs = { }
-table.insert( MODs, "pruebas" )
-table.insert( MODs, "compact-items" )
--- table.insert( MODs, "improve-compaction" )
-table.insert( MODs, "maximum-stack-size" )
-table.insert( MODs, "miniloader" )
-table.insert( MODs, "queue-to-research" )
--- table.insert( MODs, "start-with-items" )
--- table.insert( MODs, "micro-machines" )
--- table.insert( MODs, "better-module" )
-table.insert( MODs, "free-fluids" )
-table.insert( MODs, "armor-with-immunity" )
-table.insert( MODs, "equipament-1x1" )
-table.insert( MODs, "sort-items" )
-table.insert( MODs, "robots-with-unlimited-electricity" )
-table.insert( MODs, "force-a-slot-module" )
-table.insert( MODs, "minimum-electrical-consumption" )
-table.insert( MODs, "pollution-free-burner" )
-table.insert( MODs, "pollution-free-electricity" )
-table.insert( MODs, "force-production" )
+table.insert( MODs, { "pruebas", "p" } )
+table.insert( MODs, { "compact-items", "CI" } )
+-- table.insert( MODs, { "improve-compaction", "IC" } )
+table.insert( MODs, { "maximum-stack-size", "MaxStack" } )
+table.insert( MODs, { "miniloader", "Loaders" } )
+table.insert( MODs, { "queue-to-research", "QtR" } )
+-- table.insert( MODs, { "start-with-items", "SwI" } )
+-- table.insert( MODs, { "micro-machines", "MM" } )
+-- table.insert( MODs, { "better-module", "BM" } )
+-- table.insert( MODs, { "uncraft", "U" } )
+-- table.insert( MODs, { "Deepminer", "D" } )
+table.insert( MODs, { "free-fluids", "FF" } )
+table.insert( MODs, { "armor-with-immunity", "AwI" } )
+table.insert( MODs, { "equipament-1x1", "E1x1" } )
+table.insert( MODs, { "sort-items", "SI" } )
+table.insert( MODs, { "robots-with-unlimited-electricity", "RwUE" } )
+table.insert( MODs, { "force-a-slot-module", "FaSM" } )
+table.insert( MODs, { "minimum-electrical-consumption", "MEC" } )
+table.insert( MODs, { "pollution-free-burner", "PFB" } )
+table.insert( MODs, { "pollution-free-electricity", "PFE" } )
+table.insert( MODs, { "force-production", "FP" } )
 
 GPrefix.MODs = GPrefix.MODs or { }
-for Index, NameMOD in pairs( MODs ) do
+for Index, MOD in pairs( MODs ) do
 
-    -- Crea la variable si aún no ha sido creada
-    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
+    -- Renombrar las variables
+    local Name = MOD[ 1 ]
+    local Prefix = MOD[ 2 ]
 
-    -- Renombrar la variable
-    local TheMOD = GPrefix.MODs[ NameMOD ]
+    -- Crea la variable y renombrar la variable
+    local TheMOD = GPrefix.MODs[ Name ] or { }
+    GPrefix.MODs[ Name ] = TheMOD
+
+    -- Ruta de los archivos
+    TheMOD.Patch = ""
+    TheMOD.Patch = TheMOD.Patch .. "__" .. GPrefix.Prefix .. "__/"
+    TheMOD.Patch = TheMOD.Patch .. "mods/"
+    TheMOD.Patch = TheMOD.Patch .. "__MULTIMEDIES__/"
+    TheMOD.Patch = TheMOD.Patch .. Name .. "/"
 
     -- Guardar datos base
-    TheMOD.Name  = NameMOD
+    TheMOD.Name  = Name
     TheMOD.Index = Index
-    TheMOD.Patch = "__" .. GPrefix.Prefix .. "__/mods/__MULTIMEDIES__/" .. NameMOD .. "/"
-    TheMOD.Char = string.char( 64 + Index )
-    TheMOD.Prefix_MOD = GPrefix.Prefix_ .. NameMOD
+    TheMOD.Char  = string.char( 64 + Index )
+    TheMOD.Local = GPrefix.Prefix_ .. TheMOD.Name .. "."
+    TheMOD.Prefix_MOD  = GPrefix.Prefix_ .. Prefix
     TheMOD.Prefix_MOD_ = TheMOD.Prefix_MOD .. "-"
-    TheMOD.Local = TheMOD.Prefix_MOD .. "."
 end
 
 ---------------------------------------------------------------------------------------------------

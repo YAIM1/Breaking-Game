@@ -697,6 +697,7 @@ function ThisMOD.BuildWindowMainTitle( Data )
     StatusLabel.caption = { Data.GMOD.Local .. ( StatusMOD and "ON" or "OFF" ) }
     StatusLabel = StatusFlow.add( StatusLabel )
     StatusLabel.style = "bold_" .. ( StatusMOD and "green" or "red" ) .. "_label"
+
     if Data.Player.admin then
         local List = { "" }
         table.insert( List, "[font=default-bold]" )
@@ -705,7 +706,9 @@ function ThisMOD.BuildWindowMainTitle( Data )
         table.insert( List, { Data.GMOD.Local .. ( not StatusMOD and "ON" or "OFF" ) } )
         table.insert( List, "[/color][/font]" )
         StatusLabel.tooltip = List
-    else
+    end
+
+    if not Data.Player.admin then
         local List = { "" }
         table.insert( List, "[font=default-bold]" )
         table.insert( List, {Data.GMOD.Local .. "status" } )
@@ -3512,28 +3515,18 @@ end
 
 function ThisMOD.ClearScreen( Data )
 
-    -- Recorrer el los jugadores
-    for _, Player in pairs( game.players ) do
-
-        -- Consolidado de datos
-        local PlayerData = ThisMOD.CreateData( { Player = Player } )
-
         -- Cerrar la ventana principal
-        if PlayerData.GUI.Main and PlayerData.GUI.Main.WindowFrame then
-            PlayerData.Event = { }
-            PlayerData.Event.input_name = PlayerData.GMOD.Prefix_MOD
-            ThisMOD.ToggleWindowMain( PlayerData )
+        if Data.GUI.Main and Data.GUI.Main.WindowFrame then
+            Data.Event = { }
+            Data.Event.input_name = Data.GMOD.Prefix_MOD
+            ThisMOD.ToggleWindowMain( Data )
         end
-
-        -- Descativar el MOD
-        if PlayerData.gForce.Status then PlayerData.gForce.Status = nil end
 
         -- Cerrar la ventana de estado
-        if PlayerData.GUI.Status and PlayerData.GUI.Status.WindowFrame then
-            PlayerData.GUI.Status.WindowFrame.destroy( )
-            PlayerData.GUI.Status = nil
+        if Data.GUI.Status and Data.GUI.Status.WindowFrame then
+            Data.GUI.Status.WindowFrame.destroy( )
+            Data.GUI.Status = nil
         end
-    end
 end
 
 function ThisMOD.ShowTimeStatus( Data )
@@ -4731,7 +4724,7 @@ function ThisMOD.ShowTechnologiesResearched( Data )
     -- Contar las tecnologías investigadas
     local Count = 0
     for _, Technologies in pairs( Here.Levels ) do
-        for _, _ in pairs( Technologies ) do
+        for _ in pairs( Technologies ) do
             Count = Count + 1
         end
     end
@@ -4779,7 +4772,7 @@ function ThisMOD.ShowTechnologiesUnresearched( Data )
     -- Contar las tecnologías sin investigar
     local Count = 0
     for _, Technologies in pairs( Here.Levels ) do
-        for _, _ in pairs( Technologies ) do
+        for _ in pairs( Technologies ) do
             Count = Count + 1
         end
     end
@@ -4819,37 +4812,6 @@ end
 
 function ThisMOD.StartInitialize( )
 
-    -- Renombrar la variable
-    local Level = script.level
-
-    -- Modos de juego
-    local level_name = {
-
-        -- Disable
-        [ 'wave-defense' ] = true,
-        [ 'team-production' ] = true,
-
-        -- Enable
-        [ 'pvp' ] = nil,
-        [ 'supply' ] = nil,
-        [ 'sandbox' ] = nil,
-        [ 'freeplay' ] = nil,
-        [ 'rocket-rush' ] = nil,
-    }
-
-    ---> <---     ---> <---     ---> <---
-
-    -- Desactivar el MOD en campaña
-    if Level.campaign_name then ThisMOD.Active = false end
-
-    -- Desactivar el MOD de ser necesario
-    if level_name[ Level.level_name ] then ThisMOD.Active = false end
-
-    -- Desactivar esta función
-    if not ThisMOD.Active then return true end
-
-    ---> <---     ---> <---     ---> <---
-
     -- Inicializar el contenedor
     local Initialized = ThisMOD.Initialized or { }
     ThisMOD.Initialized = Initialized
@@ -4864,6 +4826,8 @@ function ThisMOD.StartInitialize( )
     local OldConnected = GPrefix.toString( Initialized )
     local NowConnected = GPrefix.toString( ListConnected )
     if NowConnected == OldConnected then return end
+
+    ---> <---     ---> <---     ---> <---
 
     -- Inicializar el contenedor
     local NewConnected = { }
@@ -4886,52 +4850,79 @@ function ThisMOD.StartInitialize( )
 
     -- Inicializar los jugadores recien conectados
     for _, Player in pairs( NewConnected ) do
-
-        -- Consolidar las variables
         local Data = ThisMOD.CreateData( { Player = Player } )
+        ThisMOD.EnableShortcut( Data )
+    end
 
-        -- Desahabilitar el botón
-        Player.set_shortcut_available( ThisMOD.Prefix_MOD, false )
+    -- Guardar el jugador como inicializado
+    ThisMOD.Initialized = ListConnected
+end
 
-        -- Destruir la ventana principal de estar abierta
-        if Data.GUI.Main and Data.GUI.Main.WindowFrame then
-            Data.GUI.Main.WindowFrame.destroy( )
+function ThisMOD.EnableShortcut( Data )
+
+    -- Desahabilitar el botón
+    Data.Player.set_shortcut_available( ThisMOD.Prefix_MOD, false )
+
+    -- Destruir la ventana principal de estar abierta
+    if Data.GUI.Main and Data.GUI.Main.WindowFrame then
+        Data.GUI.Main.WindowFrame.destroy( )
+    end
+
+    -- Destruir la ventana estado que este abierta
+    for _, Element in pairs( Data.Player.gui.screen.children ) do
+        if Element.name == ThisMOD.Prefix_MOD_ .. "status" then
+            Element.destroy( ) ThisMOD.StatusOpened = true break
         end
+    end
 
-        -- Destruir la ventana estado que este abierta
-        for _, Element in pairs( Player.gui.screen.children ) do
-            if Element.name == ThisMOD.Prefix_MOD_ .. "status" then
-                Element.destroy( ) ThisMOD.StatusOpened = true break
-            end
-        end
+    -- Validar si exiten tecnologías disponibles
+    if not Data.Force.technologies then return end
 
-        -- Validar si exiten tecnologías disponibles
-        if not Data.Force.technologies then goto JumpEnd end
+    ---> <---     ---> <---     ---> <---
 
-        -- Cargar las tecnologías en la RAM
-        ThisMOD.LoadTechnologies( Data )
+    -- Renombrar la variable
+    local Level = script.level
 
-        -- Agregar texto a traducir
-        ThisMOD.LoadTranslation( Data )
+    -- Modos de juego
+    local level_name = {
 
-        -- Validar la cola de las tecnologias
-        ThisMOD.ValidateQueue( Data )
+        -- Disable
+        [ 'wave-defense' ] = true,
+        [ 'team-production' ] = true,
 
-        -- Habilitar el botón
-        Player.set_shortcut_available( ThisMOD.Prefix_MOD, true )
+        -- Enable
+        [ 'pvp' ] = nil,
+        [ 'supply' ] = nil,
+        [ 'sandbox' ] = nil,
+        [ 'freeplay' ] = nil,
+        [ 'rocket-rush' ] = nil,
+    }
 
-        -- Reconstruir la ventana de estado
-        if ThisMOD.StatusOpened then
-            ThisMOD.BuildWindowStatus( Data )
-            ThisMOD.UpdateWindowStatus( Data )
-            ThisMOD.StatusOpened = nil
-        end
+    -- Desactivar el MOD en campaña
+    if Level.campaign_name then return end
 
-        -- Guardar el jugador como inicializado
-        Initialized[ Player.index ] = Player.name
+    -- Desactivar el MOD de ser necesario
+    if level_name[ Level.level_name ] then return end
 
-        -- Recepción del salto
-        :: JumpEnd ::
+    ---> <---     ---> <---     ---> <---
+
+    -- Cargar las tecnologías en la RAM
+    ThisMOD.LoadTechnologies( Data )
+
+    -- Agregar texto a traducir
+    ThisMOD.LoadTranslation( Data )
+
+    -- Validar la cola de las tecnologias
+    ThisMOD.ValidateQueue( Data )
+
+    -- Habilitar el botón
+    Data.Player.set_shortcut_available( ThisMOD.Prefix_MOD, true )
+
+    -- Reconstruir la ventana de estado
+    if ThisMOD.StatusOpened then
+        ThisMOD.BuildWindowStatus( Data )
+        ThisMOD.UpdateWindowStatus( Data )
+        ThisMOD.StatusOpened = nil
     end
 end
 
@@ -6194,6 +6185,7 @@ function ThisMOD.ResearchReversed( Event )
     -- Inicializar las variables
     Event.force = Event.force or Event.research.force
     local Data = ThisMOD.CreateData( Event )
+    if not Data.Technologies then return end
 
     -- Inicializar la tecnología en RAM
     local Technology = Event.research.name
@@ -6265,7 +6257,17 @@ function ThisMOD.Control( )
 
         -- Al cambiarce de grupo
         [ { "on_event", defines.events.on_player_changed_force } ] = function( Event )
+            if not ThisMOD.Initialized then return end
             ThisMOD.Initialized[ Event.player_index ] = nil
+        end,
+
+        -- Al eliminar el jugador
+        [ { "on_event", defines.events.on_pre_player_removed } ] = function( Event )
+            if not ThisMOD.Initialized then return end
+            ThisMOD.Initialized[ Event.player_index ] = nil
+
+            local Data = ThisMOD.CreateData( Event )
+            Data.gPlayer = nil
         end,
 
         ---> <---     ---> <---     ---> <---
@@ -6287,8 +6289,8 @@ function ThisMOD.Control( )
 
         ---> <---     ---> <---     ---> <---
 
-        -- Al presionar confirmar en la interfaz
-        [ { "on_event", defines.events.on_gui_confirmed } ] = function( Event )
+        -- Al cambiar el texto a buscar
+        [ { "on_event", defines.events.on_gui_text_changed } ] = function( Event )
             ThisMOD.SearchText( ThisMOD.CreateData( Event ) )
         end,
 
@@ -6326,8 +6328,9 @@ function ThisMOD.Control( )
         end,
 
         -- Eliminar todas las ventana
-        [ { "on_event", defines.events.on_surface_deleted } ] = ThisMOD.ClearScreen,
-
+        [ { "on_event", defines.events.on_pre_player_left_game  } ] = function( Event )
+            ThisMOD.ClearScreen( ThisMOD.CreateData( Event ) )
+        end,
     } )
 end
 
