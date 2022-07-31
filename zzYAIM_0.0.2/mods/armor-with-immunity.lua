@@ -55,133 +55,105 @@ ThisMOD.Settings( )
 -- Cargar la información para crear las armaduras
 function ThisMOD.LoadInformation(  )
 
-    -- Renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    local Damages = Info.Damages or { }
-    Info.Damages = Damages
-
-    local SubGroup = Info.SubGroup or { }
-    Info.SubGroup = SubGroup
-
-    -- Ingrediente opcional
-    local Fish = GPrefix.Items[ "raw-fish" ].name
-
-    -- Armadura modelo
-    Info.Base = "light-armor"
-
-    -- Ingredientes por defecto
-    Info.Ingredients = {
+    -- Información base
+    ThisMOD.Base = { }
+    ThisMOD.Base.Name = "light-armor"
+    ThisMOD.Base.Ingredients = {
         { "wood"      , 500 },
         { "coal"      , 500 },
         { "stone"     , 500 },
+        { "raw-fish"  ,  50 },
         { "iron-ore"  , 500 },
         { "copper-ore", 500 }
     }
 
-    -- Cargar todos los tipos de daños
+    -- Renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    local Items = Info.Items or { }
+    Info.Items = Items
+
+    local Recipes = Info.Recipes or { }
+    Info.Recipes = Recipes
+
+    -- Establecer es el order
+    local Order = string.char( 64 + GPrefix.getLength( data.raw[ "damage-type" ] ) + 1 )
+
+    -- Crear la mejor armadura 
+    local UltimateArmor = ThisMOD.CreateArmor( Items, "ultimate" )
+    UltimateArmor.order = Order
+
+    -- Crear la receta de la mejor armadura
+    local UltimateRecipe = ThisMOD.CreateRecipe( Recipes, "ultimate" )
+    UltimateRecipe.order = Order
+
+    -- Crear las demás armaduras
     for Damage, _ in pairs( data.raw[ "damage-type" ] ) do
-        table.insert( Damages, Damage )
-    end
 
-    -- Crear el espacio para las armaduras
-    Info.Armors = { }
+        -- Orden de la receta y el objeto
+        Order = string.char( 64 + GPrefix.getLength( Items ) )
 
-    -- Inicializar la infaormación de la mejor armadura
-    local Ultimate = { }
-    Ultimate.Name = "ultimate"
-    Ultimate.Ingredients = { }
-    Ultimate.Immunities = GPrefix.DeepCopy( Damages )
-    Ultimate.Order = string.char( 64 + 1 + #Damages )
-    Ultimate.Localised_name = { ThisMOD.Local .. "item-name", { ThisMOD.Local .. "ultimate" } }
-    Ultimate.Localised_description = { ThisMOD.Local .. "item-description", { ThisMOD.Local .. "ultimate" } }
+        -- Crear la armadura imune a un daño
+        local DamageArmor = ThisMOD.CreateArmor( Items, Damage )
+        DamageArmor.order = Order
 
-    -- Cargar los ingredientes de cada armadura
-    for Index, Damage in pairs( Damages ) do
-        local Armor = { }   table.insert( Info.Armors, Armor )
-        Armor.Order = string.char( 64 + Index )
-        Armor.Name = Damage   Armor.Immunities = { Damage }
-        Armor.Ingredients = GPrefix.DeepCopy( Info.Ingredients )
-        table.insert( Armor.Ingredients, { Fish, 50 } )
-        Armor.Localised_name = { ThisMOD.Local .. "item-name", { ThisMOD.Local .. Damage } }
-        Armor.Localised_description = { ThisMOD.Local .. "item-description", { ThisMOD.Local .. Damage } }
-    end
+        -- Agregar la inmunidad a las armaduras
+        table.insert( DamageArmor.resistances, { type = Damage, decrease = 0, percent = 100 } )
+        table.insert( UltimateArmor.resistances, { type = Damage, decrease = 0, percent = 100 } )
 
-    -- Agregar la armadura
-    table.insert( Info.Armors, Ultimate )
-end
+        -- Crear la receta para la armadura con inmunidad
+        local DamageRecipe = ThisMOD.CreateRecipe( Recipes, Damage )
+        DamageRecipe.order = Order
 
--- Crear las armaduras
-function ThisMOD.CreateArmors( )
-
-    -- Renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    -- Recorrer la información
-    for _, Armor in pairs( Info.Armors ) do
-
-        -- Copiar la armadura de muestra
-        local OldItem = GPrefix.Items[ Info.Base ]
-        local NewItem = GPrefix.DeepCopy( OldItem )
-        NewItem.order = Armor.Order
-        NewItem.name = Armor.Name
-        NewItem.localised_name = Armor.Localised_name
-        NewItem.localised_description = Armor.Localised_description
-        NewItem.resistances = { }
-
-        -- Establecer la resistencia de la armadura
-        for _, Damage in pairs( Armor.Immunities ) do
-            table.insert( NewItem.resistances,
-                { type = Damage, decrease = 0, percent = 100 }
-            )
-        end
-
-        -- Cargar los datos al juego
-        GPrefix.addItem( NewItem, ThisMOD )
-
-        -- Agregar la armadura a los ingredientes de la ultima armadura
-        local Ultimate = Info.Armors[ #Info.Armors ]
-        if Ultimate ~= Armor then
-            table.insert( Ultimate.Ingredients, { NewItem.name, 1 } )
-        end
+        -- Agregar los ingredientes a la receta
+        DamageRecipe.ingredients = GPrefix.DeepCopy( ThisMOD.Base.Ingredients )
+        table.insert( UltimateRecipe.ingredients, { ThisMOD.Prefix_MOD_ .. DamageArmor.name, 1 } )
     end
 end
 
--- Crear las recetas de las armaduras
-function ThisMOD.CreateRecipe( )
+-- Crear una armadura sin resistencia
+function ThisMOD.CreateArmor( Items, Name )
 
-    -- Renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
+    -- Inicializar la nueva armadura
+    local Item = GPrefix.Items[ ThisMOD.Base.Name ]
+    Item = GPrefix.DeepCopy( Item )
+    Items[ Name ] = Item
 
-    -- Recorrer la información
-    for _, Armor in pairs( Info.Armors ) do
+    -- Cambiar las propiedades
+    Item.name = Name
+    Item.resistances = { }
+    Item.localised_name = { ThisMOD.Local .. "item-name", { ThisMOD.Local .. Name } }
+    Item.localised_description = { ThisMOD.Local .. "item-description", { ThisMOD.Local .. Name } }
 
-        -- Copiar la receta de la armadura de muestra
-        local OldRecipe = GPrefix.Recipes[ Info.Base ][ 1 ]
-        local NewRecipe = GPrefix.DeepCopy( OldRecipe )
-        NewRecipe.localised_name = Armor.Localised_name
-        NewRecipe.enabled = true
-        NewRecipe.order = Armor.Order
-        NewRecipe.name = Armor.Name
+    -- Devolver los datos
+    return Item
+end
 
-        -- Asignar los ingredientes a la receta
-        NewRecipe.ingredients = { }
-        local ingredients = NewRecipe.ingredients
-        for _, Ingredient in pairs( Armor.Ingredients ) do
-            local ingredient  = { }
-            ingredient.type   = "item"
-            ingredient.name   = Ingredient[ 1 ]
-            ingredient.amount = Ingredient[ 2 ]
-            table.insert( ingredients, ingredient )
-        end
+-- Crear una receta para la armadura
+function ThisMOD.CreateRecipe( Recipes, Name )
 
-        -- Cargar los datos al juego
-        GPrefix.addRecipe( NewRecipe, ThisMOD )
-        GPrefix.addTechnology( Info.Base, NewRecipe.name )
-    end
+    -- Inicializar la receta para la armadura
+    local Recipe = GPrefix.Recipes[ ThisMOD.Base.Name ]
+    Recipe = GPrefix.DeepCopy( Recipe[ 1 ] )
+    Recipes[ "" ] = Recipes[ "" ] or { }
+    table.insert( Recipes[ "" ], Recipe )
+
+    -- Eliminar las propiedades inecesarios
+    Recipe.normal = nil
+    Recipe.results = nil
+    Recipe.expensive = nil
+    Recipe.ingredient = nil
+    Recipe.Localised_description = nil
+
+    -- Establece las propiedades basicas
+    Recipe.name = Name
+    Recipe.result = Name
+    Recipe.ingredients = { }
+    Recipe.localised_name = { ThisMOD.Local .. "item-name", { ThisMOD.Local .. Name } }
+
+    -- Devolver los datos
+    return Recipe
 end
 
 -- Configuración del MOD

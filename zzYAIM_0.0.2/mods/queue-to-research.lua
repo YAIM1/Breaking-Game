@@ -3513,22 +3513,6 @@ function ThisMOD.getButton( Data )
     end
 end
 
-function ThisMOD.ClearScreen( Data )
-
-        -- Cerrar la ventana principal
-        if Data.GUI.Main and Data.GUI.Main.WindowFrame then
-            Data.Event = { }
-            Data.Event.input_name = Data.GMOD.Prefix_MOD
-            ThisMOD.ToggleWindowMain( Data )
-        end
-
-        -- Cerrar la ventana de estado
-        if Data.GUI.Status and Data.GUI.Status.WindowFrame then
-            Data.GUI.Status.WindowFrame.destroy( )
-            Data.GUI.Status = nil
-        end
-end
-
 function ThisMOD.ShowTimeStatus( Data )
 
     -- Cargar espacio de respuesta
@@ -6325,11 +6309,6 @@ function ThisMOD.Control( )
         -- Guardar la nueva posición de la ventana flotante
         [ { "on_event", defines.events.on_gui_location_changed } ] = function( Event )
             ThisMOD.SaveLocationWindowStatus( ThisMOD.CreateData( Event ) )
-        end,
-
-        -- Eliminar todas las ventana
-        [ { "on_event", defines.events.on_pre_player_left_game  } ] = function( Event )
-            ThisMOD.ClearScreen( ThisMOD.CreateData( Event ) )
         end,
     } )
 end

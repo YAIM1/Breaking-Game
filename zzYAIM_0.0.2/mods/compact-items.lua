@@ -1189,13 +1189,16 @@ function ThisMOD.CreateItem( OldItem, TheMOD )
 
     -- Sobre escribir las descripciones
     ThisMOD.addDescription( NewItem )
+
+
     local Icon = { icon = "" }
     Icon.icon = Icon.icon .. ThisMOD.Patch
     Icon.icon = Icon.icon .. "icons/status.png"
     Icon.icon_size = 32
 
     -- Agregar el pez de referencia
-    GPrefix.addIcon( OldItem, NewItem, Icon )
+    GPrefix.CreateIcons( NewItem )
+    table.insert( NewItem.icons, Icon )
 
     ---> <---     ---> <---     ---> <---
 
@@ -1273,29 +1276,36 @@ function ThisMOD.CreateRecipe( OldItem )
         table.insert( NewRecipe.localised_name, 2, { ThisMOD.Local .. Category .. "-process" } )
         table.insert( NewRecipe.localised_name, 3, " " )
 
+        -- Duplicar la imagen del objeto
+        NewRecipe.icon = Item.icon
+        NewRecipe.icons = GPrefix.DeepCopy( Item.icons )
+        NewRecipe.icon_size = Item.icon_size
+        NewRecipe.icon_mipmaps = Item.icon_mipmaps
+        GPrefix.CreateIcons( NewRecipe )
+
         -- Variable contenedora
-        local Icon = { }
+        local List = { }
 
         -- Agregar el brillo
-        Icon = { icon = "" }
-        Icon.icon = Icon.icon .. ThisMOD.Patch
-        Icon.icon = Icon.icon .. "icons/status.png"
-        Icon.icon_size = 32
+        List = { icon = "" }
+        List.icon = List.icon .. ThisMOD.Patch
+        List.icon = List.icon .. "icons/status.png"
+        List.icon_size = 32
 
-        GPrefix.addIcon( OldItem, NewRecipe, Icon )
+        table.insert( NewRecipe.icons, List )
 
         -- Agregar la flecha
-        Icon = { icon = "" }
-        Icon.icon = Icon.icon .. ThisMOD.Patch
-        Icon.icon = Icon.icon .. "icons/stacking-arrow-"
-        Icon.icon = Icon.icon .. ( Recipe.action and "u" or "d" )
-        Icon.icon = Icon.icon .. ".png"
+        List = { icon = "" }
+        List.icon = List.icon .. ThisMOD.Patch
+        List.icon = List.icon .. "icons/stacking-arrow-"
+        List.icon = List.icon .. ( Recipe.action and "u" or "d" )
+        List.icon = List.icon .. ".png"
 
-        Icon.scale = 0.3
-        Icon.icon_size = 64
-        Icon.icon_mipmaps = 1
+        List.scale = 0.3
+        List.icon_size = 64
+        List.icon_mipmaps = 1
 
-        GPrefix.addIcon( NewRecipe, NewRecipe, Icon )
+        table.insert( NewRecipe.icons, List )
 
         ---> <---     ---> <---     ---> <---
 
@@ -1336,22 +1346,8 @@ function ThisMOD.UpdateDescription( Table, TheMOD )
     GPrefix.addLetter( Array, TheMOD.Char )
 end
 
-function ThisMOD.KeySequence( )
-    local Table = { }
-    Table.type = "custom-input"
-    Table.localised_name = { ThisMOD.Local .. "setting-name"}
-    Table.name = ThisMOD.Prefix_MOD
-    Table.key_sequence = "CONTROL + M"
-    data:extend( { Table } )
-end
-
--- Configuración del MOD
-function ThisMOD.DataFinalFixes( )
-    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
-    if not ThisMOD.Active then return end
-ThisMOD.KeySequence( )
-    ThisMOD.LoadCompact( )   GPrefix.createInformation( ThisMOD )
-    ThisMOD.StartItems( )   GPrefix.Compact = ThisMOD
+-- Asiganr la descompactación al jugador
+function ThisMOD.setCraftingCategories( )
 
     local CharacterCategories = data.raw[ 'character' ][ 'character' ]
     CharacterCategories = CharacterCategories[ 'crafting_categories' ]
@@ -1360,6 +1356,16 @@ ThisMOD.KeySequence( )
     local GodCategories = data.raw[ 'god-controller' ][ 'default' ]
     GodCategories = GodCategories[ 'crafting_categories' ]
     table.insert( GodCategories, ThisMOD.Prefix_MOD_ .. 'uncompact' )
+end
+
+-- Configuración del MOD
+function ThisMOD.DataFinalFixes( )
+    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if not ThisMOD.Active then return end
+
+    ThisMOD.LoadCompact( )   GPrefix.createInformation( ThisMOD )
+    ThisMOD.StartItems( )   GPrefix.Compact = ThisMOD
+    ThisMOD.setCraftingCategories( )
 end
 
 -- Cargar la configuración
@@ -1516,6 +1522,7 @@ function ThisMOD.BeforeLogout( Data )
     ThisMOD.Players[ Data.Player.index ] = nil
 end
 
+-- Configuración del MOD
 function ThisMOD.Control( )
     if not GPrefix.getKey( { "control" }, GPrefix.File ) then return end
     if not ThisMOD.Active then return end

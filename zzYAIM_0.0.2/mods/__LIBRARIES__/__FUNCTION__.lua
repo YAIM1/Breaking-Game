@@ -380,105 +380,22 @@ function GPrefix.ReplaceResult( Recipe, OldNameItem, NewNameItem )
 end
 
 
--- Call example 1. GPrefix.addIcon( OldItem, NewItem )
--- Call example 2. GPrefix.addIcon( OldItem, NewItem, true )
--- Call example 3. GPrefix.addIcon( OldItem, NewItem, false )
--- Call example 4. GPrefix.addIcon( OldItem, NewItem, newIcon )
+-- Call example. GPrefix.CreateIcons( Table )
 
-function GPrefix.addIcon( OldItem, NewItem, newIcon )
+function GPrefix.CreateIcons( Table )
 
-    -- Variable contenedora
-    local icons = { }
+    -- No hace falta crear la tabla
+    if Table.icons then return end
 
-    -- Imagenes solapadas
-    if OldItem.icons then
-        for _, icon in pairs( OldItem.icons ) do
-            icon = GPrefix.DeepCopy( icon )
-            table.insert( icons, icon )
-        end
-    end
+    -- Crear la nueva tabla
+    local Icon = { }
+    Icon.icon = Table.icon
+    Icon.icon_size = Table.icon_size
+    Icon.icon_mipmaps = Table.icon_mipmaps
 
-    -- Imagen unica
-    if OldItem.icon and not OldItem.icons then
-
-        local icon = {
-            icon = OldItem.icon,
-            icon_size = OldItem.icon_size,
-            icon_mipmaps = OldItem.icon_mipmaps
-        }
-
-        NewItem.icon  = nil
-        table.insert( icons, icon )
-    end
-
-    -- Example 2. Crear la imagen solapada de descompactado
-    if GPrefix.isBoolean( newIcon ) and newIcon then
-
-        -- Variable contenedora
-        local Icons = { }
-
-        -- Agregar la imagen de fondo
-        if not false then
-            local icon = { }
-            icon.icon = "__zzYAIM__/mods/__MULTIMEDIES__/blank.png"
-            icon.icon_size = 64
-            icon.icon_mipmaps = 4
-            table.insert( Icons, icon )
-        end
-
-        -- Cuadricula de imagenes
-        for X = -1, 1, 1 do
-            for Y = -1, 1, 1 do
-                for _, icon in pairs( icons ) do
-                    icon = GPrefix.DeepCopy( icon )
-                    icon.scale = 0.25
-                    icon.shift = { X * 8, Y * 8 }
-                    table.insert( Icons, icon )
-                end
-            end
-        end
-
-        -- Imagen central
-        for _, icon in pairs( icons ) do
-            icon = GPrefix.DeepCopy( icon )
-            icon.scale = 0.3
-            table.insert( Icons, icon )
-        end
-
-        -- Guardar las nuemas imagenes
-        icons = Icons
-    end
-
-    -- La última image a agregar
-    local lastIcon = { }
-    lastIcon.icon_size = 64
-    lastIcon.icon_mipmaps = 4
-
-    -- Example 1, 2 y 3. Agregar el pez de referencia
-    if GPrefix.isBoolean( newIcon ) or GPrefix.isNil( newIcon ) then
-        lastIcon.icon = GPrefix.Items[ "raw-fish" ].icon
-        lastIcon.scale = 0.3
-    end
-
-    -- Example 1 y 3. Mover pez a la derecha
-    if not newIcon then lastIcon.shift = { 8, -8 } end
-
-    -- Example 2. Mover pez a la izquierda
-    if GPrefix.isBoolean( newIcon ) and newIcon then
-        lastIcon.shift = { -8, 8 }
-    end
-
-    -- Example 4. Agregar imagen adicional
-    if GPrefix.isTable( newIcon ) then
-        for key, value in pairs( newIcon ) do
-            lastIcon[ key ] = value
-        end
-    end
-
-    -- Establecer la imagen del nuevo objeto
-    NewItem.icon_size = 64
-    table.insert( icons, lastIcon )
-    NewItem.icons = icons
+    -- Hacer el cambio
+    Table.icon = nil
+    Table.icons = { Icon }
 end
 
 -- Call example. GPrefix.addTechnology( OldItemName, NewRecipeName )

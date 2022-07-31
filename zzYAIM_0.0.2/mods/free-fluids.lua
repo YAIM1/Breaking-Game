@@ -326,7 +326,8 @@ function ThisMOD.CreateFluidRecipe( )
                 -- Receta del fluido
                 local Recipe = { }
                 Recipe.type = "recipe"
-                Recipe.icons = Fluid.icons
+                Recipe.icon = Fluid.icon
+                Recipe.icons = GPrefix.DeepCopy( Fluid.icons )
                 Recipe.icon_size = Fluid.icon_size
                 Recipe.icon_mipmaps = Fluid.icon_mipmaps
                 Recipe.hide_from_player_crafting = true
@@ -362,15 +363,16 @@ function ThisMOD.CreateFluidRecipe( )
 
                 -- Agregar la equis
                 if Action == "Delete" then
-                    local List = { }
+                    GPrefix.CreateIcons( Recipe )
 
+                    local List = { }
                     List.icon = "__core__/graphics/cancel.png"
                     List.icon_size = 64
                     List.icon_mipmaps = 1
 
                     List.scale = 0.3
 
-                    GPrefix.addIcon( Fluid, Recipe, List )
+                    table.insert( Recipe.icons, List )
                 end
 
                 -- Guardar el fluido
@@ -423,8 +425,8 @@ function ThisMOD.LoadMachine( )
     Info.Recipes = Recipes
 
     -- Eliminar los ingredientes
-    local Recipe = Recipes[ Base ][ 1 ]
-    for _, Table in ipairs( { Recipe, Recipe.normal, Recipe.expensive } ) do
+    local RecipeCost = Recipes[ Base ][ 1 ]
+    for _, Table in ipairs( { RecipeCost, RecipeCost.normal, RecipeCost.expensive } ) do
         if not( Table.ingredient or Table.ingredients ) then goto Jump end
         Table.ingredient = nil   Table.ingredients = { }
         :: Jump ::
