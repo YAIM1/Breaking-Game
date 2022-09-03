@@ -370,14 +370,14 @@ local function LoadOnTick( )
     GPrefix.addOnTick = addOnTick
     GPrefix.addLocalised  = addLocalised
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Codigo ejecutado en cada tick   1 Segundo == 60 tick
     GPrefix.addEvent( {
         [ { "on_event", defines.events.on_tick } ] =  StarOnTick
     } )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Datos básicos
     local Data = { }
@@ -393,7 +393,7 @@ local function LoadOnTick( )
     -- Cargar el evento
     GPrefix.addOnTick( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Asignar la función de traducción
     GPrefix.addEvent( {
@@ -424,10 +424,13 @@ Control( )
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Funciones para agregar informacion a las tablas
+-- Funciones para agregar informacion al juego
 local function add( Type, Table, ThisMOD )
-    -- Agregar a la lista de objestos del juego
+
+    -- Agregar la letra
     if ThisMOD then GPrefix.addLetter( Table, ThisMOD ) end
+
+    -- Guardar el prototipo
     GPrefix[ Type ][ Table.name ] = GPrefix[ Type ][ Table.name ] or { }
     GPrefix[ Type ][ Table.name ] = Table
     data:extend( { Table } )
@@ -588,7 +591,7 @@ local function duplicateEntity( Entity, ThisMOD )
     end
 end
 
--- Cargar la información desde data.raw
+-- Clasificar la información desde data.raw
 local function LoadData( )
 
     -- Crear las variables
@@ -899,15 +902,20 @@ local function DataFinalFixes( )
             local Items = ThisMOD.Information.Items
             Items = GPrefix.DeepCopy( Items )
 
+            -- Crea el objeto compactado
             GPrefix.Compact.Information = nil
             for _, Item in pairs( Items ) do
                 GPrefix.Compact.Compact( Item, GPrefix.Compact )
             end create( "Items", GPrefix.Compact )
 
+            -- Crear las recetas para compactar el objeto
             GPrefix.Compact.Information = nil
             for _, Item in pairs( Items ) do
                 GPrefix.Compact.CreateRecipe( Item )
             end createRecipe( GPrefix.Compact )
+
+            -- Crear una versión mejorada de ser posible
+            if GPrefix.Improve then GPrefix.Improve.LoadInformation( ) end
         end
     end
 end

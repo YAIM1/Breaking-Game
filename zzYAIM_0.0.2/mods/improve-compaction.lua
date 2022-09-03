@@ -35,101 +35,19 @@ function ThisMOD.Settings( )
     SettingOption.setting_type   = "startup"
     SettingOption.default_value  = true
     SettingOption.allowed_values = { "true", "false" }
-    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
-    local List = { }
-    table.insert( List, "" )
-    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
-    table.insert( List, { ThisMOD.Local .. "setting-name" } )
-    SettingOption.localised_name = List
+    local Name = { }
+    table.insert( Name, "" )
+    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
+    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
+    if ThisMOD.Requires then
+        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+    end SettingOption.localised_name = Name
 
-    data:extend( { SettingOption } )
-end
-
--- Cargar la configuración
-ThisMOD.Settings( )
-
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
-
--- Cargar las infomación
-function ThisMOD.LoadInformation( )
-end
-
--- Configuración del MOD
-function ThisMOD.DataFinalFixes( )
-    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
-    if not ThisMOD.Active then return end
-
-    ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
-end
-
--- Cargar la configuración
-ThisMOD.DataFinalFixes( )
-
----------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
----------------------------------------------------------------------------------------------------
-
---> compact-items.lua <--
-
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
-
--- Contenedor de este MOD
-local ThisMOD = { }
-
--- Cargar información de este MOD
-if true then
-
-    -- Identifica el mod que se está usando
-    local NameMOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
-
-    -- Crear la vareble si no existe
-    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
-
-    -- Guardar en el acceso rapido
-    ThisMOD = GPrefix.MODs[ NameMOD ]
-end
-
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
-
--- Configuración del MOD
-function ThisMOD.Settings( )
-    if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
-
-    local SettingOption =  { }
-    SettingOption.name  = ThisMOD.Prefix_MOD
-    SettingOption.type  = "bool-setting"
-    SettingOption.order = ThisMOD.Char
-    SettingOption.setting_type   = "startup"
-    SettingOption.default_value  = true
-    SettingOption.allowed_values = { "true", "false" }
-    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
-
-    local List = { }
-    table.insert( List, "" )
-    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
-    table.insert( List, { ThisMOD.Local .. "setting-name" } )
-    SettingOption.localised_name = List
+    local Description = { ThisMOD.Local .. "setting-description" }
+    if ThisMOD.Requires then
+        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+    end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
 end
@@ -142,3435 +60,1475 @@ ThisMOD.Settings( )
 
 -- Cargar las infomación
 function ThisMOD.LoadInformation( )
-end
 
--- Configuración del MOD
-function ThisMOD.DataFinalFixes( )
-    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
-    if not ThisMOD.Active then return end
+    -- Inicializar los valores
+    local AllRecipes = ThisMOD.Requires.Information.Recipes
 
-    ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
-end
+    local Find = ""
+    Find = ThisMOD.Requires.Prefix_MOD_
+    Find = string.gsub( Find, "-", "%%-" )
 
--- Cargar la configuración
-ThisMOD.DataFinalFixes( )
+    -- Revisar las recetas
+    for _, Recipes in pairs( AllRecipes ) do
 
----------------------------------------------------------------------------------------------------
+        -- Copiar los valores básicos
+        local Data = { }
 
+        -- Identifica la receta
+        for _, Recipe in pairs( Recipes ) do
+            local Name = ""
 
+            Name = Recipe.ingredients[ 1 ].name
+            if string.find( Name, Find ) then
+                Data.Uncompact = Recipe
+            end
 
+            Name = Recipe.results[ 1 ].name
+            if string.find( Name, Find ) then
+                Data.Compact = Recipe
+            end
+        end
 
+        -- Identifica el objeto a afectar
+        Data.Item = Data.Compact.ingredients[ 1 ]
+        Data.Item = GPrefix.Items[ Data.Item.name ]
+        Data.Item = GPrefix.DeepCopy( Data.Item )
 
+        -- -- Valdación básica
+        -- if string.find( Data.Item.name, Find ) then goto JumpItem end
 
+        -- -- Mejoras en los objetos
+        ThisMOD.ImproveAmmo( Data )
+        ThisMOD.ImproveFuel( Data )
+        ThisMOD.ImproveModule( Data )
+        ThisMOD.ImproveCapsule( Data )
+        ThisMOD.ImproveRepairTool( Data )
 
+        -- Mejoras en los equipos
+        ThisMOD.ImproveEquipament( Data )
 
-local _xXx_ = {
-	[ 'Entities' ] = {
-		[ 'transport-belt-beltbox' ] = {
-			[ 'type' ] = 'furnace',
-			[ 'name' ] = 'transport-belt-beltbox',
-			[ 'localised_description' ] = {
-				[ 1 ] = 'entity-description.deadlock-beltbox',
-			},
-			[ 'icons' ] = {
-				[ 1 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-base.png',
-				},
-				[ 2 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-mask.png',
-					[ 'tint' ] = {
-						[ 'r' ] = 210,
-						[ 'g' ] = 180,
-						[ 'b' ] = 80,
-					},
-				},
-			},
-			[ 'icon_size' ] = 64,
-			[ 'icon_mipmaps' ] = 4,
-			[ 'flags' ] = {
-				[ 1 ] = 'placeable-neutral',
-				[ 2 ] = 'placeable-player',
-				[ 3 ] = 'player-creation',
-			},
-			[ 'animation' ] = {
-				[ 'layers' ] = {
-					[ 1 ] = {
-						[ 'hr_version' ] = {
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-base.png',
-							[ 'animation_speed' ] = 1,
-							[ 'priority' ] = 'high',
-							[ 'frame_count' ] = 60,
-							[ 'line_length' ] = 10,
-							[ 'height' ] = 96,
-							[ 'scale' ] = 0.5,
-							[ 'shift' ] = {
-								[ 1 ] = 0,
-								[ 2 ] = 0,
-							},
-							[ 'width' ] = 96,
-						},
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-base.png',
-						[ 'animation_speed' ] = 1,
-						[ 'priority' ] = 'high',
-						[ 'frame_count' ] = 60,
-						[ 'line_length' ] = 10,
-						[ 'height' ] = 48,
-						[ 'scale' ] = 1,
-						[ 'shift' ] = {
-							[ 1 ] = 0,
-							[ 2 ] = 0,
-						},
-						[ 'width' ] = 48,
-					},
-					[ 2 ] = {
-						[ 'hr_version' ] = {
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-mask.png',
-							[ 'animation_speed' ] = 1,
-							[ 'priority' ] = 'high',
-							[ 'repeat_count' ] = 60,
-							[ 'height' ] = 96,
-							[ 'scale' ] = 0.5,
-							[ 'shift' ] = {
-								[ 1 ] = 0,
-								[ 2 ] = 0,
-							},
-							[ 'width' ] = 96,
-							[ 'tint' ] = {
-								[ 'r' ] = 210,
-								[ 'g' ] = 180,
-								[ 'b' ] = 80,
-							},
-						},
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-mask.png',
-						[ 'animation_speed' ] = 1,
-						[ 'priority' ] = 'high',
-						[ 'repeat_count' ] = 60,
-						[ 'height' ] = 48,
-						[ 'scale' ] = 1,
-						[ 'shift' ] = {
-							[ 1 ] = 0,
-							[ 2 ] = 0,
-						},
-						[ 'width' ] = 48,
-						[ 'tint' ] = {
-							[ 'r' ] = 210,
-							[ 'g' ] = 180,
-							[ 'b' ] = 80,
-						},
-					},
-					[ 3 ] = {
-						[ 'hr_version' ] = {
-							[ 'draw_as_shadow' ] = true,
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-shadow.png',
-							[ 'animation_speed' ] = 1,
-							[ 'frame_count' ] = 60,
-							[ 'line_length' ] = 10,
-							[ 'height' ] = 96,
-							[ 'scale' ] = 0.5,
-							[ 'shift' ] = {
-								[ 1 ] = 0.5,
-								[ 2 ] = 0,
-							},
-							[ 'width' ] = 144,
-						},
-						[ 'draw_as_shadow' ] = true,
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-shadow.png',
-						[ 'animation_speed' ] = 1,
-						[ 'frame_count' ] = 60,
-						[ 'line_length' ] = 10,
-						[ 'height' ] = 48,
-						[ 'scale' ] = 1,
-						[ 'shift' ] = {
-							[ 1 ] = 0.5,
-							[ 2 ] = 0,
-						},
-						[ 'width' ] = 72,
-					},
-				},
-			},
-			[ 'working_visualisations' ] = {
-				[ 1 ] = {
-					[ 'animation' ] = {
-						[ 'hr_version' ] = {
-							[ 'animation_speed' ] = 1,
-							[ 'blend_mode' ] = 'additive',
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-working.png',
-							[ 'frame_count' ] = 30,
-							[ 'line_length' ] = 10,
-							[ 'height' ] = 96,
-							[ 'priority' ] = 'high',
-							[ 'scale' ] = 0.5,
-							[ 'tint' ] = {
-								[ 'r' ] = 225,
-								[ 'g' ] = 210,
-								[ 'b' ] = 160,
-							},
-							[ 'width' ] = 96,
-						},
-						[ 'animation_speed' ] = 1,
-						[ 'blend_mode' ] = 'additive',
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-working.png',
-						[ 'frame_count' ] = 30,
-						[ 'line_length' ] = 10,
-						[ 'height' ] = 48,
-						[ 'priority' ] = 'high',
-						[ 'tint' ] = {
-							[ 'r' ] = 210,
-							[ 'g' ] = 180,
-							[ 'b' ] = 80,
-						},
-						[ 'width' ] = 48,
-					},
-					[ 'light' ] = {
-						[ 'color' ] = {
-							[ 'r' ] = 225,
-							[ 'g' ] = 210,
-							[ 'b' ] = 160,
-						},
-						[ 'intensity' ] = 0.4,
-						[ 'size' ] = 3,
-						[ 'shift' ] = {
-							[ 1 ] = 0,
-							[ 2 ] = 0.25,
-						},
-					},
-				},
-			},
-			[ 'dying_explosion' ] = 'explosion',
-			[ 'corpse' ] = 'small-remnants',
-			[ 'minable' ] = {
-				[ 'hardness' ] = 0.2,
-				[ 'mining_time' ] = 0.5,
-				[ 'result' ] = 'transport-belt-beltbox',
-			},
-			[ 'module_specification' ] = {
-				[ 'module_slots' ] = 0,
-				[ 'module_info_icon_shift' ] = {
-					[ 1 ] = 0,
-					[ 2 ] = 0.25,
-				},
-			},
-			[ 'allowed_effects' ] = {
-				[ 1 ] = 'consumption',
-			},
-			[ 'max_health' ] = 180,
-			[ 'collision_box' ] = {
-				[ 1 ] = {
-					[ 1 ] = -0.2,
-					[ 2 ] = -0.2,
-				},
-				[ 2 ] = {
-					[ 1 ] = 0.2,
-					[ 2 ] = 0.2,
-				},
-			},
-			[ 'selection_box' ] = {
-				[ 1 ] = {
-					[ 1 ] = -0.5,
-					[ 2 ] = -0.5,
-				},
-				[ 2 ] = {
-					[ 1 ] = 0.5,
-					[ 2 ] = 0.5,
-				},
-			},
-			[ 'drawing_box' ] = {
-				[ 1 ] = {
-					[ 1 ] = -0.5,
-					[ 2 ] = -0.5,
-				},
-				[ 2 ] = {
-					[ 1 ] = 0.5,
-					[ 2 ] = 0.5,
-				},
-			},
-			[ 'result_inventory_size' ] = 1,
-			[ 'source_inventory_size' ] = 1,
-			[ 'crafting_categories' ] = {
-				[ 1 ] = 'stacking',
-				[ 2 ] = 'unstacking',
-			},
-			[ 'crafting_speed' ] = 1,
-			[ 'energy_source' ] = {
-				[ 'type' ] = 'electric',
-				[ 'emissions_per_minute' ] = 3,
-				[ 'usage_priority' ] = 'secondary-input',
-				[ 'drain' ] = '15kW',
-			},
-			[ 'energy_usage' ] = '90kW',
-			[ 'resistances' ] = {
-				[ 1 ] = {
-					[ 'type' ] = 'fire',
-					[ 'percent' ] = 50,
-				},
-			},
-			[ 'vehicle_impact_sound' ] = {
-				[ 'filename' ] = '__base__/sound/car-metal-impact.ogg',
-				[ 'volume' ] = 1,
-			},
-			[ 'working_sound' ] = {
-				[ 'match_speed_to_activity' ] = true,
-				[ 'idle_sound' ] = {
-					[ 'filename' ] = '__base__/sound/idle1.ogg',
-					[ 'volume' ] = 0.6,
-				},
-				[ 'sound' ] = {
-					[ 'filename' ] = '__deadlock-beltboxes-loaders__/sounds/fan.ogg',
-					[ 'volume' ] = 1,
-				},
-				[ 'max_sounds_per_type' ] = 3,
-			},
-			[ 'show_recipe_icon' ] = true,
-			[ 'fast_replaceable_group' ] = 'transport-belt',
-			[ 'next_upgrade' ] = 'fast-transport-belt-beltbox',
-			[ 'localised_name' ] = {
-				[ 1 ] = '',
-				[ 2 ] = {
-					[ 1 ] = 'entity-name.transport-belt-beltbox',
-				},
-				[ 3 ] = ' [',
-				[ 4 ] = ' B',
-				[ 5 ] = ' ]',
-			},
-		},
-		[ 'fast-transport-belt-beltbox' ] = {
-			[ 'type' ] = 'furnace',
-			[ 'name' ] = 'fast-transport-belt-beltbox',
-			[ 'localised_description' ] = {
-				[ 1 ] = 'entity-description.deadlock-beltbox',
-			},
-			[ 'icons' ] = {
-				[ 1 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-base.png',
-				},
-				[ 2 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-mask.png',
-					[ 'tint' ] = {
-						[ 'r' ] = 210,
-						[ 'g' ] = 60,
-						[ 'b' ] = 60,
-					},
-				},
-			},
-			[ 'icon_size' ] = 64,
-			[ 'icon_mipmaps' ] = 4,
-			[ 'flags' ] = {
-				[ 1 ] = 'placeable-neutral',
-				[ 2 ] = 'placeable-player',
-				[ 3 ] = 'player-creation',
-			},
-			[ 'animation' ] = {
-				[ 'layers' ] = {
-					[ 1 ] = {
-						[ 'hr_version' ] = {
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-base.png',
-							[ 'animation_speed' ] = 0.5,
-							[ 'priority' ] = 'high',
-							[ 'frame_count' ] = 60,
-							[ 'line_length' ] = 10,
-							[ 'height' ] = 96,
-							[ 'scale' ] = 0.5,
-							[ 'shift' ] = {
-								[ 1 ] = 0,
-								[ 2 ] = 0,
-							},
-							[ 'width' ] = 96,
-						},
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-base.png',
-						[ 'animation_speed' ] = 0.5,
-						[ 'priority' ] = 'high',
-						[ 'frame_count' ] = 60,
-						[ 'line_length' ] = 10,
-						[ 'height' ] = 48,
-						[ 'scale' ] = 1,
-						[ 'shift' ] = {
-							[ 1 ] = 0,
-							[ 2 ] = 0,
-						},
-						[ 'width' ] = 48,
-					},
-					[ 2 ] = {
-						[ 'hr_version' ] = {
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-mask.png',
-							[ 'animation_speed' ] = 0.5,
-							[ 'priority' ] = 'high',
-							[ 'repeat_count' ] = 60,
-							[ 'height' ] = 96,
-							[ 'scale' ] = 0.5,
-							[ 'shift' ] = {
-								[ 1 ] = 0,
-								[ 2 ] = 0,
-							},
-							[ 'width' ] = 96,
-							[ 'tint' ] = {
-								[ 'r' ] = 210,
-								[ 'g' ] = 60,
-								[ 'b' ] = 60,
-							},
-						},
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-mask.png',
-						[ 'animation_speed' ] = 0.5,
-						[ 'priority' ] = 'high',
-						[ 'repeat_count' ] = 60,
-						[ 'height' ] = 48,
-						[ 'scale' ] = 1,
-						[ 'shift' ] = {
-							[ 1 ] = 0,
-							[ 2 ] = 0,
-						},
-						[ 'width' ] = 48,
-						[ 'tint' ] = {
-							[ 'r' ] = 210,
-							[ 'g' ] = 60,
-							[ 'b' ] = 60,
-						},
-					},
-					[ 3 ] = {
-						[ 'hr_version' ] = {
-							[ 'draw_as_shadow' ] = true,
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-shadow.png',
-							[ 'animation_speed' ] = 0.5,
-							[ 'frame_count' ] = 60,
-							[ 'line_length' ] = 10,
-							[ 'height' ] = 96,
-							[ 'scale' ] = 0.5,
-							[ 'shift' ] = {
-								[ 1 ] = 0.5,
-								[ 2 ] = 0,
-							},
-							[ 'width' ] = 144,
-						},
-						[ 'draw_as_shadow' ] = true,
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-shadow.png',
-						[ 'animation_speed' ] = 0.5,
-						[ 'frame_count' ] = 60,
-						[ 'line_length' ] = 10,
-						[ 'height' ] = 48,
-						[ 'scale' ] = 1,
-						[ 'shift' ] = {
-							[ 1 ] = 0.5,
-							[ 2 ] = 0,
-						},
-						[ 'width' ] = 72,
-					},
-				},
-			},
-			[ 'working_visualisations' ] = {
-				[ 1 ] = {
-					[ 'animation' ] = {
-						[ 'hr_version' ] = {
-							[ 'animation_speed' ] = 0.5,
-							[ 'blend_mode' ] = 'additive',
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-working.png',
-							[ 'frame_count' ] = 30,
-							[ 'line_length' ] = 10,
-							[ 'height' ] = 96,
-							[ 'priority' ] = 'high',
-							[ 'scale' ] = 0.5,
-							[ 'tint' ] = {
-								[ 'r' ] = 225,
-								[ 'g' ] = 150,
-								[ 'b' ] = 150,
-							},
-							[ 'width' ] = 96,
-						},
-						[ 'animation_speed' ] = 0.5,
-						[ 'blend_mode' ] = 'additive',
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-working.png',
-						[ 'frame_count' ] = 30,
-						[ 'line_length' ] = 10,
-						[ 'height' ] = 48,
-						[ 'priority' ] = 'high',
-						[ 'tint' ] = {
-							[ 'r' ] = 210,
-							[ 'g' ] = 60,
-							[ 'b' ] = 60,
-						},
-						[ 'width' ] = 48,
-					},
-					[ 'light' ] = {
-						[ 'color' ] = {
-							[ 'r' ] = 225,
-							[ 'g' ] = 150,
-							[ 'b' ] = 150,
-						},
-						[ 'intensity' ] = 0.4,
-						[ 'size' ] = 3,
-						[ 'shift' ] = {
-							[ 1 ] = 0,
-							[ 2 ] = 0.25,
-						},
-					},
-				},
-			},
-			[ 'dying_explosion' ] = 'explosion',
-			[ 'corpse' ] = 'small-remnants',
-			[ 'minable' ] = {
-				[ 'hardness' ] = 0.2,
-				[ 'mining_time' ] = 0.5,
-				[ 'result' ] = 'fast-transport-belt-beltbox',
-			},
-			[ 'module_specification' ] = {
-				[ 'module_slots' ] = 0,
-				[ 'module_info_icon_shift' ] = {
-					[ 1 ] = 0,
-					[ 2 ] = 0.25,
-				},
-			},
-			[ 'allowed_effects' ] = {
-				[ 1 ] = 'consumption',
-			},
-			[ 'max_health' ] = 180,
-			[ 'collision_box' ] = {
-				[ 1 ] = {
-					[ 1 ] = -0.2,
-					[ 2 ] = -0.2,
-				},
-				[ 2 ] = {
-					[ 1 ] = 0.2,
-					[ 2 ] = 0.2,
-				},
-			},
-			[ 'selection_box' ] = {
-				[ 1 ] = {
-					[ 1 ] = -0.5,
-					[ 2 ] = -0.5,
-				},
-				[ 2 ] = {
-					[ 1 ] = 0.5,
-					[ 2 ] = 0.5,
-				},
-			},
-			[ 'drawing_box' ] = {
-				[ 1 ] = {
-					[ 1 ] = -0.5,
-					[ 2 ] = -0.5,
-				},
-				[ 2 ] = {
-					[ 1 ] = 0.5,
-					[ 2 ] = 0.5,
-				},
-			},
-			[ 'result_inventory_size' ] = 1,
-			[ 'source_inventory_size' ] = 1,
-			[ 'crafting_categories' ] = {
-				[ 1 ] = 'stacking',
-				[ 2 ] = 'unstacking',
-			},
-			[ 'crafting_speed' ] = 2,
-			[ 'energy_source' ] = {
-				[ 'type' ] = 'electric',
-				[ 'emissions_per_minute' ] = 1.5,
-				[ 'usage_priority' ] = 'secondary-input',
-				[ 'drain' ] = '15kW',
-			},
-			[ 'energy_usage' ] = '180kW',
-			[ 'resistances' ] = {
-				[ 1 ] = {
-					[ 'type' ] = 'fire',
-					[ 'percent' ] = 50,
-				},
-			},
-			[ 'vehicle_impact_sound' ] = {
-				[ 'filename' ] = '__base__/sound/car-metal-impact.ogg',
-				[ 'volume' ] = 1,
-			},
-			[ 'working_sound' ] = {
-				[ 'match_speed_to_activity' ] = true,
-				[ 'idle_sound' ] = {
-					[ 'filename' ] = '__base__/sound/idle1.ogg',
-					[ 'volume' ] = 0.6,
-				},
-				[ 'sound' ] = {
-					[ 'filename' ] = '__deadlock-beltboxes-loaders__/sounds/fan.ogg',
-					[ 'volume' ] = 1,
-				},
-				[ 'max_sounds_per_type' ] = 3,
-			},
-			[ 'show_recipe_icon' ] = true,
-			[ 'fast_replaceable_group' ] = 'transport-belt',
-			[ 'next_upgrade' ] = 'express-transport-belt-beltbox',
-			[ 'localised_name' ] = {
-				[ 1 ] = '',
-				[ 2 ] = {
-					[ 1 ] = 'entity-name.fast-transport-belt-beltbox',
-				},
-				[ 3 ] = ' [',
-				[ 4 ] = ' B',
-				[ 5 ] = ' ]',
-			},
-		},
-		[ 'express-transport-belt-beltbox' ] = {
-			[ 'type' ] = 'furnace',
-			[ 'name' ] = 'express-transport-belt-beltbox',
-			[ 'localised_description' ] = {
-				[ 1 ] = 'entity-description.deadlock-beltbox',
-			},
-			[ 'icons' ] = {
-				[ 1 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-base.png',
-				},
-				[ 2 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-mask.png',
-					[ 'tint' ] = {
-						[ 'r' ] = 80,
-						[ 'g' ] = 180,
-						[ 'b' ] = 210,
-					},
-				},
-			},
-			[ 'icon_size' ] = 64,
-			[ 'icon_mipmaps' ] = 4,
-			[ 'flags' ] = {
-				[ 1 ] = 'placeable-neutral',
-				[ 2 ] = 'placeable-player',
-				[ 3 ] = 'player-creation',
-			},
-			[ 'animation' ] = {
-				[ 'layers' ] = {
-					[ 1 ] = {
-						[ 'hr_version' ] = {
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-base.png',
-							[ 'animation_speed' ] = 0.33333333333333,
-							[ 'priority' ] = 'high',
-							[ 'frame_count' ] = 60,
-							[ 'line_length' ] = 10,
-							[ 'height' ] = 96,
-							[ 'scale' ] = 0.5,
-							[ 'shift' ] = {
-								[ 1 ] = 0,
-								[ 2 ] = 0,
-							},
-							[ 'width' ] = 96,
-						},
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-base.png',
-						[ 'animation_speed' ] = 0.33333333333333,
-						[ 'priority' ] = 'high',
-						[ 'frame_count' ] = 60,
-						[ 'line_length' ] = 10,
-						[ 'height' ] = 48,
-						[ 'scale' ] = 1,
-						[ 'shift' ] = {
-							[ 1 ] = 0,
-							[ 2 ] = 0,
-						},
-						[ 'width' ] = 48,
-					},
-					[ 2 ] = {
-						[ 'hr_version' ] = {
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-mask.png',
-							[ 'animation_speed' ] = 0.33333333333333,
-							[ 'priority' ] = 'high',
-							[ 'repeat_count' ] = 60,
-							[ 'height' ] = 96,
-							[ 'scale' ] = 0.5,
-							[ 'shift' ] = {
-								[ 1 ] = 0,
-								[ 2 ] = 0,
-							},
-							[ 'width' ] = 96,
-							[ 'tint' ] = {
-								[ 'r' ] = 80,
-								[ 'g' ] = 180,
-								[ 'b' ] = 210,
-							},
-						},
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-mask.png',
-						[ 'animation_speed' ] = 0.33333333333333,
-						[ 'priority' ] = 'high',
-						[ 'repeat_count' ] = 60,
-						[ 'height' ] = 48,
-						[ 'scale' ] = 1,
-						[ 'shift' ] = {
-							[ 1 ] = 0,
-							[ 2 ] = 0,
-						},
-						[ 'width' ] = 48,
-						[ 'tint' ] = {
-							[ 'r' ] = 80,
-							[ 'g' ] = 180,
-							[ 'b' ] = 210,
-						},
-					},
-					[ 3 ] = {
-						[ 'hr_version' ] = {
-							[ 'draw_as_shadow' ] = true,
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-shadow.png',
-							[ 'animation_speed' ] = 0.33333333333333,
-							[ 'frame_count' ] = 60,
-							[ 'line_length' ] = 10,
-							[ 'height' ] = 96,
-							[ 'scale' ] = 0.5,
-							[ 'shift' ] = {
-								[ 1 ] = 0.5,
-								[ 2 ] = 0,
-							},
-							[ 'width' ] = 144,
-						},
-						[ 'draw_as_shadow' ] = true,
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-shadow.png',
-						[ 'animation_speed' ] = 0.33333333333333,
-						[ 'frame_count' ] = 60,
-						[ 'line_length' ] = 10,
-						[ 'height' ] = 48,
-						[ 'scale' ] = 1,
-						[ 'shift' ] = {
-							[ 1 ] = 0.5,
-							[ 2 ] = 0,
-						},
-						[ 'width' ] = 72,
-					},
-				},
-			},
-			[ 'working_visualisations' ] = {
-				[ 1 ] = {
-					[ 'animation' ] = {
-						[ 'hr_version' ] = {
-							[ 'animation_speed' ] = 0.33333333333333,
-							[ 'blend_mode' ] = 'additive',
-							[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/high/beltbox-working.png',
-							[ 'frame_count' ] = 30,
-							[ 'line_length' ] = 10,
-							[ 'height' ] = 96,
-							[ 'priority' ] = 'high',
-							[ 'scale' ] = 0.5,
-							[ 'tint' ] = {
-								[ 'r' ] = 160,
-								[ 'g' ] = 210,
-								[ 'b' ] = 225,
-							},
-							[ 'width' ] = 96,
-						},
-						[ 'animation_speed' ] = 0.33333333333333,
-						[ 'blend_mode' ] = 'additive',
-						[ 'filename' ] = '__deadlock-beltboxes-loaders__/graphics/entities/low/beltbox-working.png',
-						[ 'frame_count' ] = 30,
-						[ 'line_length' ] = 10,
-						[ 'height' ] = 48,
-						[ 'priority' ] = 'high',
-						[ 'tint' ] = {
-							[ 'r' ] = 80,
-							[ 'g' ] = 180,
-							[ 'b' ] = 210,
-						},
-						[ 'width' ] = 48,
-					},
-					[ 'light' ] = {
-						[ 'color' ] = {
-							[ 'r' ] = 160,
-							[ 'g' ] = 210,
-							[ 'b' ] = 225,
-						},
-						[ 'intensity' ] = 0.4,
-						[ 'size' ] = 3,
-						[ 'shift' ] = {
-							[ 1 ] = 0,
-							[ 2 ] = 0.25,
-						},
-					},
-				},
-			},
-			[ 'dying_explosion' ] = 'explosion',
-			[ 'corpse' ] = 'small-remnants',
-			[ 'minable' ] = {
-				[ 'hardness' ] = 0.2,
-				[ 'mining_time' ] = 0.5,
-				[ 'result' ] = 'express-transport-belt-beltbox',
-			},
-			[ 'module_specification' ] = {
-				[ 'module_slots' ] = 0,
-				[ 'module_info_icon_shift' ] = {
-					[ 1 ] = 0,
-					[ 2 ] = 0.25,
-				},
-			},
-			[ 'allowed_effects' ] = {
-				[ 1 ] = 'consumption',
-			},
-			[ 'max_health' ] = 180,
-			[ 'collision_box' ] = {
-				[ 1 ] = {
-					[ 1 ] = -0.2,
-					[ 2 ] = -0.2,
-				},
-				[ 2 ] = {
-					[ 1 ] = 0.2,
-					[ 2 ] = 0.2,
-				},
-			},
-			[ 'selection_box' ] = {
-				[ 1 ] = {
-					[ 1 ] = -0.5,
-					[ 2 ] = -0.5,
-				},
-				[ 2 ] = {
-					[ 1 ] = 0.5,
-					[ 2 ] = 0.5,
-				},
-			},
-			[ 'drawing_box' ] = {
-				[ 1 ] = {
-					[ 1 ] = -0.5,
-					[ 2 ] = -0.5,
-				},
-				[ 2 ] = {
-					[ 1 ] = 0.5,
-					[ 2 ] = 0.5,
-				},
-			},
-			[ 'result_inventory_size' ] = 1,
-			[ 'source_inventory_size' ] = 1,
-			[ 'crafting_categories' ] = {
-				[ 1 ] = 'stacking',
-				[ 2 ] = 'unstacking',
-			},
-			[ 'crafting_speed' ] = 3,
-			[ 'energy_source' ] = {
-				[ 'type' ] = 'electric',
-				[ 'emissions_per_minute' ] = 1,
-				[ 'usage_priority' ] = 'secondary-input',
-				[ 'drain' ] = '15kW',
-			},
-			[ 'energy_usage' ] = '270kW',
-			[ 'resistances' ] = {
-				[ 1 ] = {
-					[ 'type' ] = 'fire',
-					[ 'percent' ] = 50,
-				},
-			},
-			[ 'vehicle_impact_sound' ] = {
-				[ 'filename' ] = '__base__/sound/car-metal-impact.ogg',
-				[ 'volume' ] = 1,
-			},
-			[ 'working_sound' ] = {
-				[ 'match_speed_to_activity' ] = true,
-				[ 'idle_sound' ] = {
-					[ 'filename' ] = '__base__/sound/idle1.ogg',
-					[ 'volume' ] = 0.6,
-				},
-				[ 'sound' ] = {
-					[ 'filename' ] = '__deadlock-beltboxes-loaders__/sounds/fan.ogg',
-					[ 'volume' ] = 1,
-				},
-				[ 'max_sounds_per_type' ] = 3,
-			},
-			[ 'show_recipe_icon' ] = true,
-			[ 'fast_replaceable_group' ] = 'transport-belt',
-			[ 'localised_name' ] = {
-				[ 1 ] = '',
-				[ 2 ] = {
-					[ 1 ] = 'entity-name.express-transport-belt-beltbox',
-				},
-				[ 3 ] = ' [',
-				[ 4 ] = ' B',
-				[ 5 ] = ' ]',
-			},
-		},
-	},
-	[ 'Recipes' ] = {
-		[ 'transport-belt-beltbox' ] = {
-			[ 1 ] = {
-				[ 'type' ] = 'recipe',
-				[ 'name' ] = 'transport-belt-beltbox',
-				[ 'localised_description' ] = {
-					[ 1 ] = 'entity-description.deadlock-beltbox',
-				},
-				[ 'group' ] = 'logistics',
-				[ 'subgroup' ] = 'beltboxes',
-				[ 'order' ] = 'ba-deadlock-beltbox',
-				[ 'enabled' ] = false,
-				[ 'ingredients' ] = {
-					[ 1 ] = {
-						[ 1 ] = 'transport-belt',
-						[ 2 ] = 4,
-					},
-					[ 2 ] = {
-						[ 1 ] = 'iron-plate',
-						[ 2 ] = 10,
-					},
-					[ 3 ] = {
-						[ 1 ] = 'iron-gear-wheel',
-						[ 2 ] = 10,
-					},
-					[ 4 ] = {
-						[ 1 ] = 'electronic-circuit',
-						[ 2 ] = 4,
-					},
-				},
-				[ 'result' ] = 'transport-belt-beltbox',
-				[ 'energy_required' ] = 3,
-				[ 'localised_name' ] = {
-					[ 1 ] = '',
-					[ 2 ] = {
-						[ 1 ] = 'entity-name.transport-belt-beltbox',
-					},
-					[ 3 ] = ' [',
-					[ 4 ] = ' B',
-					[ 5 ] = ' ]',
-				},
-			},
-		},
-		[ 'fast-transport-belt-beltbox' ] = {
-			[ 1 ] = {
-				[ 'type' ] = 'recipe',
-				[ 'name' ] = 'fast-transport-belt-beltbox',
-				[ 'localised_description' ] = {
-					[ 1 ] = 'entity-description.deadlock-beltbox',
-				},
-				[ 'group' ] = 'logistics',
-				[ 'subgroup' ] = 'beltboxes',
-				[ 'order' ] = 'bb-deadlock-beltbox',
-				[ 'enabled' ] = false,
-				[ 'ingredients' ] = {
-					[ 1 ] = {
-						[ 1 ] = 'transport-belt-beltbox',
-						[ 2 ] = 1,
-					},
-					[ 2 ] = {
-						[ 1 ] = 'iron-plate',
-						[ 2 ] = 20,
-					},
-					[ 3 ] = {
-						[ 1 ] = 'iron-gear-wheel',
-						[ 2 ] = 20,
-					},
-					[ 4 ] = {
-						[ 1 ] = 'advanced-circuit',
-						[ 2 ] = 2,
-					},
-				},
-				[ 'result' ] = 'fast-transport-belt-beltbox',
-				[ 'energy_required' ] = 3,
-				[ 'localised_name' ] = {
-					[ 1 ] = '',
-					[ 2 ] = {
-						[ 1 ] = 'entity-name.fast-transport-belt-beltbox',
-					},
-					[ 3 ] = ' [',
-					[ 4 ] = ' B',
-					[ 5 ] = ' ]',
-				},
-			},
-		},
-		[ 'express-transport-belt-beltbox' ] = {
-			[ 1 ] = {
-				[ 'type' ] = 'recipe',
-				[ 'name' ] = 'express-transport-belt-beltbox',
-				[ 'localised_description' ] = {
-					[ 1 ] = 'entity-description.deadlock-beltbox',
-				},
-				[ 'category' ] = 'crafting-with-fluid',
-				[ 'group' ] = 'logistics',
-				[ 'subgroup' ] = 'beltboxes',
-				[ 'order' ] = 'bc-deadlock-beltbox',
-				[ 'enabled' ] = false,
-				[ 'ingredients' ] = {
-					[ 1 ] = {
-						[ 1 ] = 'fast-transport-belt-beltbox',
-						[ 2 ] = 1,
-					},
-					[ 2 ] = {
-						[ 1 ] = 'iron-plate',
-						[ 2 ] = 30,
-					},
-					[ 3 ] = {
-						[ 1 ] = 'iron-gear-wheel',
-						[ 2 ] = 30,
-					},
-					[ 4 ] = {
-						[ 'name' ] = 'lubricant',
-						[ 'type' ] = 'fluid',
-						[ 'amount' ] = 100,
-					},
-				},
-				[ 'result' ] = 'express-transport-belt-beltbox',
-				[ 'energy_required' ] = 3,
-				[ 'localised_name' ] = {
-					[ 1 ] = '',
-					[ 2 ] = {
-						[ 1 ] = 'entity-name.express-transport-belt-beltbox',
-					},
-					[ 3 ] = ' [',
-					[ 4 ] = ' B',
-					[ 5 ] = ' ]',
-				},
-			},
-		},
-	},
-	[ 'Items' ] = {
-		[ 'transport-belt-beltbox' ] = {
-			[ 'type' ] = 'item',
-			[ 'name' ] = 'transport-belt-beltbox',
-			[ 'localised_description' ] = {
-				[ 1 ] = 'entity-description.deadlock-beltbox',
-			},
-			[ 'icons' ] = {
-				[ 1 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-base.png',
-				},
-				[ 2 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-mask.png',
-					[ 'tint' ] = {
-						[ 'r' ] = 210,
-						[ 'g' ] = 180,
-						[ 'b' ] = 80,
-					},
-				},
-			},
-			[ 'icon_size' ] = 64,
-			[ 'icon_mipmaps' ] = 4,
-			[ 'stack_size' ] = 1000,
-			[ 'flags' ] = { },
-			[ 'place_result' ] = 'transport-belt-beltbox',
-			[ 'group' ] = 'logistics',
-			[ 'subgroup' ] = 'beltboxes',
-			[ 'order' ] = 'ba-deadlock-beltbox',
-			[ 'localised_name' ] = {
-				[ 1 ] = '',
-				[ 2 ] = {
-					[ 1 ] = 'entity-name.transport-belt-beltbox',
-				},
-				[ 3 ] = ' [',
-				[ 4 ] = ' B',
-				[ 5 ] = ' ]',
-			},
-		},
-		[ 'fast-transport-belt-beltbox' ] = {
-			[ 'type' ] = 'item',
-			[ 'name' ] = 'fast-transport-belt-beltbox',
-			[ 'localised_description' ] = {
-				[ 1 ] = 'entity-description.deadlock-beltbox',
-			},
-			[ 'icons' ] = {
-				[ 1 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-base.png',
-				},
-				[ 2 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-mask.png',
-					[ 'tint' ] = {
-						[ 'r' ] = 210,
-						[ 'g' ] = 60,
-						[ 'b' ] = 60,
-					},
-				},
-			},
-			[ 'icon_size' ] = 64,
-			[ 'icon_mipmaps' ] = 4,
-			[ 'stack_size' ] = 1000,
-			[ 'flags' ] = { },
-			[ 'place_result' ] = 'fast-transport-belt-beltbox',
-			[ 'group' ] = 'logistics',
-			[ 'subgroup' ] = 'beltboxes',
-			[ 'order' ] = 'bb-deadlock-beltbox',
-			[ 'localised_name' ] = {
-				[ 1 ] = '',
-				[ 2 ] = {
-					[ 1 ] = 'entity-name.fast-transport-belt-beltbox',
-				},
-				[ 3 ] = ' [',
-				[ 4 ] = ' B',
-				[ 5 ] = ' ]',
-			},
-		},
-		[ 'express-transport-belt-beltbox' ] = {
-			[ 'type' ] = 'item',
-			[ 'name' ] = 'express-transport-belt-beltbox',
-			[ 'localised_description' ] = {
-				[ 1 ] = 'entity-description.deadlock-beltbox',
-			},
-			[ 'icons' ] = {
-				[ 1 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-base.png',
-				},
-				[ 2 ] = {
-					[ 'icon' ] = '__deadlock-beltboxes-loaders__/graphics/icons/mipmaps/beltbox-icon-mask.png',
-					[ 'tint' ] = {
-						[ 'r' ] = 80,
-						[ 'g' ] = 180,
-						[ 'b' ] = 210,
-					},
-				},
-			},
-			[ 'icon_size' ] = 64,
-			[ 'icon_mipmaps' ] = 4,
-			[ 'stack_size' ] = 1000,
-			[ 'flags' ] = { },
-			[ 'place_result' ] = 'express-transport-belt-beltbox',
-			[ 'group' ] = 'logistics',
-			[ 'subgroup' ] = 'beltboxes',
-			[ 'order' ] = 'bc-deadlock-beltbox',
-			[ 'localised_name' ] = {
-				[ 1 ] = '',
-				[ 2 ] = {
-					[ 1 ] = 'entity-name.express-transport-belt-beltbox',
-				},
-				[ 3 ] = ' [',
-				[ 4 ] = ' B',
-				[ 5 ] = ' ]',
-			},
-		},
-	},
-}
+        -- Mejoras en los suelos
+        ThisMOD.ImproveTile( Data )
 
+        -- Mejoras en las entidades
+        ThisMOD.IdentifyEntity( Data )
 
+        -- Agregar el objeto modificado
+        ThisMOD.AddModifiedItem( Data )
 
-
-
-
-
-
-
-
-
-
-
---------------------------------------
-
--- compact-items.lua
-
---------------------------------------
---------------------------------------
-
--- Identifica el mod que se está usando
-local MOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
-
--- Crear la vareble si no existe
-GPrefix.MODs[ MOD ] = GPrefix.MODs[ MOD ] or { }
-
--- Guardar en el acceso rapido
-GPrefix.MOD = GPrefix.MODs[ MOD ]
-
---------------------------------------
---------------------------------------
-
-local Files = { }
-table.insert( Files, "settings" )
-
--- Cargar la configuración
-if GPrefix.getKey( Files, GPrefix.File ) then
-
-    -- Preparar la configuración de este mod
-    local SettingOption =  {
-        type          = "int-setting",
-        setting_type  = "startup",
-        default_value = 50,
-        minimum_value = 1,
-        maximum_value = 65000
-    }
-
-    -- Construir valores
-    SettingOption.name  = GPrefix.MOD.Prefix_MOD
-    SettingOption.order = GPrefix.SettingOrder[ SettingOption.type ]
-	SettingOption.order = SettingOption.order .. "-" .. SettingOption.name
-    SettingOption.localised_name  = { GPrefix.MOD.Local .. "setting-name"}
-    SettingOption.localised_description  = { GPrefix.MOD.Local .. "setting-description"}
-
-    -- Cargar configuración del mod al juego
-    data:extend( { SettingOption } )
-	return
-end
-
---------------------------------------
---------------------------------------
-
-Files = { }
-table.insert( Files, "control" )
-table.insert( Files, "data-final-fixes" )
-
--- Es necesario ejecutar este codigo??
-if not GPrefix.getKey( Files, GPrefix.File ) then return end
-
--- MOD Inactivo
-if not GPrefix.MOD.Active then return end
-
---------------------------------------
---------------------------------------
-
----> <---     ---> <---     ---> <---
-
---------------------------------------
---------------------------------------
-
--- Renombrar la variable
-local GMOD = GPrefix.MOD
-
--- Agregar al jugador los objeto
-local function AddItems( Player )
-
-	-- Identificar al jugador
-	local Data = { Player = Player }
-	local gPlayer = GPrefix.setGlobal( Data ).Player
-
-	-- Lista de objetos a agregar
-	local Items = { }
-	table.insert( Items, { count = 1, name = GMOD.Prefix_MOD_ .. "compact" } )
-
-	-- Agregar los objetos
-	for _, Item in pairs( Items ) do
-		repeat
-			local Flag = gPlayer[ Item.name ]
-			Flag = Flag and gPlayer[ Item.name ] <= Item.count
-			if Flag then break end gPlayer[ Item.name ] = Item.count
-			Player.insert( Item )
-		until true
-	end
-end
-
--- Inicializar las variables
-local function Initialize( Player )
-
-	-- Identificar el MOD
-    GPrefix.MOD = GPrefix.MODs[ MOD ]
-
-	-- Validación básica
-	if not( game or Player ) then return end
-
-	-- Jugadores a inicializar
-    local Players = game.players
-    if Player then Players = { Player } end
-
-    -- Inicializar jugadores
-    for _, _Player in pairs( Players ) do
-		if _Player.connected then AddItems( _Player ) end
-    end
-
-	-- Inicializar las tecnologias
-    GPrefix.MOD = false
-end
-
-Files = { }
-table.insert( Files, "control" )
-
--- Darle al jugador un compactador
-if GPrefix.getKey( Files, GPrefix.File ) then
-
-	-- Gestor de eventos
-    GPrefix.addEvent( {
-
-        -- Al crear el mapa
-        [ "on_init" ] = Initialize,
-
-        -- Al cargar el mapa
-        [ "on_load" ] = Initialize,
-
-        -- Al unirse a la partida
-        [ { "on_event", defines.events.on_player_created } ] = function( Event )
-            Initialize( game.get_player( Event.player_index ) )
-        end,
-	} )
-
-	return
-end
-
---------------------------------------
---------------------------------------
-
----> <---     ---> <---     ---> <---
-
---------------------------------------
---------------------------------------
-
-local function BrighterColour( Colour )
-    local function SubFunction( RGB )
-        return math.floor( ( RGB + 240 ) / 2 )
-    end
-
-	local ColourNew = { }
-	ColourNew.r = SubFunction( Colour.r )
-	ColourNew.g = SubFunction( Colour.g )
-	ColourNew.b = SubFunction( Colour.b )
-
-	return ColourNew
-end
-
-local function CompactEntity( List )
-
-	-- Variable contenedora con los valores referenciales
-	local AssemblingMachine = GPrefix.Entities[ List.Compact.Base ]
-
-	---> <---     ---> <---     ---> <---
-
-	-- Variable contenedora
-    local Entity = { }
-    Entity.type = "furnace"
-    Entity.name = List.Compact.Name
-    Entity.energy_usage   = AssemblingMachine.energy_usage
-    Entity.crafting_speed = AssemblingMachine.crafting_speed
-    Entity.crafting_categories   = { "compact", "uncompact" }
-    Entity.localised_description = { "entity-description." .. GMOD.Prefix_MOD_ .. "compact" }
-
-    Entity.corpse = "small-remnants"
-    Entity.max_health = AssemblingMachine.max_health
-	Entity.next_upgrade = List.Compact.Next
-    Entity.allowed_effects = AssemblingMachine.allowed_effects
-    Entity.dying_explosion = "explosion"
-    Entity.show_recipe_icon = true
-    Entity.result_inventory_size = 1
-    Entity.source_inventory_size = 1
-	Entity.fast_replaceable_group =  GMOD.Prefix_MOD_ .. "compact"
-
-	Entity.drawing_box   = { { -0.5, -0.5 }, { 0.5, 0.5 } }
-    Entity.collision_box = { { -0.35, -0.35 }, { 0.35, 0.35 } }
-    Entity.selection_box = { { -0.5 , -0.5  }, { 0.5 , 0.5  } }
-
-    ---> <---     ---> <---     ---> <---
-
-    Entity.minable = { }
-    Entity.minable.result = Entity.name
-    Entity.minable.mining_time = AssemblingMachine.minable.mining_time
-
-    Entity.energy_source = { }
-    Entity.energy_source.drain = AssemblingMachine.energy_source.drain
-    Entity.energy_source.type = AssemblingMachine.energy_source.type
-    Entity.energy_source.usage_priority = AssemblingMachine.energy_source.usage_priority
-    Entity.energy_source.emissions_per_minute = AssemblingMachine.energy_source.emissions_per_minute
-
-    Entity.working_sound = { }
-    Entity.working_sound.match_speed_to_activity = true
-    Entity.working_sound.idle_sound = { }
-    Entity.working_sound.idle_sound.filename = "__base__/sound/idle1.ogg"
-    Entity.working_sound.idle_sound.volume = 0.6
-    Entity.working_sound.sound = { }
-    Entity.working_sound.sound.filename = "__zzYAIM__/mods/sounds/fan.ogg"
-    Entity.working_sound.sound.volume = 1.0
-    Entity.working_sound.max_sounds_per_type = 3
-
-    Entity.vehicle_impact_sound = { }
-    Entity.vehicle_impact_sound.filename = "__base__/sound/car-metal-impact.ogg"
-    Entity.vehicle_impact_sound.volume = 1.0
-
-    Entity.module_specification = AssemblingMachine.module_specification
-
-    Entity.flags = { }
-    table.insert( Entity.flags, "player-creation" )
-    table.insert( Entity.flags, "placeable-player" )
-    table.insert( Entity.flags, "placeable-neutral" )
-
-    ---> <---     ---> <---     ---> <---
-
-    Entity.icons = { }
-    Entity.icon_size = 64
-    Entity.icon_mipmaps = 4
-
-    local icon = { }
-
-    icon = { }
-    icon.icon = GPrefix.FolderGraphics .. "icons/mipmaps/beltbox-icon-base.png"
-    table.insert( Entity.icons, icon )
-
-    icon = { }
-    icon.tint = List.Colour
-    icon.icon = GPrefix.FolderGraphics .. "icons/mipmaps/beltbox-icon-mask.png"
-    table.insert( Entity.icons, icon )
-
-    ---> <---     ---> <---     ---> <---
-
-    Entity.animation = { }
-    Entity.animation.layers = { }
-
-    local Layer = { }
-    local HR_Version = { }
-
-	HR_Version = { }
-    HR_Version.frame_count = 60
-    HR_Version.line_length = 10
-    HR_Version.filename = GPrefix.FolderGraphics .. "entity/high/beltbox-base.png"
-    HR_Version.priority = "high"
-    HR_Version.height = 96
-    HR_Version.scale  = 0.5
-    HR_Version.shift  = { 0, 0 }
-    HR_Version.width  = 96
-
-    Layer = { }
-    Layer.frame_count = 60
-    Layer.line_length = 10
-    Layer.filename = GPrefix.FolderGraphics .. "entity/low/beltbox-base.png"
-    Layer.priority = "high"
-    Layer.height = 48
-    Layer.scale  = 1
-    Layer.shift  = { 0, 0 }
-    Layer.width  = 48
-
-    Layer.hr_version = HR_Version
-    table.insert( Entity.animation.layers, Layer )
-
-    HR_Version = { }
-    HR_Version.repeat_count = 60
-    HR_Version.filename = GPrefix.FolderGraphics .. "entity/high/beltbox-mask.png"
-    HR_Version.priority = "high"
-    HR_Version.height = 96
-    HR_Version.scale = 0.5
-    HR_Version.shift = { 0, 0 }
-    HR_Version.width = 96
-    HR_Version.tint  = List.Colour
-
-    Layer = { }
-    Layer.repeat_count = 60
-    Layer.filename = GPrefix.FolderGraphics .. "entity/low/beltbox-mask.png"
-    Layer.priority = "high"
-    Layer.height = 48
-    Layer.scale  = 1
-    Layer.shift  = { 0, 0 }
-    Layer.width  = 48
-    Layer.tint   = List.Colour
-
-    Layer.hr_version = HR_Version
-    table.insert( Entity.animation.layers, Layer )
-
-    HR_Version = { }
-    HR_Version.draw_as_shadow  = true
-    HR_Version.frame_count = 60
-    HR_Version.line_length = 10
-    HR_Version.filename = GPrefix.FolderGraphics .. "entity/high/beltbox-shadow.png"
-    HR_Version.height = 96
-    HR_Version.scale = 0.5
-    HR_Version.shift = { 0.5, 0 }
-    HR_Version.width = 144
-
-    Layer = { }
-    Layer.draw_as_shadow  = true
-    Layer.frame_count = 60
-    Layer.line_length = 10
-    Layer.filename = GPrefix.FolderGraphics .. "entity/low/beltbox-shadow.png"
-    Layer.height = 48
-    Layer.scale  = 1
-    Layer.shift  = { 0.5, 0 }
-    Layer.width  = 72
-
-    Layer.hr_version = HR_Version
-    table.insert( Entity.animation.layers, Layer )
-
-    ---> <---     ---> <---     ---> <---
-
-    local Light = { }
-    Light.color = BrighterColour( List.Colour )
-    Light.shift = { 0, 0.25 }
-    Light.intensity = 0.4
-    Light.size = 3
-
-    HR_Version = { }
-    HR_Version.frame_count = 30
-    HR_Version.line_length = 10
-    HR_Version.blend_mode  = "additive"
-    HR_Version.filename = GPrefix.FolderGraphics .. "entity/high/beltbox-working.png"
-    HR_Version.priority = "high"
-    HR_Version.height = 96
-    HR_Version.scale  = 0.5
-    HR_Version.width  = 96
-    HR_Version.tint = BrighterColour( List.Colour )
-
-    local Animation = { }
-    Animation.frame_count = 30
-    Animation.line_length = 10
-    Animation.blend_mode = "additive"
-    Animation.hr_version = HR_Version
-    Animation.filename = GPrefix.FolderGraphics .. "entity/low/beltbox-working.png"
-    Animation.priority = "high"
-    Animation.height = 48
-    Animation.width  = 48
-    Animation.tint = List.Colour
-
-    local Working = { }
-    Working.light = Light
-    Working.animation = Animation
-    Entity.working_visualisations = { Working }
-
-    local Resistances = { }
-    Resistances.type = "fire"
-    Resistances.percent = 50
-    Entity.resistances  = { Resistances }
-
-    ---> <---     ---> <---     ---> <---
-
-	-- Guardar la entidad
-	data:extend( { Entity } )
-	GPrefix.Entities[ Entity.name ] = Entity
-end
-
-local function CompactRecipe( List )
-
-	-- Variable contenedora
-	local Recipe = { }
-    Recipe.type = "recipe"
-
-	-- Establecer el nombre de la nueva receta
-    Recipe.name = List.Compact.Name
-
-	-- Establecer el apodo de la descripcion
-	Recipe.localised_description = { "entity-description." .. GMOD.Prefix_MOD_ .. "compact" }
-
-	-- Establece la categoria y el subgrupo
-    Recipe.category = List.Category
-    Recipe.subgroup = GMOD.Prefix_MOD_ .. "compact"
-
-	-- Establecer el orden de la receta
-    Recipe.order = GPrefix.Items[ List.Compact.Base ].order
-
-	-- Establecer los valores de fabricación
-    Recipe.result = Recipe.name
-    Recipe.enabled = false
-    Recipe.energy_required = 3
-
-	-- Crear la receta con cada ingredientes
-	for Index, Ingredients in pairs( List.Compact.Ingredients ) do
-
-		-- Copiar la recera base
-		local recipe = GPrefix.DeepCopy( Recipe )
-
-		-- Establece el nombre de esta receta
-		recipe.name = recipe.name .. "-" .. Index
-
-		-- Establecer los ingredientes
-		recipe.ingredients = Ingredients
-
-		-- Guardar la receta
-		data:extend( { recipe } )
-
-		-- Guardar la receta
-		GPrefix.Recipes[ recipe.result ] = GPrefix.Recipes[ recipe.result ] or { }
-		table.insert( GPrefix.Recipes[ recipe.result ], recipe )
-
-		-- Agregar a la tecnologia
-		GPrefix.addTechnology( List.Technology, recipe.name )
-	end
-end
-
-local function CompactItem( List )
-
-	-- Variable contenedora
-	local Item = { }
-    Item.type = "item"
-    Item.name =  List.Compact.Name
-    Item.localised_description = { "entity-description." .. GMOD.Prefix_MOD_ .. "compact" }
-
-    Item.icons = { }
-    Item.icon_size = 64
-    Item.icon_mipmaps = 4
-
-	local icon = { }
-
-	icon = { }
-	icon.icon = GPrefix.FolderGraphics .. "icons/mipmaps/beltbox-icon-base.png"
-	table.insert( Item.icons, icon )
-
-	icon = { }
-	icon.tint = List.Colour
-	icon.icon = GPrefix.FolderGraphics .. "icons/mipmaps/beltbox-icon-mask.png"
-	table.insert( Item.icons, icon )
-
-	Item.flags = { }
-    Item.subgroup = GMOD.Prefix_MOD_ .. "compact"
-	Item.stack_size = 50
-    Item.place_result = Item.name
-
-    Item.order = GPrefix.Items[ List.Compact.Base ].order
-
-	-- Guardar el objeto
-	data:extend( { Item } )
-	GPrefix.Items[ Item.name ] = Item
-end
-
---------------------------------------
---------------------------------------
-
-local function LoaderEntity( List )
-
-	-- Variable contenedora con los valores referenciales
-	local Belt = GPrefix.Entities[ List.Loader.Base ]
-
-    ---> <---     ---> <---     ---> <---
-
-	-- Variable contenedora
-	local Entity = { }
-	Entity.type = "loader-1x1"
-	Entity.name = List.Loader.Name
-	Entity.speed = Belt.speed * GMOD.Value
-	Entity.localised_description = { "entity-description." .. GMOD.Prefix_MOD_ .. "loader" }
-
-	Entity.corpse = "small-remnants"
-	Entity.max_health = 170
-	Entity.belt_length = 0.5
-	Entity.filter_count = 5
-	Entity.next_upgrade = List.Loader.Next
-	Entity.belt_distance = 0.5
-	Entity.container_distance = 1
-	Entity.belt_animation_set = Belt.belt_animation_set
-	Entity.fast_replaceable_group =  GMOD.Prefix_MOD_ .. "loader"
-	Entity.structure_render_layer = "object"
-	Entity.animation_speed_coefficient = 32
-
-	Entity.collision_box = { { -0.35, -0.35 }, { 0.35, 0.35 } }
-	Entity.selection_box = { { -0.5 , -0.5  }, { 0.5 , 0.5  } }
-
-    ---> <---     ---> <---     ---> <---
-
-    Entity.minable = { }
-    Entity.minable.result = Entity.name
-    Entity.minable.mining_time = 0.1
-
-	Entity.icons = { }
-	Entity.icon_size = 64
-	Entity.icon_mipmaps = 4
-
-	local icon = { }
-
-	icon = { }
-	icon.icon = GPrefix.FolderGraphics .. "icons/mipmaps/loader-icon-base.png"
-	table.insert( Entity.icons, icon )
-
-	icon = { }
-	icon.tint = List.Colour
-	icon.icon = GPrefix.FolderGraphics .. "icons/mipmaps/loader-icon-mask.png"
-	table.insert( Entity.icons, icon )
-
-    ---> <---     ---> <---     ---> <---
-
-	Entity.vehicle_impact_sound = { }
-	Entity.vehicle_impact_sound.filename = "__base__/sound/car-metal-impact.ogg"
-	Entity.vehicle_impact_sound.volume = 1
-
-	Entity.open_sound = { }
-	Entity.open_sound.filename = "__base__/sound/wooden-chest-open.ogg"
-	Entity.open_sound.volume = 1
-
-	Entity.close_sound = { }
-	Entity.close_sound.filename = "__base__/sound/wooden-chest-close.ogg"
-	Entity.close_sound.volume = 1
-
-	Entity.flags = { }
-    table.insert( Entity.flags, "player-creation" )
-    table.insert( Entity.flags, "placeable-neutral" )
-    table.insert( Entity.flags, "fast-replaceable-no-build-while-moving" )
-
-	Entity.collision_mask = { }
-    table.insert( Entity.collision_mask, "item-layer" )
-    table.insert( Entity.collision_mask, "water-tile" )
-    table.insert( Entity.collision_mask, "object-layer" )
-    table.insert( Entity.collision_mask, "player-layer" )
-    table.insert( Entity.collision_mask, "transport-belt-layer" )
-
-	---> <---     ---> <---     ---> <---
-
-    local Resistances = { }
-    Resistances.type = "fire"
-    Resistances.percent = 60
-    Entity.resistances  = { Resistances }
-
-    ---> <---     ---> <---     ---> <---
-
-	local Sheet = { }
-	local Sheets = { }
-	local HR_Version = { }
-
-
-
-	HR_Version = { }
-	HR_Version.filename = GPrefix.FolderGraphics .. "entity/high/loader-back.png"
-	HR_Version.priority = "extra-high"
-	HR_Version.height = 96
-	HR_Version.width = 96
-	HR_Version.scale = 0.5
-	HR_Version.shift = { 0, 0 }
-
-	Sheet = { }
-	Sheet.hr_version = HR_Version
-	Sheet.filename = GPrefix.FolderGraphics .. "entity/low/loader-back.png"
-	Sheet.priority = "extra-high"
-	Sheet.height = 48
-	Sheet.width = 48
-	Sheet.scale = 1
-	Sheet.shift = { 0, 0 }
-
-	Entity.structure = { }
-	Entity.structure.back_patch = { }
-	Entity.structure.back_patch.sheet = Sheet
-
-
-
-	Sheets = { }
-	HR_Version = { }
-	HR_Version.draw_as_shadow = true
-	HR_Version.filename = GPrefix.FolderGraphics .. "entity/high/loader-shadow.png"
-	HR_Version.priority = "medium"
-	HR_Version.height = 96
-	HR_Version.width = 144
-	HR_Version.scale = 0.5
-	HR_Version.shift = { 0.5, 0 }
-
-	Sheet = { }
-	Sheet.draw_as_shadow = true
-	Sheet.filename = GPrefix.FolderGraphics .. "entity/low/loader-shadow.png"
-	Sheet.priority = "medium"
-	Sheet.height = 48
-	Sheet.width = 72
-	Sheet.scale = 1
-	Sheet.shift = { 0.5, 0 }
-
-	Sheet.hr_version = HR_Version
-	table.insert( Sheets, Sheet )
-
-	HR_Version = { }
-	HR_Version.filename = GPrefix.FolderGraphics .. "entity/high/loader-base.png"
-	HR_Version.priority = "extra-high"
-	HR_Version.height = 96
-	HR_Version.width = 96
-	HR_Version.scale = 0.5
-	HR_Version.shift = { 0, 0 }
-
-	Sheet = { }
-	Sheet.filename = GPrefix.FolderGraphics .. "entity/low/loader-base.png"
-	Sheet.priority = "extra-high"
-	Sheet.height = 48
-	Sheet.width = 48
-	Sheet.scale = 1
-	Sheet.shift = { 0, 0 }
-
-	Sheet.hr_version = HR_Version
-	table.insert( Sheets, Sheet )
-
-	HR_Version = { }
-	HR_Version.filename = GPrefix.FolderGraphics .. "entity/high/loader-mask.png"
-	HR_Version.priority = "extra-high"
-	HR_Version.height = 96
-	HR_Version.width = 96
-	HR_Version.scale = 0.5
-	HR_Version.shift = { 0, 0 }
-	HR_Version.tint = List.Colour
-
-	Sheet = { }
-	Sheet.filename = GPrefix.FolderGraphics .. "entity/low/loader-mask.png"
-	Sheet.priority = "extra-high"
-	Sheet.height = 48
-	Sheet.width = 48
-	Sheet.scale = 1
-	Sheet.shift = { 0, 0 }
-	Sheet.tint = List.Colour
-
-	Sheet.hr_version = HR_Version
-	table.insert( Sheets, Sheet )
-
-	Entity.structure.direction_in = { }
-	Entity.structure.direction_in.sheets = Sheets
-
-
-
-	Sheets = { }
-	HR_Version = { }
-	HR_Version.draw_as_shadow = true
-	HR_Version.filename = GPrefix.FolderGraphics .. "entity/high/loader-shadow.png"
-	HR_Version.priority = "medium"
-	HR_Version.height = 96
-	HR_Version.width = 144
-	HR_Version.scale = 0.5
-	HR_Version.shift = { 0.5, 0 }
-
-	Sheet = { }
-	Sheet.draw_as_shadow = true
-	Sheet.filename = GPrefix.FolderGraphics .. "entity/low/loader-shadow.png"
-	Sheet.priority = "medium"
-	Sheet.height = 48
-	Sheet.width = 72
-	Sheet.scale = 1
-	Sheet.shift = { 0.5, 0 }
-
-	Sheet.hr_version = HR_Version
-	table.insert( Sheets, Sheet )
-
-	HR_Version = { }
-	HR_Version.filename = GPrefix.FolderGraphics .. "entity/high/loader-base.png"
-	HR_Version.height = 96
-	HR_Version.priority = "extra-high"
-	HR_Version.width = 96
-	HR_Version.scale = 0.5
-	HR_Version.shift = { 0, 0 }
-	HR_Version.y = 96
-
-	Sheet = { }
-	Sheet.filename = GPrefix.FolderGraphics .. "entity/low/loader-base.png"
-	Sheet.height = 48
-	Sheet.priority = "extra-high"
-	Sheet.width = 48
-	Sheet.scale = 1
-	Sheet.shift = { 0, 0 }
-	Sheet.y = 48
-
-	Sheet.hr_version = HR_Version
-	table.insert( Sheets, Sheet )
-
-	HR_Version = { }
-	HR_Version.filename = GPrefix.FolderGraphics .. "entity/high/loader-mask.png"
-	HR_Version.priority = "extra-high"
-	HR_Version.height = 96
-	HR_Version.width = 96
-	HR_Version.scale = 0.5
-	HR_Version.shift = { 0, 0 }
-	HR_Version.tint = List.Colour
-	HR_Version.y = 96
-
-	Sheet = { }
-	Sheet.filename = GPrefix.FolderGraphics .. "entity/low/loader-mask.png"
-	Sheet.priority = "extra-high"
-	Sheet.height = 48
-	Sheet.width = 48
-	Sheet.scale = 1
-	Sheet.shift = { 0, 0 }
-	Sheet.tint = List.Colour
-	Sheet.y = 48
-
-	Sheet.hr_version = HR_Version
-	table.insert( Sheets, Sheet )
-
-	Entity.structure.direction_out = { }
-	Entity.structure.direction_out.sheets = Sheets
-
-    ---> <---     ---> <---     ---> <---
-
-	-- Guardar la entidad
-	data:extend( { Entity } )
-	GPrefix.Entities[ Entity.name ] = Entity
-end
-
-local function LoaderRecipe( List )
-
-	-- Variable contenedora
-	local Recipe = { }
-	Recipe.type = "recipe"
-
-	-- Establecer el nombre de la nueva receta
-	Recipe.name = List.Loader.Name
-
-	-- Establecer el apodo de la descripcion
-	Recipe.localised_description = { "entity-description." .. GMOD.Prefix_MOD_ .. "loader" }
-
-	-- Establece la categoria y el subgrupo
-	Recipe.category = List.Category
-    Recipe.subgroup = GMOD.Prefix_MOD_ .. "loader"
-
-	-- Establecer el orden de la receta
-	Recipe.order = GPrefix.Items[ List.Loader.Base ].order
-
-	-- Establecer los valores de fabricación
-	Recipe.result = List.Loader.Name
-	Recipe.enabled = false
-	Recipe.energy_required = 2
-
-	-- Crear la receta con cada ingredientes
-	for Index, Ingredients in pairs( List.Loader.Ingredients ) do
-
-		-- Copiar la recera base
-		local recipe = GPrefix.DeepCopy( Recipe )
-
-		-- Establece el nombre de esta receta
-		recipe.name = recipe.name .. "-" .. Index
-
-		-- Establecer los ingredientes
-		recipe.ingredients = Ingredients
-
-		-- Guardar la receta
-		data:extend( { recipe } )
-
-		-- Guardar la receta
-		GPrefix.Recipes[ recipe.result ] = GPrefix.Recipes[ recipe.result ] or { }
-		table.insert( GPrefix.Recipes[ recipe.result ], recipe )
-
-		-- Agregar a la tecnologia
-		GPrefix.addTechnology( List.Technology, recipe.name )
-	end
-end
-
-local function LoaderItem( List )
-
-	-- Variable contenedora
-	local Item = { }
-	Item.type = "item"
-	Item.name = List.Loader.Name
-	Item.localised_description = { "entity-description." .. GMOD.Prefix_MOD_ .. "loader" }
-
-	Item.icon_size = 64
-	Item.icon_mipmaps = 4
-	Item.icons = { }
-
-	local icon = { }
-
-	icon = { }
-	icon.icon = GPrefix.FolderGraphics .. "icons/mipmaps/loader-icon-base.png"
-	table.insert( Item.icons, icon )
-
-	icon = { }
-	icon.tint = List.Colour
-	icon.icon = GPrefix.FolderGraphics .. "icons/mipmaps/loader-icon-mask.png"
-	table.insert( Item.icons, icon )
-
-    Item.subgroup = GMOD.Prefix_MOD_ .. "loader"
-	Item.stack_size = 50
-	Item.place_result = Item.name
-
-	Item.order = GPrefix.Items[ List.Loader.Base ].order
-
-	-- Guardar el objeto
-	data:extend( { Item } )
-	GPrefix.Items[ Item.name ] = Item
-end
-
---------------------------------------
---------------------------------------
-
--- Crear la vareble si no existe
-GMOD.Result = GMOD.Result or { }
-
--- Cargador y compactador Amarillo
-if true then
-
-	-- Color de los objetos
-	local Compact = { }
-	Compact.Colour   = { }
-	Compact.Colour.r = 210
-	Compact.Colour.g = 180
-	Compact.Colour.b =  80
-
-	-- Datos generales
-	Compact.Tier = "-1"
-	Compact.Next = "fast-"
-	Compact.Prefix = ""
-	Compact.Category = "crafting"
-	Compact.Technology = Compact.Prefix .. "splitter"
-
-
-
-	-- Valores de los cargadores
-	Compact.Loader = { }
-	Compact.Loader.Name = GMOD.Prefix_MOD_ .. Compact.Prefix .. "loader"
-	Compact.Loader.Next = GMOD.Prefix_MOD_ .. Compact.Next .. "loader"
-	Compact.Loader.Base = Compact.Prefix .. "transport-belt"
-
-	-- Ingredientes de la recetas
-	Compact.Loader.Ingredients = { }
-
-	-- Receta
-	Compact.Ingredient = { }
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "iron-plate"    , amount = 5, type = "item" } )
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "transport-belt", amount = 1, type = "item" } )
-	table.insert( Compact.Loader.Ingredients, Compact.Ingredient )
-
-
-
-	-- Valores de los compactadores
-	Compact.Compact = { }
-	Compact.Compact.Name = GMOD.Prefix_MOD_ .. Compact.Prefix .. "compact"
-	Compact.Compact.Next = GMOD.Prefix_MOD_ .. Compact.Next .. "compact"
-	Compact.Compact.Base = "assembling-machine" .. Compact.Tier
-
-	-- Ingredientes de la recetas
-	Compact.Compact.Ingredients = { }
-
-	-- Receta
-	Compact.Ingredient = { }
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "iron-plate"        , amount = 10, type = "item" } )
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "transport-belt"    , amount =  4, type = "item" } )
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "iron-gear-wheel"   , amount = 10, type = "item" } )
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "electronic-circuit", amount =  4, type = "item" } )
-	table.insert( Compact.Compact.Ingredients, Compact.Ingredient )
-
-
-
-	-- Eliminar la variable
-	table.insert( GMOD.Result, Compact )
-end
-
--- Cargador y compactador Rojo
-if true then
-
-	-- Color de los objetos
-	local Compact = { }
-	Compact.Colour   = { }
-	Compact.Colour.r = 210
-	Compact.Colour.g =  60
-	Compact.Colour.b =  60
-
-	-- Datos generales
-	Compact.Tier = "-2"
-	Compact.Next = "express-"
-	Compact.Prefix = "fast-"
-	Compact.Category = "crafting"
-	Compact.Technology = Compact.Prefix .. "splitter"
-
-
-
-	-- Valores de los cargadores
-	Compact.Loader = { }
-	Compact.Loader.Name = GMOD.Prefix_MOD_ .. Compact.Prefix .. "loader"
-	Compact.Loader.Next = GMOD.Prefix_MOD_ .. Compact.Next .. "loader"
-	Compact.Loader.Base = Compact.Prefix .. "transport-belt"
-
-	-- Ingredientes de la recetas
-	Compact.Loader.Ingredients = { }
-
-	-- Receta
-	Compact.Ingredient = { }
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "loader", amount =  1, type = "item" } )
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "iron-gear-wheel"  , amount = 20, type = "item" } )
-	table.insert( Compact.Loader.Ingredients, Compact.Ingredient )
-
-
-
-	-- Valores de los compactadores
-	Compact.Compact = { }
-	Compact.Compact.Name = GMOD.Prefix_MOD_ .. Compact.Prefix .. "compact"
-	Compact.Compact.Base = "assembling-machine" .. Compact.Tier
-
-	-- Ingredientes de la recetas
-	Compact.Compact.Ingredients = { }
-
-	-- Receta
-	Compact.Ingredient = { }
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "compact", amount =  1, type = "item" } )
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "iron-plate"        , amount = 20, type = "item" } )
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "iron-gear-wheel"   , amount = 20, type = "item" } )
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "advanced-circuit"  , amount =  2, type = "item" } )
-	table.insert( Compact.Compact.Ingredients, Compact.Ingredient )
-
-
-
-	-- Eliminar la variable
-	table.insert( GMOD.Result, Compact )
-end
-
--- Cargador y compactador Azul
-if true then
-
-	-- Color de los objetos
-	local Compact = { }
-	Compact.Colour   = { }
-	Compact.Colour.r =  80
-	Compact.Colour.g = 180
-	Compact.Colour.b = 210
-
-	-- Datos generales
-	Compact.Tier = "-3"
-	Compact.Prefix = "express-"
-	Compact.Category = "crafting-with-fluid"
-	Compact.Technology = Compact.Prefix .. "splitter"
-
-
-
-	-- Valores de los cargadores
-	Compact.Loader = { }
-	Compact.Loader.Name = GMOD.Prefix_MOD_ .. Compact.Prefix .. "loader"
-	Compact.Loader.Base = Compact.Prefix .. "transport-belt"
-
-	-- Ingredientes de la recetas
-	Compact.Loader.Ingredients = { }
-
-	-- Receta
-	Compact.Ingredient = { }
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "fast-loader", type = "item" , amount =  1 } )
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "iron-gear-wheel"       , type = "item" , amount = 40 } )
-	table.insert( Compact.Ingredient, { name = "lubricant"             , type = "fluid", amount = 20 } )
-	table.insert( Compact.Loader.Ingredients, Compact.Ingredient )
-
-
-
-	-- Valores de los compactadores
-	Compact.Compact = { }
-	Compact.Compact.Name = GMOD.Prefix_MOD_ .. Compact.Prefix .. "compact"
-	Compact.Compact.Base = "assembling-machine" .. Compact.Tier
-
-	-- Ingredientes de la recetas
-	Compact.Compact.Ingredients = { }
-
-	-- Receta
-	Compact.Ingredient = { }
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "fast-compact", type = "item" , amount =   1 } )
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "iron-plate"             , type = "item" , amount =  30 } )
-	table.insert( Compact.Ingredient, { name = GMOD.Prefix_MOD_ .. "iron-gear-wheel"        , type = "item" , amount =  30 } )
-	table.insert( Compact.Ingredient, { name = "lubricant"              , type = "fluid", amount = 100 } )
-	table.insert( Compact.Compact.Ingredients, Compact.Ingredient )
-
-
-
-	-- Eliminar la variable
-	table.insert( GMOD.Result, Compact )
-end
-
---------------------------------------
---------------------------------------
-
--- Agregar el subgrupo de los objetos
-if true then
-
-	GPrefix.addSubGroup( data.raw[ "item-subgroup" ] )
-	local subGroup = false
-
-	subGroup = { }
-	subGroup.type  = "item-subgroup"
-	subGroup.name  = GMOD.Prefix_MOD_ .. "loader"
-	subGroup.group = "logistics"
-	subGroup.order = GMOD.Prefix_MOD_ .. "0"
-	data:extend( { subGroup } )
-
-	subGroup = { }
-	subGroup.type  = "item-subgroup"
-	subGroup.name  = GMOD.Prefix_MOD_ .. "compact"
-	subGroup.group = "logistics"
-	subGroup.order = GMOD.Prefix_MOD_ .. "1"
-	data:extend( { subGroup } )
-end
-
--- Agregar el subgrupo de las recetas
-if true then
-	local Category = { }
-
-	Category = { }
-	Category.type = "recipe-category"
-	Category.name = "compact"
-	data:extend( { Category } )
-
-	Category = { }
-	Category.type = "recipe-category"
-	Category.name = "uncompact"
-	data:extend( { Category } )
-end
-
--- Crear el compactador y el cargador
-for _, List in pairs( GMOD.Result ) do
-	CompactEntity( List )
-	CompactRecipe( List )
-	CompactItem( List )
-
-	LoaderEntity( List )
-	LoaderRecipe( List )
-	LoaderItem( List )
-end
-
---------------------------------------
---------------------------------------
-
----> <---     ---> <---     ---> <---
-
---------------------------------------
---------------------------------------
-
-local function ReCalculate( ValueOld )
-
-	-- ValueOld = 10kW
-
-	-- Convertir el valor en un número
-	local ValueNew = GPrefix.getNumber( ValueOld ) -- 10000 <- 10kW
-
-	-- Potenciar el valor
-	ValueNew = ValueNew * GMOD.Value -- 500000 <- 10000 * 50
-
-	-- Convertir el numero en cadena
-	ValueNew = GPrefix.shortNumber( ValueNew ) -- 500K <- 500000
-
-	-- Agregarle la unidad de medición
-	ValueNew = ValueNew .. GPrefix.getUnit( ValueOld ) -- 500KW <- 500K .. 10kW
-
-	-- Devolver el resultado
-	return ValueNew -- 500KW
-end
-
--- Mejoras en los objetos
-
-local function BetterClusterGrenade( itemNew, List )
-
-	-- Marcar el objeto
-	itemNew.localised_name[ 3 ] = " [ + ]"
-
-	-- Variable contenedora
-	local Grenade = data.raw.projectile
-
-	-- Selecionar el efecto
-	Grenade = Grenade[ List.projectile ]
-
-	-- Copiar el efecto
-	Grenade = GPrefix.DeepCopy( Grenade )
-
-	-- Renombrar el efecto
-	Grenade.name = GMOD.Prefix_MOD_ .. Grenade.name
-
-	-- Renombrar la variable
-	local Actions = Grenade.action
-
-	-- Validación de datos
-	Actions = Actions[ 1 ] and  Actions or { Actions }
-
-	-- Buscar la acción deseada
-	for _, Action in pairs( Actions ) do
-		if Action.cluster_count then
-
-			-- Potenciar el valor
-			Action.cluster_count = Action.cluster_count * GMOD.Value
-
-			-- Guardar el nuevo efecto
-			data:extend( { Grenade } )
-			List.projectile = Grenade.name
-			return
-		end
-	end
-end
-
-local function BetterGrenade( itemNew, List )
-
-	-- Marcar el objeto
-	itemNew.localised_name[ 3 ] = " [ + ]"
-
-	-- Variable contenedora
-	local Grenade = data.raw.projectile
-
-	-- Selecionar el efecto
-	Grenade = Grenade[ List.projectile ]
-
-	-- Copiar el efecto
-	Grenade = GPrefix.DeepCopy( Grenade )
-
-	-- Renombrar el efecto
-	Grenade.name = GMOD.Prefix_MOD_ .. Grenade.name
-
-	-- Renombrar la variable
-	local Actions = Grenade.action
-
-	-- Validación de datos
-	Actions = Actions[ 1 ] and  Actions or { Actions }
-
-	-- Buscar la acción deseada
-	for _, Action in pairs( Actions ) do
-		if Action.action_delivery then
-
-			-- Renombrar la variable
-			local ActionDelivery = Action.action_delivery
-			local TargetEffects = ActionDelivery.target_effects
-
-			-- Validación de datos
-			TargetEffects = TargetEffects[ 1 ] and TargetEffects or { TargetEffects }
-
-			-- Buscar la acción deseada
-			for _, TargetEffect in pairs( TargetEffects ) do
-				if TargetEffect.damage then
-
-					-- Renombrar la variable
-					local Damage = TargetEffect.damage
-
-					-- Potenciar el valor
-					Damage.amount = Damage.amount * GMOD.Value
-
-					-- Guardar el nuevo efecto
-					data:extend( { Grenade } )
-					List.projectile = Grenade.name
-					return
-				end
-			end
-		end
-	end
-end
-
-local function BetterCapsule( itemNew )
-
-    -- Valdación básica
-	if not itemNew.capsule_action then return end
-	if itemNew.name == GMOD.Prefix_MOD_ .. "cliff-explosives" then return end
-
-	-- Variable contenedora
-	local Propietys = { }
-	table.insert( Propietys, "capsule_action" )
-	table.insert( Propietys, "attack_parameters" )
-	table.insert( Propietys, "ammo_type" )
-
-	-- Buscar el efecto deseado
-	local Propiety = itemNew
-	for _, value in pairs( Propietys ) do
-		Propiety = Propiety[ value ]
-		if not Propiety then return end
-	end
-
-	-- Buscar la acción deseada
-	if not Propiety.action then return end
-
-	-- Renombrar la variable
-	local Actions = Propiety.action
-
-	-- Validación de datos
-	Actions = Actions[ 1 ] and Actions or { Actions }
-
-	-- Buscar la acción deseada
-	for _, Action in pairs( Actions ) do
-		repeat
-
-			-- Renombrar la variable
-			local ActionDelivery = Action.action_delivery
-
-			-- Acción no encontrada
-			if not ActionDelivery then break end
-
-			-- Daño instantaneo o cura instantanea
-			if ActionDelivery.target_effects then
-
-				-- Renombrar la variable
-				local TargetEffects = ActionDelivery.target_effects
-
-				-- Validación de datos
-				if not TargetEffects[ 1 ] then TargetEffects = { TargetEffects } end
-
-				-- Buscar el efecto deseado
-				for _, TargetEffect in pairs( TargetEffects ) do
-					if TargetEffect.damage then
-
-						-- Renombrar la variable
-						local Damage = TargetEffect.damage
-
-						-- Potenciar el valor
-						Damage.amount = Damage.amount * GMOD.Value
-
-						-- Marcar el objeto
-						itemNew.localised_name[ 3 ] = " [ + ]"
-
-						-- Dejar de buscar
-						Action = nil
-					end
-				end
-			end
-
-			-- Daño por efecto
-			if ActionDelivery.projectile then
-
-				-- Renombrar la variable
-				local Projectile = ActionDelivery.projectile
-
-				-- Modificar el efecto de las granadas
-				if Projectile == "grenade" then
-					BetterGrenade( itemNew, ActionDelivery )
-				end
-
-				-- Modificar el efecto de las granadas agrupadas
-				if Projectile == "cluster-grenade" then
-					BetterClusterGrenade( itemNew, ActionDelivery )
-				end
-
-				-- Dejar de buscar
-				Action = nil
-			end
-
-		until true
-
-		-- Dejar de buscar
-		if not Action then break end
-	end
-end
-
-
-
-local function BetterAmmo( itemNew )
-
-	-- Valdación básica
-	if not itemNew.ammo_type then return end
-
-	-- Validación de datos
-	itemNew.magazine_size = itemNew.magazine_size or 1
-
-	-- Potenciar el valor
-	itemNew.magazine_size = itemNew.magazine_size * GMOD.Value
-
-	-- Marcar el objeto
-	itemNew.localised_name[ 3 ] = " [ + ]"
-end
-
-local function BetterFuel( itemNew )
-
-	-- Valdación básica
-    if not itemNew.fuel_value then return end
-
-	-- Potenciar el valor
-	itemNew.fuel_value = ReCalculate( itemNew.fuel_value )
-
-	-- Marcar el objeto
-	itemNew.localised_name[ 3 ] = " [ + ]"
-end
-
-local function BetterModule( itemNew )
-
-	-- Valdación básica
-	if not itemNew.effect then return end
-
-	-- Variable contenedora
-	local Effects = { }
-	table.insert( Effects, "productivity" )
-	table.insert( Effects, "consumption" )
-	table.insert( Effects, "pollution" )
-	table.insert( Effects, "speed" )
-
-	-- Buscar el efecto deseado
-	for _, Effect in ipairs( Effects ) do
-		if itemNew.effect[ Effect ] then
-
-			-- Renombrar la variable
-			Effect = itemNew.effect[ Effect ]
-
-			-- Variable contenedora
-			local Bonus = Effect.bonus * GMOD.Value
-
-			-- Validación de datos
-			if Bonus > 300 then Bonus = 300 end
-
-			-- Establecer el valor
-			Effect.bonus = Bonus
-		end
-	end
-
-	-- Marcar el objeto
-	itemNew.localised_name[ 3 ] = " [ + ]"
-end
-
-local function BetterRepairTool( itemNew )
-
-	-- Valdación básica
-	if not itemNew.durability then return end
-	if not itemNew.speed then return end
-
-	-- Establecer el suelo en el nuevo objeto
-	itemNew.speed = GMOD.Value
-
-	-- Validación de datos
-	if GMOD.Value > itemNew.durability then
-		itemNew.durability = GMOD.Value
-	end
-
-	-- Marcar el objeto
-	itemNew.localised_name[ 3 ] = " [ + ]"
-end
-
--- Mejoras en los equipos
-
-local function BetterEquipament( itemNew )
-
-	-- Valdación básica
-    if not itemNew.placed_as_equipment_result then return end
-
-	-- Variable contenedora
-	local Equipment = itemNew
-	Equipment = Equipment.placed_as_equipment_result
-	Equipment = GPrefix.Equipaments[ Equipment ]
-	Equipment = GPrefix.DeepCopy( Equipment )
-
-	-- Validación de datos
-	if not Equipment.localised_name then
-		Equipment.localised_name =  { "equipment-name." .. Equipment.name }
-	end
-
-	-- Renombrar el equipo
-	Equipment.name = GMOD.Prefix_MOD_ .. Equipment.name
-
-	-- Establecer el podo
-	Equipment.localised_name =  { "", Equipment.localised_name, " [ = ]"}
-
-	-- Buffer e IO
-	if Equipment.energy_source then
-
-		-- Renombrar la variable
-		local Propiety = Equipment.energy_source
-
-		-- Validación de datos
-		if Propiety.buffer_capacity then
-
-			-- Potenciar el valor
-			Propiety.buffer_capacity = ReCalculate( Propiety.buffer_capacity )
-
-			-- Marcar el objeto y el equipo
-			Equipment.localised_name[ 3 ] = " [ + ]"
-			itemNew.localised_name[ 3 ] = " [ + ]"
-		end
-
-		-- Validación de datos
-		if Propiety.input_flow_limit then
-
-			-- Potenciar el valor
-			Propiety.input_flow_limit = ReCalculate( Propiety.input_flow_limit )
-
-			-- Marcar el objeto y el equipo
-			Equipment.localised_name[ 3 ] = " [ + ]"
-			itemNew.localised_name[ 3 ] = " [ + ]"
-		end
-
-		-- Validación de datos
-		if Propiety.output_flow_limit then
-
-			-- Potenciar el valor
-			Propiety.output_flow_limit = ReCalculate( Propiety.output_flow_limit )
-
-			-- Marcar el objeto y el equipo
-			Equipment.localised_name[ 3 ] = " [ + ]"
-			itemNew.localised_name[ 3 ] = " [ + ]"
-		end
-	end
-
-	-- Armas
-	if Equipment.attack_parameters then
-
-		-- Renombrar la variable
-		local Propiety = Equipment.attack_parameters
-
-		-- Validación de datos
-		if Propiety.damage_modifier then
-
-			-- Potenciar el valor
-			Propiety.damage_modifier = Propiety.damage_modifier * GMOD.Value
-
-			-- Marcar el objeto y el equipo
-			Equipment.localised_name[ 3 ] = " [ + ]"
-			itemNew.localised_name[ 3 ] = " [ + ]"
-		end
-	end
-
-	-- Escudos
-	if Equipment.max_shield_value then
-
-		-- Potenciar el valor
-		Equipment.max_shield_value = Equipment.max_shield_value * GMOD.Value
-
-		-- Marcar el objeto y el equipo
-		Equipment.localised_name[ 3 ] = " [ + ]"
-		itemNew.localised_name[ 3 ] = " [ + ]"
-	end
-
-	-- Generadores
-	if Equipment.power then
-
-		-- Potenciar el valor
-		Equipment.power = ReCalculate( Equipment.power )
-
-		-- Marcar el objeto y el equipo
-		Equipment.localised_name[ 3 ] = " [ + ]"
-		itemNew.localised_name[ 3 ] = " [ + ]"
-	end
-
-	-- Recargas de los robopurtos
-	if Equipment.charging_energy then
-
-		-- Potenciar el valor
-		Equipment.charging_energy = ReCalculate( Equipment.charging_energy )
-
-		-- Marcar el objeto y el equipo
-		Equipment.localised_name[ 3 ] = " [ + ]"
-		itemNew.localised_name[ 3 ] = " [ + ]"
-	end
-
-	-- Regresar el objeto usado
-	if Equipment.take_result then
-		Equipment.take_result = nil
-	end
-
-	-- Guardar el nuevo suelo
-	data:extend( { Equipment } )
-	GPrefix.Equipaments[ Equipment.name ] = Equipment
-
-	-- Establecer el equipamento en el nuevo objeto
-	itemNew.placed_as_equipment_result = Equipment.name
-end
-
--- Mejoras en los suelos
-
-local function BetterTile( itemNew )
-
-	-- Valdación básica
-    if not itemNew.place_as_tile then return end
-
-	-- Buscar el suelo deseado
-	local Index = false
-	for key, _ in pairs( GPrefix.Tiles ) do
-		if GMOD.Prefix_MOD_ .. key == itemNew.name then
-			Index = key break
-		end
-	end
-
-	-- Suelo no encontrado
-	if not Index then return end
-
-	-- Marcar el objeto
-	itemNew.localised_name[ 3 ] = " [ + ]"
-
-	-- Recorrer todos los suelos
-	for key, Tile in pairs( GPrefix.Tiles[ Index ] ) do
-
-		-- Hacer una copia del suelo
-		Tile = GPrefix.DeepCopy( Tile )
-
-		-- Validación de datos
-		if not Tile.localised_name then
-			Tile.localised_name = { "item-name." .. Tile.name }
-		end
-
-		if Tile.next_direction then
-			Tile.next_direction = GMOD.Prefix_MOD_ .. Tile.next_direction
-		end
-
-		if Tile.minable and Tile.minable.result then
-			Tile.minable.result = itemNew.name
-		end
-
-		-- Renombrar el suelo
-		Tile.name = GMOD.Prefix_MOD_ .. Tile.name
-
-		-- Beneficion del suelo
-		Tile.pollution_absorption_per_second = GMOD.Value
-
-		-- Establecer el podo y marcar el suelo
-		Tile.localised_name = { "", Tile.localised_name, " [ + ]" }
-
-		-- Guardar el nuevo suelo
-		data:extend( { Tile } )
-		GPrefix.Tiles[ Tile.name ] = Tile
-
-		-- Establecer el suelo en el nuevo objeto
-		if key == 1 then itemNew.place_as_tile.result = Tile.name end
-	end
-end
-
--- Mejoras en las entidades
-
-local function BetterLab( itemNew, Lab )
-
-	-- Valdación básica
-	if not Lab.researching_speed then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Lab.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Lab.researching_speed = Lab.researching_speed * GMOD.Value
-end
-
-local function BetterGate( itemNew, Gate )
-
-	-- Valdación básica
-	if not Gate.opening_speed then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Gate.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Gate.max_health = Gate.max_health * GMOD.Value
-end
-
-local function BetterTree( itemNew, Tree )
-
-	-- Valdación básica
-	if not Tree.emissions_per_second then return end
-	if Tree.emissions_per_second >= 0 then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Tree.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Tree.emissions_per_second = Tree.emissions_per_second * GMOD.Value
-end
-
-local function BetterWall( itemNew, Wall )
-
-	-- Valdación básica
-	if not Wall.wall_diode_red then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Wall.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Wall.max_health = Wall.max_health * GMOD.Value
-end
-
-local function BetterBeacon( itemNew, Beacon )
-
-	-- Valdación básica
-	if not Beacon.distribution_effectivity then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Beacon.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Beacon.distribution_effectivity = Beacon.distribution_effectivity * GMOD.Value
-end
-
-local function BetterContainer( itemNew, Container )
-
-	-- Valdación básica
-	if Container.energy_usage then return end
-	if Container.energy_source then return end
-	if not Container.inventory_size then return end
-	if Container.inventory_size > GMOD.Value then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Container.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Container.inventory_size = GMOD.Value
-end
-
-local function BetterCircuitWire( itemNew, Entity )
-
-	-- Valdación básica
-	if not Entity.circuit_wire_max_distance then return end
-	if Entity.circuit_wire_max_distance == 0 then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Entity.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Entity.circuit_wire_max_distance = GMOD.Value
-end
-
-local function BetterMiningDrill( itemNew, MiningDrill )
-
-	-- Valdación básica
-	if not MiningDrill.mining_speed then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	MiningDrill.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	MiningDrill.mining_speed = MiningDrill.mining_speed * GMOD.Value
-end
-
-local function BetterElectricPole( itemNew, ElectricPole )
-
-	-- Valdación básica
-	if not ElectricPole.maximum_wire_distance then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	ElectricPole.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	if 	GMOD.Value > ElectricPole.maximum_wire_distance then
-		local Value = GMOD.Value
-		if Value > 64 then Value = 64 end
-		ElectricPole.maximum_wire_distance = Value
-	end
-end
-
-local function BetterRailwayEntity( itemNew, Entity )
-
-	-- Entidades a modificar
-	local types = { }
-	table.insert( types, "locomotive" )
-	table.insert( types, "cargo-wagon" )
-	table.insert( types, "fluid-wagon" )
-	table.insert( types, "artillery-wagon" )
-
-	-- Valdación básica
-	if not GPrefix.getKey( types, Entity.type ) then return end
-
-	-- Potenciar la velocidad
-	Entity.max_speed = Entity.max_speed * GMOD.Value
-    Entity.air_resistance = 0
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Entity.localised_name[ 3 ] = " [ + ]"
-end
-
-local function BetterCraftingMachine( itemNew, Machine )
-
-	-- Valdación básica
-	if not Machine.crafting_speed then return end
-
-	-- Potenciar la absorción de la contaminación
-	if Machine.energy_source then
-		local EnergySource = Machine.energy_source
-		local Pollution = EnergySource.emissions_per_minute
-		if Pollution and Pollution < 0 then
-			Pollution = Pollution  * GMOD.Value
-			EnergySource.emissions_per_minute = Pollution
-
-			-- Marcar el objeto y la entidad
-			itemNew.localised_name[ 3 ] = " [ + ]"
-			Machine.localised_name[ 3 ] = " [ + ]"
-
-			return
-		end
-	end
-
-	local Ingredient = Machine.source_inventory_size
-	local Result = Machine.result_inventory_size
-	if Result and Ingredient then
-		if Result == 0 and Ingredient == 0 then
-			return
-		end
-	end
-
-	-- Potenciar la velocidad de creación
-	local Speed = Machine.crafting_speed
-	Speed = Speed * GMOD.Value
-	Machine.crafting_speed = Speed
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Machine.localised_name[ 3 ] = " [ + ]"
-end
-
-
-
-local function BetterRobot( itemNew, Robot )
-
-	-- Valdación básica
-	if not Robot.energy_per_move then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Robot.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Robot.speed = Robot.speed * GMOD.Value
-end
-
-local function BetterRoboport( itemNew, Roboport )
-
-	-- Valdación básica
-	if not Roboport.charging_energy then return end
-	if not Roboport.charging_offsets then return end
-	if #Roboport.charging_offsets <= 0 then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Roboport.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Roboport.charging_energy = ReCalculate( Roboport.charging_energy )
-end
-
-
-
-local function BetterGenerator( itemNew, Generator )
-
-	-- Valdación básica
-	if Generator.type ~= "generator" then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Generator.localised_name[ 3 ] = " [ + ]"
-	-- Generator.maximum_temperature = GPrefix.Fluids[ "steam" ].max_temperature
-
-	-- La energía generada es fija
-	if Generator.max_power_output then
-		Generator.max_power_output = ReCalculate( Generator.max_power_output )
-	end
-
-	-- La energía generada se calcula
-	if not Generator.max_power_output then
-		Generator.effectivity = Generator.effectivity * GMOD.Value
-	end
-end
-
-local function BetterSolarPanel( itemNew, Generator )
-
-	-- Valdación básica
-	if not Generator.production then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Generator.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Generator.production = ReCalculate( Generator.production )
-end
-
-local function BetterAccumulator( itemNew, Accumulator )
-
-	-- Valdación básica
-	if not Accumulator.charge_animation then return end
-
-	-- Renombrar la variable
-	local EnergySource = Accumulator.energy_source
-
-	-- Valdación básica
-	if not EnergySource then return end
-
-	local Output = EnergySource.output_flow_limit
-	if GPrefix.getNumber( Output ) == 0 then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Accumulator.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	EnergySource.output_flow_limit = ReCalculate( EnergySource.output_flow_limit )
-	EnergySource.input_flow_limit = ReCalculate( EnergySource.input_flow_limit )
-	EnergySource.buffer_capacity = ReCalculate( EnergySource.buffer_capacity )
-end
-
-
-
-local function BetterFluidWeapon( itemNew, Weapon )
-
-	-- Variable contenedora
-	local Value = Weapon.attack_parameters
-
-	-- Valdación básica
-	if not Value then return end
-	if not Value.fluids then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Weapon.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	for _, fluid in pairs( Value.fluids ) do
-		if fluid.damage_modifier then
-			fluid.damage_modifier = fluid.damage_modifier * GMOD.Value
-		end
-	end
-end
-
-local function BetterWeaponAmmoless( itemNew, Weapon )
-
-	-- Variable contenedora
-	local Value = Weapon.attack_parameters
-
-	-- Valdación básica
-	if not Value then return end
-	if not Value.damage_modifier then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Weapon.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Value.damage_modifier = Value.damage_modifier * GMOD.Value
-end
-
-
-
-local function BetterPump( itemNew, Pump )
-
-	-- Valdación básica
-	if not Pump.pumping_speed then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Pump.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	local Value = Pump.pumping_speed
-	Value = Value * GMOD.Value
-	Pump.pumping_speed = Value
-end
-
-local function BetterFluidWagon( itemNew, Wagon )
-
-	-- Valdación básica
-	if not Wagon.capacity then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Wagon.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	Wagon.capacity = Wagon.capacity * GMOD.Value
-end
-
-local function BetterInputFluidBox( itemNew, Container )
-
-	-- Variable contenedora
-	local Value = Container.fluid_box
-
-	-- Valdación básica
-	if not Value then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Container.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	if Value.height then
-		Value.height = Value.height * GMOD.Value
-	end
-
-	if Value.base_area then
-		Value.base_area = Value.base_area * GMOD.Value
-	end
-
-	for _, value in pairs( Value.pipe_connections or { } ) do
-		if value.max_underground_distance then
-			local Distance = value.max_underground_distance
-			if GMOD.Value > Distance then Distance = GMOD.Value end
-			if Distance > 250 then Distance = 250 end
-			value.max_underground_distance = Distance
-		end
-	end
-end
-
-local function BetterOutputFluidBox( itemNew, Container )
-
-	-- Variable contenedora
-	local Value = Container.output_fluid_box
-
-	-- Valdación básica
-	if not Value then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Container.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	if Value.height then
-		Value.height = Value.height * GMOD.Value
-	end
-
-	if Value.base_area then
-		Value.base_area = Value.base_area * GMOD.Value
-	end
-end
-
-
-
-local function BetterBelt( itemNew, Belt )
-
-	-- Valdación básica
-	if not Belt.related_underground_belt then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Belt.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	local Value = Belt.speed
-	Value = Value * GMOD.Value
-	Belt.speed = Value
-end
-
-local function BetterLoader( itemNew, Loader )
-
-	-- Valdación básica
-	if not Loader.container_distance then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Loader.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	local Value = Loader.speed
-	Value = Value * GMOD.Value
-	Loader.speed = Value
-end
-
-local function BetterInserter( itemNew, Inserter )
-
-	-- Valdación básica
-	if not Inserter.extension_speed then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Inserter.localised_name[ 3 ] = " [ + ]"
-
-	-- Variable contenedora
-	local Speed = 0
-
-	-- Potenciar el valor
-	Speed = Inserter.extension_speed
-	Speed = Speed * GMOD.Value
-	if Speed > 0.2 then Speed = 0.2 end
-	Inserter.extension_speed = Speed
-
-	Speed = Inserter.rotation_speed
-	Speed = Speed * GMOD.Value
-	if Speed > 0.2 then Speed = 0.2 end
-	Inserter.rotation_speed = Speed
-end
-
-local function BetterSplitter( itemNew, Splitter )
-
-	-- Valdación básica
-	if not Splitter.structure_patch then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Splitter.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	local Value = Splitter.speed
-	Value = Value * GMOD.Value
-	Splitter.speed = Value
-end
-
-local function BetterUndergroundBelt( itemNew, Belt )
-
-	-- Valdación básica
-	if not Belt.max_distance then return end
-
-	-- Marcar el objeto y la entidad
-	itemNew.localised_name[ 3 ] = " [ + ]"
-	Belt.localised_name[ 3 ] = " [ + ]"
-
-	-- Potenciar el valor
-	local Value = 0
-
-	Value = Belt.max_distance
-	Value = Value * GMOD.Value
-	if Value > 250 then Value = 250 end
-	Belt.max_distance = Value
-
-	Value = Belt.speed
-	Value = Value * GMOD.Value
-	Belt.speed = Value
-end
-
-local function BetterEntity( itemNew )
-
-    -- Valdación básica
-	if not itemNew.place_result then return end
-
-	-- Variable contenedora
-	local Entity = GPrefix.Entities[ itemNew.place_result ]
-
-	-- Reemplazar la entidad no compactada
-	if not Entity.fast_replaceable_group then
-		if GPrefix.Items[ Entity.name ] then
-			local SubGroup = GPrefix.Items[ Entity.name ].subgroup
-			Entity.fast_replaceable_group = SubGroup
-		end
-	end
-
-	-- Hacer una copia de la entidad
-	Entity = GPrefix.DeepCopy( Entity )
-
-	-- Asignar objeto como minable
-	if Entity.minable and Entity.minable.result then
-		Entity.minable.result = itemNew.name
-	end
-
-    -- Sobre escribir los nombres
-	if not Entity.localised_name then
-		Entity.localised_name = { "entity-name." .. Entity.name }
-	end Entity.localised_name = { "", Entity.localised_name, " [ = ]" }
-
-    -- Sobre escribir las descripciones
-    if not Entity.localised_description then
-		Entity.localised_description = { "entity-description." .. Entity.name }
-	end Entity.localised_description = Entity.localised_description
-
-	-- Asignar la actualización
-	if Entity.next_upgrade then
-		Entity.next_upgrade = GMOD.Prefix_MOD_ .. Entity.next_upgrade
-	end
-
-	-- Renombrar la entidad
-	Entity.name = GMOD.Prefix_MOD_ .. Entity.name
-
-	---> <---     ---> <---     ---> <---
-
-	-- Variado
-	BetterLab( itemNew, Entity )
-	BetterGate( itemNew, Entity )
-	BetterTree( itemNew, Entity )
-	BetterWall( itemNew, Entity )
-	BetterBeacon( itemNew, Entity )
-	BetterContainer( itemNew, Entity )
-	BetterCircuitWire( itemNew, Entity )
-	BetterMiningDrill( itemNew, Entity )
-	BetterElectricPole( itemNew, Entity )
-	BetterRailwayEntity( itemNew, Entity )
-	BetterCraftingMachine( itemNew, Entity )
-
-	-- Robots
-	BetterRobot( itemNew, Entity )
-	BetterRoboport( itemNew, Entity )
-
-	-- Energy
-	BetterGenerator( itemNew, Entity )
-	BetterSolarPanel( itemNew, Entity )
-	BetterAccumulator( itemNew, Entity )
-
-	-- Armas
-	BetterFluidWeapon( itemNew, Entity )
-	BetterWeaponAmmoless( itemNew, Entity )
-
-	-- Fluidos
-	BetterPump( itemNew, Entity )
-	BetterFluidWagon( itemNew, Entity )
-	BetterInputFluidBox( itemNew, Entity )
-	BetterOutputFluidBox( itemNew, Entity )
-
-	-- Logistica
-	BetterBelt( itemNew, Entity )
-	BetterLoader( itemNew, Entity )
-	BetterInserter( itemNew, Entity )
-	BetterSplitter( itemNew, Entity )
-	BetterUndergroundBelt( itemNew, Entity )
-
-	---> <---     ---> <---     ---> <---
-
-	-- Guardar el insertador
-	data:extend( { Entity } )
-	GPrefix.Entities[ Entity.name ] = Entity
-
-	-- Establecer el insertador al nuevo objeto
-	itemNew.place_result = Entity.name
-end
-
---------------------------------------
---------------------------------------
-
----> <---     ---> <---     ---> <---
-
---------------------------------------
---------------------------------------
-
--- Establecer la lists de cambios
-local Corrections = { }
-Corrections[ "se-big-turbine" ] = 5.5
-Corrections[ "se-condenser-turbine" ] = 3
-
--- Establecer los cambios
-for Entity, Value in pairs( Corrections ) do
-	repeat
-
-		-- Buscar la entidad
-		Entity = GPrefix.Entities[ Entity ]
-
-		-- Validación basica
-		if not Entity then break end
-		if not Entity.fluid_boxes then break end
-
-		-- Buscar el valor a acambiar
-		local PipeConnections = 0
-		for _, FluidBox in pairs( Entity.fluid_boxes ) do
-			if not FluidBox.filter then break end
-			if not FluidBox.production_type then break end
-			if not FluidBox.pipe_connections then break end
-
-			if FluidBox.filter ~= "se-decompressing-steam" then break end
-			if FluidBox.production_type ~= "output" then break end
-			if #FluidBox.pipe_connections < 1 then break end
-
-			PipeConnections = FluidBox.pipe_connections
-		end
-
-		-- Realizar el cambio
-		for _, PipeConnection in pairs( PipeConnections ) do
-			if not PipeConnection.position then break end
-			PipeConnection.position[ 2 ] = Value
-		end
-	until true
-end
-
---------------------------------------
---------------------------------------
-
----> <---     ---> <---     ---> <---
-
---------------------------------------
---------------------------------------
-
--- Tipos a evitar
-local AvoidTypes = { }
-table.insert( AvoidTypes, "car" )
-table.insert( AvoidTypes, "gun" )
-table.insert( AvoidTypes, "armor" )
-table.insert( AvoidTypes, "rail-planner" )
-table.insert( AvoidTypes, "selection-tool" )
-table.insert( AvoidTypes, "spider-vehicle" )
-table.insert( AvoidTypes, "belt-immunity-equipment" )
-
--- Patrones a evitar
-local AvoidPatterns = { }
-table.insert( AvoidPatterns, "%-remote" )
-
---------------------------------------
---------------------------------------
-
-local function CreateRecipe( itemOld )
-
-	-- Variable contenedora
-	local itemNew = GPrefix.Items[ GMOD.Prefix_MOD_ .. itemOld.name ]
-
-    -- Valdación básica
-	if not itemNew then return end
-
-	-- Valores para la receta
-    local recipes      = { }
-    recipes.compact    = { }
-    recipes.uncompact  = { }
-
-    -- Valores para la descompresion
-    recipes.uncompact.name        = GMOD.Prefix_MOD_ .. "uncompact-" .. itemOld.name
-    recipes.uncompact.results     = { { type = "item", amount = GMOD.Value, name = itemOld.name } }
-    recipes.uncompact.ingredients = { { type = "item", amount = 1 , name = GMOD.Prefix_MOD_ .. itemOld.name } }
-    recipes.uncompact.action      = true
-
-	-- Valores para la compresion
-    recipes.compact.name        = GMOD.Prefix_MOD_ .. "compact-" .. itemOld.name
-    recipes.compact.results     = { { type = "item", amount = 1 , name = GMOD.Prefix_MOD_ .. itemOld.name } }
-    recipes.compact.ingredients = { { type = "item", amount = GMOD.Value, name = itemOld.name  } }
-
-    ---> <---     ---> <---     ---> <---
-
-    for Category, Recipe in pairs( recipes ) do
-
-        -- Copiar el objeto
-        local recipeNew = { }
-
-        -- Crear las recetas
-        recipeNew.name = Recipe.name
-        recipeNew.type = "recipe"
-
-		recipeNew.order    = itemOld.order
-        recipeNew.enabled  = false
-        recipeNew.category = Category
-        recipeNew.subgroup = GMOD.Prefix_MOD_ .. itemOld.subgroup
-
-		recipeNew.results      = Recipe.results
-        recipeNew.ingredients  = Recipe.ingredients
-        recipeNew.main_product = ""
-
-        recipeNew.energy_required     = 10
-        recipeNew.allow_decomposition = true
-        recipeNew.always_show_made_in = true
-
-		recipeNew.hide_from_player_crafting = Recipe.action or false
-
-        -- Sobre escribir los nombres
-        local recipeName = { }
-        recipeNew.localised_name = recipeName
-        table.insert( recipeName, "" )
-        table.insert( recipeName, { "recipe-name." .. GMOD.Prefix_MOD_ .. Category } )
-		table.insert( recipeName, itemNew.localised_name )
-
-        -- Añadir el pez
-        GPrefix.addIcon( itemOld, recipeNew, Recipe.action )
-
-		---> <---     ---> <---     ---> <---
-
-        -- Guardar la nueva receta
-        data:extend( { recipeNew } )
-        GPrefix.addTechnology( itemOld.name, recipeNew.name )
-		local Result = recipeNew.results[ 1 ].name
-		GPrefix.Recipes[ Result ] = GPrefix.Recipes[ Result ] or { }
-		table.insert( GPrefix.Recipes[ Result ], recipeNew )
+        -- Recepción del salto
+        :: JumpItem ::
     end
 end
 
-local function CreateItem( itemOld )
+-- Agregar el objeto modificado
+function ThisMOD.AddModifiedItem( Data )
 
-    -- Copiar el objeto
-    local itemNew = GPrefix.DeepCopy( itemOld )
+    -- Validación básica
+    if not Data.Modified then return end
 
-    -- Establecer los nombres
-    itemNew.name     = GMOD.Prefix_MOD_ .. itemOld.name
-    itemNew.subgroup = GMOD.Prefix_MOD_ .. itemOld.subgroup
+    -- Cargar el objeto comprimido
+    local Find = GPrefix.Prefix_
+    Find = string.gsub( Find, "-", "%%-" )
+    local Name = Data.Item.name
+    Name = string.gsub( Name, Find, "" )
+    Name = ThisMOD.Requires.Prefix_MOD_ .. Name
+    local OldItem = GPrefix.Items[ Name ]
+    if not OldItem then return end
 
-    -- Preparar el nuevo nombre
-	if not itemOld.localised_name then
-		if itemOld.place_result then
-			itemNew.localised_name = { "entity-name." .. itemOld.name }
-		elseif itemOld.place_as_tile then
-			itemNew.localised_name = { "item-name." .. itemOld.name }
-		elseif itemOld.placed_as_equipment_result then
-			itemNew.localised_name = { "equipment-name." .. itemOld.name }
-		else
-			itemNew.localised_name = { "item-name." .. itemOld.name }
-		end
-	end
+    -- Oculatar el objeto comprimido
+    OldItem.flags = OldItem.flags or { "hidden" }
+    if not GPrefix.getKey( OldItem.flags, "hidden" ) then
+        table.insert( OldItem.flags, "hidden" )
+    end GPrefix.Items[ OldItem.name ] = nil
 
-    -- Sobre escribir los nombres
-	itemNew.localised_name = { "", itemNew.localised_name, " [ = ]"}
+    -- Modificar el objeto con efecto
+    Data.Item.name = Data.Item.name
+    Data.Item.icon = nil
+    Data.Item.icons = OldItem.icons
+    Data.Item.subgroup = OldItem.subgroup
+    Data.Item.localised_name = OldItem.localised_name
+    Data.Item.localised_description = OldItem.localised_description
 
-    -- Sobre escribir las descripciones
-    if not itemOld.localised_description then
-        if itemOld.place_result then
-            itemNew.localised_description = { "entity-description." .. itemOld.name }
-        elseif itemOld.place_as_tile then
-            itemNew.localised_description = { "tile-description." .. itemOld.name }
-        else
-            itemNew.localised_description = { "item-description." .. itemOld.name }
+    -- Agregar la letra del MOD
+    GPrefix.addLetter( Data.Item, ThisMOD )
+    ThisMOD.addLetter( Data.Item, Data.Compact )
+    ThisMOD.addLetter( Data.Item, Data.Uncompact )
+    ThisMOD.addLetter( Data.Item, Data.LocalisedName )
+
+    -- Modificar las recetas
+    Data.Compact.results[ 1 ].name = Data.Item.name
+    Data.Uncompact.ingredients[ 1 ].name = Data.Item.name
+
+    -- Imagen de este MOD
+    local MODIcon = ThisMOD.Patch .. "icons/status.png"
+
+    -- Cambiar la imagen
+    Data.Item.icons[ #Data.Item.icons ].icon = MODIcon
+    Data.Compact.icons[ #Data.Compact.icons - 1 ].icon = MODIcon
+    Data.Uncompact.icons[ #Data.Uncompact.icons - 1 ].icon = MODIcon
+
+    -- Crear el objetos mejorado
+    data:extend( { Data.Item } )
+    GPrefix.Items[ Data.Item.name ] = Data.Item
+    if Data.LocalisedName then data:extend( { Data.LocalisedName } ) end
+end
+
+-- Agregar la letra indicadora del MOD
+function ThisMOD.addLetter( Source, Destiny )
+
+    -- Validación básica
+    if not Destiny then return end
+
+    -- Inicializar las varebles
+    local Array = { }
+    local Start = 0
+    local List = { }
+
+    -- Guardar los nuevos inidicadores
+    Start = 0
+    List = Source.localised_name
+    for i, Str in pairs( List ) do
+        if Str == " [" then Start = i end
+        if Start > 0 then table.insert( Array, Str ) end
+    end
+
+    -- Identificar el inicio de los inidicadores
+    Start = 0
+    List = Destiny.localised_name
+    for i, Str in pairs( List ) do
+        if Str == " [" then Start = i break end
+    end
+
+    -- Borrar los viejos idicadores
+    List = Destiny.localised_name
+    while List[ Start ] do table.remove( List, Start ) end
+
+    -- Agregar los indicadores guardados
+    for _, Str in pairs( Array ) do
+        table.insert( Destiny.localised_name, Str )
+    end
+end
+
+-- -- -- Mejoras en los objetos -- -- --
+
+-- Mejorar las capsulas
+function ThisMOD.ImproveCapsule( Data )
+
+    -- Valdación básica
+    if Data.Item.type ~= "capsule" then return end
+    if Data.Item.name == "cliff-explosives" then return end
+
+    -- Variable contenedora
+    local Propietys = { }
+    table.insert( Propietys, "capsule_action" )
+    table.insert( Propietys, "attack_parameters" )
+    table.insert( Propietys, "ammo_type" )
+
+    -- Buscar el efecto deseado
+    local Propiety = Data.Item
+    for _, value in pairs( Propietys ) do
+        Propiety = Propiety[ value ]
+        if not Propiety then return end
+    end
+
+    -- Buscar la acción deseada
+    if not Propiety.action then return end
+
+    -- Renombrar la variable
+    local Actions = Propiety.action
+    Data.Projectiles = data.raw.projectile
+
+    -- Validación de datos
+    Actions = Actions[ 1 ] and Actions or { Actions }
+
+    -- Buscar la acción deseada
+    for _, Action in pairs( Actions ) do
+        Data.ActionDelivery = Action.action_delivery
+        ThisMOD.ImproveCapsuleInstant( Data )
+        ThisMOD.ImproveCapsuleProjectiles( Data )
+    end
+end
+
+-- Mejorar lo que se consume
+function ThisMOD.ImproveCapsuleInstant( Data )
+
+    -- Acción no encontrada
+    if not Data.ActionDelivery then return end
+
+    -- Daño instantaneo o cura instantanea
+    if not Data.ActionDelivery.target_effects then return end
+
+    -- Renombrar la variable
+    local TargetEffects = Data.ActionDelivery.target_effects
+
+    -- Validación de datos
+    if not TargetEffects[ 1 ] then TargetEffects = { TargetEffects } end
+
+    -- Buscar el efecto deseado
+    for _, TargetEffect in pairs( TargetEffects ) do
+        if TargetEffect.damage then
+            Data.Array = TargetEffect
+            ThisMOD.ImproveCapsuleAmount( Data )
+        end
+    end
+end
+
+-- Mejorar lo que se arroja
+function ThisMOD.ImproveCapsuleProjectiles( Data )
+
+    -- Acción no encontrada
+    if not Data.ActionDelivery then return end
+
+    -- Daño por efecto
+    if not Data.ActionDelivery.projectile then return end
+
+    -- Renombrar la variable
+    Data.ProjectileName = Data.ActionDelivery.projectile
+
+    -- Nombre de nuevo proyectil
+    ThisMOD.IdentifyProyectile( Data )
+
+    -- Crear el valor con el nuevo daño
+    if not Data.Modified then return end
+
+    -- Validar si existe el proyectil
+    Data.ActionDelivery.projectile = Data.Projectile.name
+    if Data.Projectiles[ Data.Projectile.name ] then return end
+
+    -- Crear el nuevo proyectil
+    data:extend( { Data.Projectile } )
+end
+
+-- Identificar el efecto de lo arojado
+function ThisMOD.IdentifyProyectile( Data )
+
+    -- Renombrar las varebles
+    local Unit = data.raw.unit
+    local Entities = GPrefix.Entities
+    local CombatRobot = data.raw[ "combat-robot" ]
+
+    -- Selecionar el efecto
+    Data.Projectile = Data.Projectiles[ Data.ProjectileName ]
+
+    -- Copiar el efecto
+    Data.Projectile = GPrefix.DeepCopy( Data.Projectile )
+
+    -- Renombrar el efecto
+    Data.Projectile.name = ThisMOD.Prefix_MOD_ .. Data.Projectile.name
+
+    -- Renombrar la variable
+    local Actions = Data.Projectile.action
+
+    -- Validación de datos
+    Actions = Actions[ 1 ] and Actions or { Actions }
+
+    for _, Action in pairs( Actions ) do
+        local TargetEffects = { }
+        local ActionDelivery = Action.action_delivery
+        if not ActionDelivery then goto JumpContinue end
+
+        if Action.type == "cluster" then
+            Data.Action = Action
+            ThisMOD.ImproveCapsuleCluster( Data )
+        end
+
+        TargetEffects = ActionDelivery.target_effects
+        if not TargetEffects then goto JumpContinue end
+        if #TargetEffects < 1 then TargetEffects = { ActionDelivery.target_effects } end
+
+        for _, Effect in pairs( TargetEffects ) do
+            Data.Array = Effect
+            ThisMOD.ImproveCapsuleAmount( Data )
+            ThisMOD.ImproveCapsuleStiker( Data )
+
+            ThisMOD.ImproveCapsuleEnemies( Data, data.raw.unit )
+            ThisMOD.ImproveCapsuleRobots( Data, data.raw[ "combat-robot" ] )
+
+            if Effect.entity_name and Entities[ Effect.entity_name ] then
+                GPrefix.Log( "Show this to YAIM904", Data.Projectile.name )
+            end
+        end
+
+        -- Recepción del salto
+        :: JumpContinue ::
+    end
+end
+
+-- Mejorar las granadas y las curas
+function ThisMOD.ImproveCapsuleAmount( Data )
+
+    -- Renombrar la variable
+    local Damage = Data.Array.damage
+
+    -- Validación básica
+    if not Damage then return end
+
+    -- Potenciar el valor
+    Damage.amount = Damage.amount * ThisMOD.Requires.Value
+
+    -- Marcar como modificado
+    Data.Modified = true
+end
+
+-- Mejora en las granadas de racimo
+function ThisMOD.ImproveCapsuleCluster( Data )
+
+    -- Renombrar la variable
+    local Target = Data.Action.action_delivery
+
+    -- Validación básica
+    if not Target then return end
+    if not Target.projectile then return end
+
+    -- Crear el proyectil de ser necesario
+    local Name = ThisMOD.Prefix_MOD_
+    Name = Name .. Target.projectile
+    if not Data.Projectiles[ Name ] then
+        Data.ActionDelivery = { projectile = Target.projectile }
+        ThisMOD.ImproveCapsuleProjectiles( Data )
+    end
+
+    -- Cambiar el proyectil
+    Target.projectile = Name
+
+    -- Marcar como modificado
+    Data.Modified = true
+end
+
+-- Mejorar las cápsulas para realientizzar
+function ThisMOD.ImproveCapsuleStiker( Data )
+
+    -- Renombrar la variable
+    local Target = Data.Array
+    local Stickers = data.raw.sticker
+
+    -- Validación básica
+    if not Target then return end
+    if not Target.sticker then return end
+
+    -- Nombre del nuevo stiker
+    local Name = ThisMOD.Prefix_MOD_
+    Name = Name .. Target.sticker
+
+    -- Validar si ya existe
+    if Stickers[ Name ] then goto JumpSticker end
+
+    -- Cargar efecto
+    Data.Sticker = Stickers[ Target.sticker ]
+    Data.Sticker = GPrefix.DeepCopy( Data.Sticker )
+    if not Data.Sticker then return end
+
+    -- Actualizar los valores
+    Data.Sticker.name = Name
+    Data.Sticker.duration_in_ticks = Data.Sticker.duration_in_ticks * ThisMOD.Requires.Value
+
+    -- Crear el efecto mejorado
+    data:extend( { Data.Sticker } )
+
+    -- Recepción del salto
+    :: JumpSticker ::
+
+    -- Cambiar el efecto
+    Target.sticker = Name
+
+    -- Marcar como modificado
+    Data.Modified = true
+end
+
+-- Mejorar los enemigos-aliados
+function ThisMOD.ImproveCapsuleEnemies( Data, Array )
+    ThisMOD.ImproveCapsuleEntities( Data, Array )
+end
+
+-- Mejorar los robots
+function ThisMOD.ImproveCapsuleRobots( Data, Array )
+    ThisMOD.ImproveCapsuleEntities( Data, Array )
+end
+
+-- Mejorar las entidades
+function ThisMOD.ImproveCapsuleEntities( Data, Array )
+
+    -- Renombrar la variable
+    local Target = Data.Array
+
+    -- Validación básica
+    if not Target.entity_name then return end
+
+    -- Nombre del nuevo proyectil
+    local Name = ThisMOD.Prefix_MOD_
+    Name = Name .. Target.entity_name
+
+    -- Validar si ya existe
+    if Array[ Name ] then goto JumpElement end
+
+    -- Cargar el elemento
+    Data.Element = Array[ Target.entity_name ]
+    Data.Element = GPrefix.DeepCopy( Data.Element )
+    if not Data.Element then return end
+
+    -- Actualizar los valores
+    Data.Element.name = Name
+    Data.Element.localised_name = { "", { "entity-name." .. Target.entity_name } }
+    Data.Element.max_health = Data.Element.max_health * ThisMOD.Requires.Value
+    Data.LocalisedName = Data.Element
+
+    -- Recepción del salto
+    :: JumpElement ::
+
+    -- Cambiar el efecto
+    Target.entity_name = Name
+
+    -- Marcar como modificado
+    Data.Modified = true
+end
+
+-- Mejorar las municiones
+function ThisMOD.ImproveAmmo( Data )
+
+    -- Renombrar la variable
+    local Item = Data.Item
+
+    -- Valdación básica
+    if Item.type ~= "ammo"  then return end
+    if not Item.ammo_type then return end
+
+    -- Validación de datos
+    Item.magazine_size = Item.magazine_size or 1
+
+    -- Potenciar el valor
+    Item.magazine_size = Item.magazine_size * ThisMOD.Requires.Value
+
+    -- Marcar como modificado
+    Data.Modified = true
+end
+
+-- Mejorar los combustibles
+function ThisMOD.ImproveFuel( Data )
+
+    -- Renombrar la variable
+    local Item = Data.Item
+
+    -- Valdación básica
+    if not Item.fuel_value then return end
+    if Item.place_result then return end
+
+    -- Potenciar el valor
+    Item.fuel_value = ThisMOD.ReCalculate( Item.fuel_value )
+
+    -- Marcar como modificado
+    Data.Modified = true
+end
+
+-- Mejorar los modulos
+function ThisMOD.ImproveModule( Data )
+
+    -- Renombrar la variable
+    local Item = Data.Item
+
+    -- Valdación básica
+    if Item.type ~= "module" then return end
+    if not Item.effect then return end
+
+    -- Variable contenedora
+    local Effects = { }
+    table.insert( Effects, { "productivity", 1 } )
+    table.insert( Effects, { "consumption", -1 } )
+    table.insert( Effects, { "pollution", -1 } )
+    table.insert( Effects, { "speed",  1 } )
+
+    -- Buscar el efecto deseado
+    for _, Effect in ipairs( Effects ) do
+
+        -- Contenedor de valores
+        local List = { }
+
+        -- Encontrar el efecto
+        List.Name = Effect[ 1 ]
+        List.effect = Item.effect[ List.Name ]
+        if not List.effect then goto JumpEffect end
+
+        -- Cacular el nuevo valor
+        List.Bonus = Effect[ 2 ]
+        if List.Bonus > 0 then
+            List.Bonus = List.Bonus * List.effect.bonus
+            List.Bonus = List.Bonus * ThisMOD.Requires.Value
+        end
+
+        -- Validación de datos
+        if List.Bonus > 300 then List.Bonus = 300 end
+        if List.Bonus < 0 then List.Bonus = 0 end
+
+        -- Establecer el valor
+        if List.Bonus > 0 then List.effect.bonus = List.Bonus end
+
+        -- Eliminar el efecto
+        if List.Bonus < 1 then Item.effect[ List.Name ] = nil end
+
+        -- Recepción del salto
+        :: JumpEffect ::
+    end
+
+    -- Marcar como modificado
+    Data.Modified = GPrefix.getLength( Item.effect ) > 0
+end
+
+-- Mejorar los objetos de reparación
+function ThisMOD.ImproveRepairTool( Data )
+
+    -- Renombrar la variable
+    local Item = Data.Item
+
+    -- Valdación básica
+    if Item.type ~= "repair-tool" then return end
+    if not Item.durability then return end
+    if not Item.speed then return end
+
+    -- Establecer el suelo en el nuevo objeto
+    if ThisMOD.Requires.Value > Item.speed then
+        Item.speed = Item.speed * ThisMOD.Requires.Value
+        Item.speed = Item.speed * 1 / 3
+        Item.speed = math.floor( Item.speed )
+    end
+
+    -- Validación de datos
+    if ThisMOD.Requires.Value > Item.durability then
+        Item.durability = Item.durability * ThisMOD.Requires.Value
+        Item.durability = Item.durability * 2 / 3
+        Item.durability = math.ceil( Item.durability )
+    end
+
+    -- Marcar como modificado
+    Data.Modified = true
+end
+
+-- -- -- Mejoras en los equipos -- -- --
+
+function ThisMOD.ImproveEquipament( Data )
+
+    -- Renombrar la variable
+    local Item = Data.Item
+
+    -- Valdación básica
+    if Item.type ~= "item" then return end
+    if not Item.placed_as_equipment_result then return end
+
+    -- Variable contenedora
+    local List = { }
+
+    -- Cargar el equipo
+    List.Equipment = Item.placed_as_equipment_result
+    List.Equipment = GPrefix.Equipaments[ List.Equipment ]
+    List.Equipment = GPrefix.DeepCopy( List.Equipment )
+
+
+
+    -- Buffer e IO
+    if not List.Equipment.energy_source then goto JumpEnegy end
+
+    -- Renombrar la variable
+    List.Propiety = List.Equipment.energy_source
+
+    -- Validación de datos
+    if List.Propiety.buffer_capacity then
+        List.Propiety.buffer_capacity = ThisMOD.ReCalculate( List.Propiety.buffer_capacity )
+    end
+
+    -- Validación de datos
+    if List.Propiety.input_flow_limit then
+        List.Propiety.input_flow_limit = ThisMOD.ReCalculate( List.Propiety.input_flow_limit )
+    end
+
+    -- Validación de datos
+    if List.Propiety.output_flow_limit then
+        List.Propiety.output_flow_limit = ThisMOD.ReCalculate( List.Propiety.output_flow_limit )
+    end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Recepción del salto
+    :: JumpEnegy ::
+
+
+
+    -- Armas
+    if not List.Equipment.attack_parameters then goto JumpWeapon end
+
+    -- Renombrar la variable
+    List.Propiety = List.Equipment.attack_parameters
+
+    -- Validación de datos
+    if List.Propiety.damage_modifier then
+        List.Propiety.damage_modifier = List.Propiety.damage_modifier * ThisMOD.Requires.Value
+    end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Recepción del salto
+    :: JumpWeapon ::
+
+
+
+
+    -- Escudos
+    if List.Equipment.max_shield_value then
+        List.Equipment.max_shield_value = List.Equipment.max_shield_value * ThisMOD.Requires.Value
+
+        -- Marcar como modificado
+        Data.Modified = true
+    end
+
+
+
+    -- Generadores
+    if List.Equipment.power then
+        List.Equipment.power = ThisMOD.ReCalculate( List.Equipment.power )
+
+        -- Marcar como modificado
+        Data.Modified = true
+    end
+
+
+
+    -- Recargas de los robopurtos
+    if List.Equipment.charging_energy then
+        List.Equipment.charging_energy = ThisMOD.ReCalculate( List.Equipment.charging_energy )
+
+        -- Marcar como modificado
+        Data.Modified = true
+    end
+
+
+
+    -- Regresar el objeto usado
+    if List.Equipment.take_result then
+        List.Equipment.take_result = nil
+
+        -- Marcar como modificado
+        Data.Modified = true
+    end
+
+
+
+    -- No es necesario agregar el equipo
+    if not Data.Modified then return end
+
+    -- Recombrar el equipo
+    List.Find = string.gsub( GPrefix.Prefix_, "-", "%%-" )
+    List.Name = string.gsub( List.Equipment.name, List.Find, "" )
+    List.Equipment.name = ThisMOD.Prefix_MOD_ .. List.Name
+    List.Equipment.localised_name = Item.localised_name
+    Data.LocalisedName = List.Equipment
+
+    -- Guardar el nuevo equipo
+    GPrefix.Equipaments[ List.Equipment.name ] = List.Equipment
+
+    -- Establecer el equipamento en el nuevo objeto
+    Item.placed_as_equipment_result = List.Equipment.name
+end
+
+-- -- -- Mejoras en los suelos -- -- --
+
+function ThisMOD.ImproveTile( Data )
+
+    -- Renombrar la variable
+    local Item = Data.Item
+
+    -- Valdación básica
+    if not Item.place_as_tile then return end
+
+    -- Validar elemento
+    local Alias = nil
+    if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
+    if Alias and Alias( Item.place_as_tile.result ) then return end
+
+    -- Buscar el suelo
+    local Titles = GPrefix.Tiles[ Item.name ]
+    if not Titles then return end
+
+    -- Nombre para la busqueda
+    local Find = string.gsub( GPrefix.Prefix_, "-", "%%-" )
+    local Name = string.gsub( Item.place_as_tile.result, Find, "" )
+    local NameRef = ThisMOD.Prefix_MOD_ .. Name
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Recorrer todos los suelos
+    for Key, Tile in pairs( Titles ) do
+
+        -- Hacer una copia del suelo
+        Tile = GPrefix.DeepCopy( Tile )
+
+        -- Renombrar el suelo con otra dirección
+        if Tile.next_direction then
+            Tile.next_direction = ThisMOD.Prefix_MOD_ .. Tile.next_direction
+        end
+
+        -- Actualizar el piso a retiar
+        if Tile.minable and Tile.minable.result then
+            Name = string.gsub( Item.name, Find, "" )
+            Tile.minable.result = ThisMOD.Prefix_MOD_ .. Name
+        end
+
+        -- Beneficion del suelo
+        local Absorption = Tile.pollution_absorption_per_second or 0
+        Absorption = Absorption * ThisMOD.Requires.Value
+        Tile.pollution_absorption_per_second = Absorption
+
+        -- Recombrar el suelo
+        Name = string.gsub( Tile.name, Find, "" )
+        Tile.name = ThisMOD.Prefix_MOD_ .. Name
+
+        -- Guardar el nuevo suelo
+        GPrefix.Tiles[ NameRef ] = GPrefix.Tiles[ NameRef ] or { }
+        table.insert( GPrefix.Tiles[ NameRef ], Tile )
+        data:extend( { Tile } )
+
+        -- Establecer el suelo en el nuevo objeto
+        if Key == 1 then Item.place_as_tile.result = Tile.name end
+    end
+end
+
+-- -- -- Mejoras en las entidades -- -- --
+
+-- Identificar la entidades
+function ThisMOD.IdentifyEntity( Data )
+
+    -- Renombrar la variable
+    local Item = Data.Item
+
+    -- Valdación básica
+    if not Item.place_result then return end
+
+    -- Variable contenedora
+    Data.Entity = GPrefix.Entities[ Item.place_result ]
+    if not Data.Entity then return end
+
+    -- Hacer una copia de la entidad
+    Data.Entity = GPrefix.DeepCopy( Data.Entity )
+
+    -- Reemplazar la entidad no compactada
+    if not Data.Entity.fast_replaceable_group then
+        if GPrefix.Items[ Data.Entity.name ] then
+            local Item = GPrefix.Items[ Data.Entity.name ]
+            Data.Entity.fast_replaceable_group = Item.subgroup
         end
     end
 
-    -- Agregar el pez de referencia
-    GPrefix.addIcon( itemOld, itemNew )
+    -- Patron del prefijo
+    local Find = string.gsub( GPrefix.Prefix_, "-", "%%-" )
 
-	---> <---     ---> <---     ---> <---
+    -- Asignar objeto como minable
+    if Data.Entity.minable and Data.Entity.minable.result then
+        local Name = string.gsub( Item.name, Find, "" )
+        Data.Entity.minable.result = ThisMOD.Prefix_MOD_ .. Name
+    end
 
-	-- Mejoras en los objetos
-	BetterAmmo( itemNew )
-	BetterFuel( itemNew )
-	BetterModule( itemNew )
-	BetterCapsule( itemNew )
-	BetterRepairTool( itemNew )
+    -- Recombrar el suelo
+    local Name = string.gsub( Data.Entity.name, Find, "" )
+    Data.Entity.name = ThisMOD.Prefix_MOD_ .. Name
+    Data.Entity.localised_name = Item.localised_name
+    Data.LocalisedName = Data.Entity
 
-	-- Mejoras en los equipos
-	BetterEquipament( itemNew )
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-	-- Mejoras en los suelos
-	BetterTile( itemNew )
+    -- Variado
+    ThisMOD.ImproveLab( Data )
+    ThisMOD.ImproveGate( Data )
+    ThisMOD.ImproveTree( Data )
+    ThisMOD.ImproveWall( Data )
+    ThisMOD.ImproveBeacon( Data )
+    ThisMOD.ImproveContainer( Data )
+    ThisMOD.ImproveMiningDrill( Data )
+    ThisMOD.ImproveRailwayEntity( Data )
+    ThisMOD.ImproveCraftingMachine( Data )
 
-	-- Mejoras en las entidades
-	BetterEntity( itemNew )
+    -- Robots
+    ThisMOD.ImproveRobot( Data )
+    ThisMOD.ImproveRoboport( Data )
 
-	---> <---     ---> <---     ---> <---
+    -- Energy
+    ThisMOD.ImproveGenerator( Data )
+    ThisMOD.ImproveSolarPanel( Data )
+    ThisMOD.ImproveAccumulator( Data )
 
-	-- Eliminar los valores problematicos
-	itemNew.icon = nil
-	itemNew.pictures = nil
-	itemNew.icon_tintable = nil
-	itemNew.icon_tintable_mask = nil
-	itemNew.dark_background_icon = nil
+    -- Armas
+    ThisMOD.ImproveFluidWeapon( Data )
+    ThisMOD.ImproveWeaponAmmoless( Data )
 
-	-- Posible problema con la imagen del objeto
-	for key, value in pairs( itemNew ) do
-		while GPrefix.isString( value ) and #value >= 4 do
-			local Flag = string.sub( value, -4 ) == ".png"
-			if not Flag then break end
-			GPrefix.Log( MOD .. " > " .. itemNew.name .. " > itemNew." .. key .. " = nil" )
-			break
-		end
-	end
+    -- Fluidos
+    ThisMOD.ImprovePump( Data )
+    ThisMOD.ImproveFluidWagon( Data )
+    ThisMOD.ImproveInputFluidBox( Data )
+    ThisMOD.ImproveOutputFluidBox( Data )
 
-	---> <---     ---> <---     ---> <---
+    -- Logistica
+    ThisMOD.ImproveBelt( Data )
+    ThisMOD.ImproveLoader( Data )
+    ThisMOD.ImproveInserter( Data )
+    ThisMOD.ImproveSplitter( Data )
+    ThisMOD.ImproveUndergroundBelt( Data )
 
-	-- Guardar el objeto
-	data:extend( { itemNew } )
-    GPrefix.Items[ itemNew.name ] = itemNew
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- No se modificó la entidad
+    if not Data.Modified then return end
+
+    -- Guardar la nueva entidad
+    GPrefix.Entities[ Data.Entity.name ] = Data.Entity
+
+    -- Establecer la nueva entidad
+    Item.place_result = Data.Entity.name
 end
 
---------------------------------------
---------------------------------------
+-- Mejoras los laboratorios
+function ThisMOD.ImproveLab( Data )
 
--- Revisar todos los objetos
-for _, item in pairs( GPrefix.Items ) do
-    repeat
+    -- Renombrar la variable
+    local Entity = Data.Entity
 
-        -- Evitar los rieles
-        if item.curved_rail then break end
+    -- Valdación básica
+    if Entity.type ~= "lab" then return end
 
-        -- Evitar estos tipos
-        if GPrefix.getKey( AvoidTypes, item.type ) then break end
+    -- Marcar como modificado
+    Data.Modified = true
 
-        -- Evitar lo inapilable
-		if GPrefix.getKey( item.flags, "hidden" ) then break end
-		if GPrefix.getKey( item.flags, "not-stackable" ) then break end
-
-        -- Evitar estos patrones
-		local NotValid = false
-		for _, Pattern in pairs( AvoidPatterns ) do
-			NotValid = string.find( item.name, Pattern )
-			if NotValid then break end
-		end if NotValid then break end
-
-		-- Evitar un bucle
-        local PrefixFind = GPrefix.Prefix
-        PrefixFind = string.gsub( PrefixFind, "-", "%%-" )
-        PrefixFind = string.find( item.name, PrefixFind )
-        if PrefixFind then break end
-
-		-- Crear el nuevo objeto
-		CreateItem( item )
-		CreateRecipe( item )
-
-	until true
+    -- Potenciar el valor
+    Entity.researching_speed = Entity.researching_speed * ThisMOD.Requires.Value
 end
 
---------------------------------------
+-- Mejoras los laboratorios
+function ThisMOD.ImproveGate( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "gate" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    Entity.max_health = Entity.max_health * ThisMOD.Requires.Value
+end
+
+-- Mejoras los árboles
+function ThisMOD.ImproveTree( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "tree" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    Entity.emissions_per_second = Entity.emissions_per_second * ThisMOD.Requires.Value
+end
+
+-- Mejoras los muros
+function ThisMOD.ImproveWall( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "wall" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    Entity.max_health = Entity.max_health * ThisMOD.Requires.Value
+end
+
+-- Mejoras los faros
+function ThisMOD.ImproveBeacon( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "beacon" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    Entity.distribution_effectivity = Entity.distribution_effectivity * ThisMOD.Requires.Value
+end
+
+-- Mejoras los contenedores
+function ThisMOD.ImproveContainer( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "container" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    Entity.inventory_size = ThisMOD.Requires.Value
+end
+
+-- Mejoras los talatros
+function ThisMOD.ImproveMiningDrill( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "mining-drill" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    Entity.mining_speed = Entity.mining_speed * ThisMOD.Requires.Value
+end
+
+-- Mejoras los rieles
+function ThisMOD.ImproveRailwayEntity( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Entidades a modificar
+    local Types = { }
+    table.insert( Types, "locomotive" )
+    table.insert( Types, "cargo-wagon" )
+    table.insert( Types, "fluid-wagon" )
+    table.insert( Types, "artillery-wagon" )
+
+    -- Valdación básica
+    if not GPrefix.getKey( Types, Entity.type ) then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar la velocidad
+    Entity.max_speed = Entity.max_speed * ThisMOD.Requires.Value
+    Entity.air_resistance = 0
+end
+
+-- Mejoras las maquinas que fabrican
+function ThisMOD.ImproveCraftingMachine( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if not Entity.crafting_speed then return end
+
+    -- Potenciar la absorción de la contaminación
+    if Entity.energy_source then
+        local EnergySource = Entity.energy_source
+        local Pollution = EnergySource.emissions_per_minute
+        if Pollution and Pollution < 0 then
+            Pollution = Pollution  * ThisMOD.Requires.Value
+            EnergySource.emissions_per_minute = Pollution
+
+            -- Marcar como modificado
+            Data.Modified = true
+            return
+        end
+    end
+
+    -- La entidad no tiene resulatados ni require inventario
+    local Ingredient = Entity.source_inventory_size
+    local Result = Entity.result_inventory_size
+    if Result and Ingredient then
+        if Result == 0 and Ingredient == 0 then
+            return
+        end
+    end
+
+    -- Potenciar la velocidad de creación
+    local Speed = Entity.crafting_speed
+    Speed = Speed * ThisMOD.Requires.Value
+    Entity.crafting_speed = Speed
+
+    -- Marcar como modificado
+    Data.Modified = true
+end
+
+
+
+-- Mejoras los robots
+function ThisMOD.ImproveRobot( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Entidades a modificar
+    local Types = { }
+    table.insert( Types, "logistic-robot" )
+    table.insert( Types, "construction-robot" )
+
+    -- Valdación básica
+    if not GPrefix.getKey( Types, Entity.type ) then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    Entity.speed = Entity.speed * ThisMOD.Requires.Value
+end
+
+-- Mejoras los robot puertos
+function ThisMOD.ImproveRoboport( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "roboport" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    Entity.charging_energy = ThisMOD.ReCalculate( Entity.charging_energy )
+end
+
+
+
+-- Mejoras los generadores
+function ThisMOD.ImproveGenerator( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "generator" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- La energía generada es fija
+    if Entity.max_power_output then
+        Entity.max_power_output = ThisMOD.ReCalculate( Entity.max_power_output )
+    end
+
+    -- La energía generada se calcula
+    if not Entity.max_power_output then
+        Entity.effectivity = Entity.effectivity * ThisMOD.Requires.Value
+    end
+end
+
+-- Mejoras los paneles solares 
+function ThisMOD.ImproveSolarPanel( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "solar-panel" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    Entity.production = ThisMOD.ReCalculate( Entity.production )
+end
+
+-- Mejoras los acomuladores
+function ThisMOD.ImproveAccumulator( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "accumulator" then return end
+
+    -- Valdación básica
+    local EnergySource = Entity.energy_source
+    if not EnergySource then return end
+    local Output = EnergySource.output_flow_limit
+    if GPrefix.getNumber( Output ) == 0 then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    EnergySource.output_flow_limit = ThisMOD.ReCalculate( EnergySource.output_flow_limit )
+    EnergySource.input_flow_limit = ThisMOD.ReCalculate( EnergySource.input_flow_limit )
+    EnergySource.buffer_capacity = ThisMOD.ReCalculate( EnergySource.buffer_capacity )
+end
+
+
+
+-- Mejoras las armas de fluidos
+function ThisMOD.ImproveFluidWeapon( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Variable contenedora
+    local Value = Entity.attack_parameters
+
+    -- Valdación básica
+    if not Value then return end
+    if not Value.fluids then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    for _, fluid in pairs( Value.fluids ) do
+        if fluid.damage_modifier then
+            fluid.damage_modifier = fluid.damage_modifier * ThisMOD.Requires.Value
+        end
+    end
+end
+
+-- Mejoras las armas si municiones
+function ThisMOD.ImproveWeaponAmmoless( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Variable contenedora
+    local Value = Entity.attack_parameters
+
+    -- Valdación básica
+    if not Value then return end
+    if not Value.damage_modifier then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    Value.damage_modifier = Value.damage_modifier * ThisMOD.Requires.Value
+end
+
+
+
+-- Mejoras los bombas de liquidos
+function ThisMOD.ImprovePump( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if not Entity.pumping_speed then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    local Value = Entity.pumping_speed
+    Value = Value * ThisMOD.Requires.Value
+    Entity.pumping_speed = Value
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Variable contenedora
+    local Table = Entity.fluid_box
+
+    -- Valdación básica
+    if not Table then return end
+
+    -- Renombrar la variable
+    Value = ThisMOD.Requires.Value
+
+    -- Potenciar el valor
+    if Table.height then
+        Table.height = Table.height * Value
+    end
+
+    if Table.base_area then
+        Table.base_area = Table.base_area * Value
+    end
+
+    if Table.base_level then
+        Table.base_level = Table.base_level * Value
+    end
+end
+
+-- Mejoras los vagones de fluidos
+function ThisMOD.ImproveFluidWagon( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "fluid-wagon" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    Entity.capacity = Entity.capacity * ThisMOD.Requires.Value
+end
+
+-- Mejoras la capacidad y el flujo entrante
+function ThisMOD.ImproveInputFluidBox( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "storage-tank" then return end
+
+    -- Variable contenedora
+    local Table = Entity.fluid_box
+
+    -- Valdación básica
+    if not Table then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Renombrar la variable
+    local Value = ThisMOD.Requires.Value
+
+    -- Potenciar el valor
+    if Table.height then
+        Table.height = Table.height * Value
+    end
+
+    if Table.base_area then
+        Table.base_area = Table.base_area * Value
+    end
+end
+
+-- Mejoras el flujo saliente
+function ThisMOD.ImproveOutputFluidBox( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "storage-tank" then return end
+
+    -- Variable contenedora
+    local Table = Entity.output_fluid_box
+
+    -- Valdación básica
+    if not Table then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Renombrar la variable
+    local Value = ThisMOD.Requires.Value
+
+    -- Potenciar el valor
+    if Table.height then
+        Table.height = Table.height * Value
+    end
+
+    if Table.base_area then
+        Table.base_area = Table.base_area * Value
+    end
+
+    if Table.base_level then
+        Table.base_level = Table.base_level * Value
+    end
+end
+
+-- Mejoras la capacidad y el flujo entrante
+function ThisMOD.ImproveUndergroundPipe( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "pipe-to-ground" then return end
+
+    -- Variable contenedora
+    local Table = Entity.fluid_box
+
+    -- Valdación básica
+    if not Table then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Renombrar la variable
+    local Value = ThisMOD.Requires.Value
+
+    -- Buscar y cambiar la distancia maxima
+    for _, value in pairs( Table.pipe_connections or { } ) do
+        if value.max_underground_distance then
+            local Distance = value.max_underground_distance
+            if Value > Distance then Distance = Value end
+            if Distance > 250 then Distance = 250 end
+            value.max_underground_distance = Distance
+        end
+    end
+end
+
+
+
+-- Mejoras las cintas transportadoras
+function ThisMOD.ImproveBelt( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "transport-belt" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    local Value = Entity.speed
+    Value = Value * ThisMOD.Requires.Value
+    Entity.speed = Value
+end
+
+-- Mejoras los cargadores
+function ThisMOD.ImproveLoader( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Entidades a modificar
+    local Types = { }
+    table.insert( Types, "loader" )
+    table.insert( Types, "loader-1x1" )
+
+    -- Valdación básica
+    if not GPrefix.getKey( Types, Entity.type ) then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    local Value = Entity.speed
+    Value = Value * ThisMOD.Requires.Value
+    Entity.speed = Value
+end
+
+-- Mejoras los insertadores
+function ThisMOD.ImproveInserter( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "inserter" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Variable contenedora
+    local Speed = 0
+
+    -- Potenciar el valor
+    Speed = Entity.extension_speed
+    Speed = Speed * ThisMOD.Requires.Value
+    if Speed > 0.2 then Speed = 0.2 end
+    Entity.extension_speed = Speed
+
+    Speed = Entity.rotation_speed
+    Speed = Speed * ThisMOD.Requires.Value
+    if Speed > 0.2 then Speed = 0.2 end
+    Entity.rotation_speed = Speed
+end
+
+-- Mejoras los divisores
+function ThisMOD.ImproveSplitter( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "splitter" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    local Value = Entity.speed
+    Value = Value * ThisMOD.Requires.Value
+    Entity.speed = Value
+end
+
+-- Mejoras las cintas subterraneas
+function ThisMOD.ImproveUndergroundBelt( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "underground-belt" then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Potenciar el valor
+    local Value = 0
+
+    Value = Entity.max_distance
+    Value = Value * ThisMOD.Requires.Value
+    if Value > 250 then Value = 250 end
+    Entity.max_distance = Value
+
+    Value = Entity.speed
+    Value = Value * ThisMOD.Requires.Value
+    Entity.speed = Value
+end
+
+-- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+-- Recalcular el valor de la energia
+function ThisMOD.ReCalculate( OldValue )
+
+    -- ValueOld = 10kW
+
+    -- Convertir el valor en un número
+    local Value = GPrefix.getNumber( OldValue ) -- 10000 <- 10kW
+
+    -- Potenciar el valor
+    Value = Value * ThisMOD.Requires.Value -- 500000 <- 10000 * 50
+
+    -- Convertir el numero en cadena
+    local NewValue = GPrefix.shortNumber( Value ) -- 500K <- 500000
+
+    -- Agregarle la unidad de medición
+    NewValue = NewValue .. GPrefix.getUnit( OldValue ) -- 500KW <- 500K .. 10kW
+
+    -- Devolver el resultado
+    return NewValue -- 500KW
+end
+
+-- Validar si se debe evitar este elemento
+function ThisMOD.AvoidElement( Name )
+
+    -- Patron a buscar
+    local Find = ThisMOD.Prefix_MOD_
+    Find = string.gsub( Find, "-", "%%-" )
+
+    -- Ignonrar el elemento
+    if string.find( Name, Find ) then return true end
+
+    -- Elemento valido
+    return false
+end
+
+-- Cargar los prototipos
+function ThisMOD.DataFinalFixes( )
+    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
+    if not ThisMOD.Active then return end
+
+    ThisMOD.LoadInformation( )   GPrefix.Improve = ThisMOD
+end
+
+-- Cargar la configuración
+ThisMOD.DataFinalFixes( )
+
+---------------------------------------------------------------------------------------------------

@@ -35,13 +35,19 @@ function ThisMOD.Settings( )
     SettingOption.setting_type   = "startup"
     SettingOption.default_value  = true
     SettingOption.allowed_values = { "true", "false" }
-    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
-    local List = { }
-    table.insert( List, "" )
-    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
-    table.insert( List, { ThisMOD.Local .. "setting-name" } )
-    SettingOption.localised_name = List
+	local Name = { }
+    table.insert( Name, "" )
+    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
+    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
+	if ThisMOD.Requires then
+		Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+	end SettingOption.localised_name = Name
+
+	local Description = { ThisMOD.Local .. "setting-description" }
+	if ThisMOD.Requires then
+		Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+	end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
 end
@@ -90,9 +96,12 @@ function ThisMOD.LoadInformation(  )
 
     -- Crear las demás armaduras
     for Damage, _ in pairs( data.raw[ "damage-type" ] ) do
+        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
         -- Orden de la receta y el objeto
         Order = string.char( 64 + GPrefix.getLength( Items ) )
+
+        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
         -- Crear la armadura imune a un daño
         local DamageArmor = ThisMOD.CreateArmor( Items, Damage )
@@ -102,6 +111,8 @@ function ThisMOD.LoadInformation(  )
         table.insert( DamageArmor.resistances, { type = Damage, decrease = 0, percent = 100 } )
         table.insert( UltimateArmor.resistances, { type = Damage, decrease = 0, percent = 100 } )
 
+        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
         -- Crear la receta para la armadura con inmunidad
         local DamageRecipe = ThisMOD.CreateRecipe( Recipes, Damage )
         DamageRecipe.order = Order
@@ -109,6 +120,8 @@ function ThisMOD.LoadInformation(  )
         -- Agregar los ingredientes a la receta
         DamageRecipe.ingredients = GPrefix.DeepCopy( ThisMOD.Base.Ingredients )
         table.insert( UltimateRecipe.ingredients, { ThisMOD.Prefix_MOD_ .. DamageArmor.name, 1 } )
+
+        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
     end
 end
 
@@ -159,6 +172,7 @@ end
 -- Configuración del MOD
 function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
 
     ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )

@@ -35,13 +35,19 @@ function ThisMOD.Settings( )
     SettingOption.setting_type   = "startup"
     SettingOption.default_value  = true
     SettingOption.allowed_values = { "true", "false" }
-    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
-    local List = { }
-    table.insert( List, "" )
-    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
-    table.insert( List, { ThisMOD.Local .. "setting-name" } )
-    SettingOption.localised_name = List
+	local Name = { }
+    table.insert( Name, "" )
+    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
+    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
+	if ThisMOD.Requires then
+		Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+	end SettingOption.localised_name = Name
+
+	local Description = { ThisMOD.Local .. "setting-description" }
+	if ThisMOD.Requires then
+		Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+	end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
 end
@@ -70,11 +76,21 @@ function ThisMOD.LoadInformation( )
 
     -- Redimencionar el tamñao del equipamento
     for _, Equipament in pairs( GPrefix.Equipaments ) do
+
+        -- Validar elemento
+        local Alias = nil
+        if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
+        if Alias and Alias( Equipament.name ) then goto JumpEquipament end
+
+        -- Validar las dimensiones
         if Equipament.shape.width > 1 then
             Equipaments[ Equipament.name ] = Equipament
         elseif Equipament.shape.height > 1 then
             Equipaments[ Equipament.name ] = Equipament
         end
+
+        -- Recepción del salto
+        :: JumpEquipament ::
     end
 
     -- Hacer una copia de los equipos
@@ -94,6 +110,7 @@ end
 -- Configuración del MOD
 function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
 
     ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )

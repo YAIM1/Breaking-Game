@@ -27,6 +27,7 @@ end
 -- Configuración del MOD
 function ThisMOD.Settings( )
     if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
 
     local SettingOption =  { }
     SettingOption.name  = ThisMOD.Prefix_MOD
@@ -36,13 +37,19 @@ function ThisMOD.Settings( )
     SettingOption.default_value = 1000
     SettingOption.minimum_value = 1
     SettingOption.maximum_value = 65000
-    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
-    local List = { }
-    table.insert( List, "" )
-    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
-    table.insert( List, { ThisMOD.Local .. "setting-name" } )
-    SettingOption.localised_name = List
+	local Name = { }
+    table.insert( Name, "" )
+    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
+    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
+	if ThisMOD.Requires then
+		Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+	end SettingOption.localised_name = Name
+
+	local Description = { ThisMOD.Local .. "setting-description" }
+	if ThisMOD.Requires then
+		Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+	end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
 end
@@ -1080,16 +1087,15 @@ function ThisMOD.StartItems( )
     if RecipeCategory then goto JumpRecipeCategory end
 
     -- Crear la categoria
-    data:extend( {
-        {
-            [ 'type' ] = 'recipe-category',
-            [ 'name' ] = ThisMOD.Prefix_MOD_ .. 'compact',
-        },
-        {
-            [ 'type' ] = 'recipe-category',
-            [ 'name' ] = ThisMOD.Prefix_MOD_ .. 'uncompact',
-        }
-    } )
+    data:extend( {  {
+        [ 'type' ] = 'recipe-category',
+        [ 'name' ] = ThisMOD.Prefix_MOD_ .. 'compact',
+    } } )
+
+    data:extend( { {
+        [ 'type' ] = 'recipe-category',
+        [ 'name' ] = ThisMOD.Prefix_MOD_ .. 'uncompact',
+    } } )
 
     -- Recepción del salto
     :: JumpRecipeCategory ::
@@ -1111,6 +1117,11 @@ end
 
 -- Crear un item compactado
 function ThisMOD.Compact( OldItem, TheMOD )
+
+    -- Validar elemento
+    local Alias = nil
+    if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
+    if Alias and Alias( OldItem.name ) then return end
 
     -- Tipos a evitar
     local AvoidTypes = { }
@@ -1200,7 +1211,7 @@ function ThisMOD.CreateItem( OldItem, TheMOD )
     GPrefix.CreateIcons( NewItem )
     table.insert( NewItem.icons, Icon )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Inicializar y renombrar la variable
     local Info = TheMOD.Information or { }
@@ -1217,6 +1228,11 @@ end
 -- Crear las recetas de compactado
 function ThisMOD.CreateRecipe( OldItem )
 
+    -- Validar elemento
+    local Alias = nil
+    if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
+    if Alias and Alias( OldItem.name ) then return end
+
     -- Inicializar y renombrar la variable
     local Info = ThisMOD.Information or { }
     ThisMOD.Information = Info
@@ -1231,7 +1247,7 @@ function ThisMOD.CreateRecipe( OldItem )
     local Item = GPrefix.Items[ NewName ]
     if not Item then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Valores para la receta
     local Table      = { }
@@ -1261,7 +1277,7 @@ function ThisMOD.CreateRecipe( OldItem )
         NewRecipe.order    = Item.order
         NewRecipe.enabled  = false
         NewRecipe.category = ThisMOD.Prefix_MOD_ .. Category
-        local PrefixFind = string.gsub( GPrefix.Prefix_, "-", "%%-" )
+        local PrefixFind   = string.gsub( GPrefix.Prefix_, "-", "%%-" )
         NewRecipe.subgroup = string.gsub( Item.subgroup, PrefixFind, "" )
         NewRecipe.subgroup = GPrefix.Prefix_ .. NewRecipe.subgroup
 
@@ -1271,7 +1287,7 @@ function ThisMOD.CreateRecipe( OldItem )
 
         NewRecipe.energy_required = 10
         NewRecipe.allow_decomposition = false
-        NewRecipe.hide_from_player_crafting = not Recipe.action
+        NewRecipe.hide_from_player_crafting = not not Recipe.action
         NewRecipe.localised_name = GPrefix.DeepCopy( Item.localised_name )
         table.insert( NewRecipe.localised_name, 2, { ThisMOD.Local .. Category .. "-process" } )
         table.insert( NewRecipe.localised_name, 3, " " )
@@ -1283,18 +1299,9 @@ function ThisMOD.CreateRecipe( OldItem )
         NewRecipe.icon_mipmaps = Item.icon_mipmaps
         GPrefix.CreateIcons( NewRecipe )
 
-        -- Variable contenedora
+        -- Agregar la flecha
         local List = { }
 
-        -- Agregar el brillo
-        List = { icon = "" }
-        List.icon = List.icon .. ThisMOD.Patch
-        List.icon = List.icon .. "icons/status.png"
-        List.icon_size = 32
-
-        table.insert( NewRecipe.icons, List )
-
-        -- Agregar la flecha
         List = { icon = "" }
         List.icon = List.icon .. ThisMOD.Patch
         List.icon = List.icon .. "icons/stacking-arrow-"
@@ -1307,7 +1314,7 @@ function ThisMOD.CreateRecipe( OldItem )
 
         table.insert( NewRecipe.icons, List )
 
-        ---> <---     ---> <---     ---> <---
+        -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
         -- Guardar la nueva recera
         Recipes[ OldItem.name ] = Recipes[ OldItem.name ] or { }
@@ -1338,7 +1345,7 @@ function ThisMOD.UpdateDescription( Table, TheMOD )
 
     -- La descripción es la que se busca
     if not GPrefix.isTable( Array[ 2 ] ) then return end
-    local PrefixFind = ThisMOD.Prefix_MOD .. ".item-description"
+    local PrefixFind = ThisMOD.Local .. "item-description"
     if Array[ 2 ][ 1 ] ~= PrefixFind then return end
 
     -- Se actualiza el cambio
@@ -1361,6 +1368,7 @@ end
 -- Configuración del MOD
 function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
 
     ThisMOD.LoadCompact( )   GPrefix.createInformation( ThisMOD )
@@ -1379,7 +1387,7 @@ ThisMOD.Players = { }
 
 -- Lista de objetos a agregar
 ThisMOD.Items = { }
-table.insert( ThisMOD.Items, { count = 1, name = "compact" } )
+table.insert( ThisMOD.Items, { count = 1, name = ThisMOD.Prefix_MOD_ .. "compact" } )
 table.insert( ThisMOD.Items, { count = 1, name = "iron-plate" } )
 table.insert( ThisMOD.Items, { count = 1, name = "copper-plate" } )
 table.insert( ThisMOD.Items, { count = 1, name = "stone" } )
@@ -1476,12 +1484,18 @@ function ThisMOD.addItems( Data )
     Flag = Flag and Data.Player.force.index < 2
     if Flag then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- El jugador no tiene un cuerpo
     if not Data.Player.character then
         for _, Item in pairs( Data.GMOD.Items ) do
-            Item.name = Data.GMOD.Prefix_MOD_ .. Item.name
+
+            -- Buscar los objetos
+            local Name = Data.GMOD.Prefix_MOD_ .. "compact-" .. Item.name
+            local Recipe = game.recipe_prototypes[ Name ]
+            if Recipe then Item.name = Recipe.products[ 1 ].name end
+
+            -- Agregar los objetos
             Data.Player.insert( Item )
         end
     end
@@ -1492,12 +1506,18 @@ function ThisMOD.addItems( Data )
         local IDInvertory = defines.inventory.character_main
         Inventory = Inventory.get_inventory( IDInvertory )
         for _, Item in pairs( Data.GMOD.Items ) do
-            Item.name = Data.GMOD.Prefix_MOD_ .. Item.name
+
+            -- Buscar los objetos
+            local Name = Data.GMOD.Prefix_MOD_ .. "compact-" .. Item.name
+            local Recipe = game.recipe_prototypes[ Name ]
+            if Recipe then Item.name = Recipe.products[ 1 ].name end
+
+            -- Agregar los objetos
             Inventory.insert( Item )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Marcar cómo hecho
     Data.gForce[ IDPlayer ] = GPrefix.DeepCopy( ThisMOD.Items )
@@ -1525,7 +1545,10 @@ end
 -- Configuración del MOD
 function ThisMOD.Control( )
     if not GPrefix.getKey( { "control" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
+
+    GPrefix.Compact = ThisMOD
 
     GPrefix.addEvent( {
 

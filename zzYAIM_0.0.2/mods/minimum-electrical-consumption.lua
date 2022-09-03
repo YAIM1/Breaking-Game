@@ -35,13 +35,19 @@ function ThisMOD.Settings( )
     SettingOption.setting_type   = "startup"
     SettingOption.default_value  = true
     SettingOption.allowed_values = { "true", "false" }
-    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
-    local List = { }
-    table.insert( List, "" )
-    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
-    table.insert( List, { ThisMOD.Local .. "setting-name" } )
-    SettingOption.localised_name = List
+	local Name = { }
+    table.insert( Name, "" )
+    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
+    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
+	if ThisMOD.Requires then
+		Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+	end SettingOption.localised_name = Name
+
+	local Description = { ThisMOD.Local .. "setting-description" }
+	if ThisMOD.Requires then
+		Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+	end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
 end
@@ -65,6 +71,11 @@ function ThisMOD.LoadInformation( )
     local Table = { }
     local String = ""
 
+    -- Establecer electricidad minima
+    local function Min( OldValue )
+       return tostring( 10 ^ 1 ) .. GPrefix.getUnit( OldValue )
+    end
+
     -- Agregar a los prototipos del juego
     local function add( Entity )
         if not Entities[ Entity.name ] then
@@ -75,6 +86,11 @@ function ThisMOD.LoadInformation( )
     -- Buscar las entidades a afectar
     for _, Entity in pairs( GPrefix.Entities ) do
 
+        -- Validar elemento
+        local Alias = nil
+        if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
+        if Alias and Alias( Entity.name ) then goto JumpEntity end
+
         -- Todos
         repeat
             if not Entity.energy_source then break end
@@ -82,61 +98,54 @@ function ThisMOD.LoadInformation( )
             if not Table.type then goto JumpEntity end
             if Table.type ~= "electric" then goto JumpEntity end
             if not Table.drain then break end
+
             Entity = add( Entity )
             Entity.energy_source.drain = nil
         until true
 
         if Entity.energy_usage then
             Entity = add( Entity )
-            String = Entity.energy_usage
-            Entity.energy_usage = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
+            Entity.energy_usage = Min( Entity.energy_usage )
         end
 
         -- Entidades logicas
         if Entity.active_energy_usage then
             Entity = add( Entity )
-            String = Entity.active_energy_usage
-            Entity.active_energy_usage = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
+            Entity.active_energy_usage = Min( Entity.active_energy_usage )
         end
 
         -- Radar
         if Entity.energy_per_nearby_scan then
             Entity = add( Entity )
-            String = Entity.energy_per_nearby_scan
-            Entity.energy_per_nearby_scan = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
+            Entity.energy_per_nearby_scan = Min( Entity.energy_per_nearby_scan )
         end
 
         if Entity.energy_per_sector then
             Entity = add( Entity )
-            String = Entity.energy_per_sector
-            Entity.energy_per_sector = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
+            Entity.energy_per_sector = Min( Entity.energy_per_sector )
         end
 
         -- Insertador
         if Entity.energy_per_movement then
             Entity = add( Entity )
-            String = Entity.energy_per_movement
-            Entity.energy_per_movement = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
+            Entity.energy_per_movement = Min( Entity.energy_per_movement )
         end
 
         if Entity.energy_per_rotation then
             Entity = add( Entity )
-            String = Entity.energy_per_rotation
-            Entity.energy_per_rotation = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
+            Entity.energy_per_rotation = Min( Entity.energy_per_rotation )
         end
 
         -- Lamaparas y altavoz
         if Entity.energy_usage_per_tick then
             Entity = add( Entity )
-            String = Entity.energy_usage_per_tick
-            Entity.energy_usage_per_tick = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
+            Entity.energy_usage_per_tick = Min( Entity.energy_usage_per_tick )
         end
 
         -- Spidertron
         if Entity.movement_energy_consumption then
             Entity = add( Entity )
-            String = Entity.movement_energy_consumption
-            Entity.movement_energy_consumption = tostring( 10 ^ -2 ) .. GPrefix.getUnit( String )
+            Entity.movement_energy_consumption = Min( Entity.movement_energy_consumption )
         end
 
         -- Arma de energía
@@ -146,9 +155,22 @@ function ThisMOD.LoadInformation( )
             if not Table.ammo_type then break end
             Table = Table.ammo_type
             if not Table.energy_consumption then break end
+
             Entity = add( Entity )
             Table = Entity.attack_parameters.ammo_type
-            Table.energy_consumption = tostring( 10 ^ -2 ) .. GPrefix.getUnit( Table.energy_consumption )
+            Table.energy_consumption = Min( Table.energy_consumption )
+        until true
+
+        -- Acumuladores que no liberan enegía
+        repeat
+            local EnergySource = Entity.energy_source
+            if not EnergySource then break end
+            local Output = EnergySource.output_flow_limit
+            if not Output then break end
+            if GPrefix.getNumber( Output ) > 0 then break end
+
+            Entity = add( Entity )
+            EnergySource.buffer_capacity = Min( EnergySource.buffer_capacity )
         until true
 
         -- Recepción del salto
@@ -159,6 +181,7 @@ end
 -- Configuración del MOD
 function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
 
     ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )

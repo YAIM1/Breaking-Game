@@ -35,13 +35,19 @@ function ThisMOD.Settings( )
     SettingOption.setting_type   = "startup"
     SettingOption.default_value  = true
     SettingOption.allowed_values = { "true", "false" }
-    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
-    local List = { }
-    table.insert( List, "" )
-    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
-    table.insert( List, { ThisMOD.Local .. "setting-name" } )
-    SettingOption.localised_name = List
+	local Name = { }
+    table.insert( Name, "" )
+    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
+    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
+	if ThisMOD.Requires then
+		Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+	end SettingOption.localised_name = Name
+
+	local Description = { ThisMOD.Local .. "setting-description" }
+	if ThisMOD.Requires then
+		Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+	end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
 end
@@ -67,9 +73,20 @@ function ThisMOD.LoadInformation( )
 
     -- Duplicar los modulos de producción
     for _, Item in pairs( GPrefix.Items ) do
-        if Item.limitation then
-            Items[ Item.name ] = GPrefix.DeepCopy( Item )
-        end
+
+        -- Es un modulo??
+        if not Item.limitation then goto JumpItem end
+
+        -- Validar elemento
+        local Alias = nil
+        if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
+        if Alias and Alias( Item.name ) then goto JumpItem end
+
+        -- Duplicar el objeto
+        Items[ Item.name ] = GPrefix.DeepCopy( Item )
+
+        -- Recepción del salto
+        :: JumpItem ::
     end
 
     -- Variable contenedora
@@ -95,6 +112,7 @@ end
 -- Configuración del MOD
 function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
 
     ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )

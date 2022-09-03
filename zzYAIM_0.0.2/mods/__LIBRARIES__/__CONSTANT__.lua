@@ -9,10 +9,10 @@
 _G.log = log
 _G.data = data
 _G.game = game
+_G.mods = mods
 _G.global = global
 _G.script = script
 _G.defines = defines
-
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
@@ -50,8 +50,8 @@ end
 local MODs = { }
 table.insert( MODs, { "pruebas", "p" } )
 table.insert( MODs, { "compact-items", "CI" } )
--- table.insert( MODs, { "improve-compaction", "IC" } )
 table.insert( MODs, { "maximum-stack-size", "MaxStack" } )
+table.insert( MODs, { "improve-compaction", "IC", "compact-items" } )
 table.insert( MODs, { "miniloader", "Loaders" } )
 table.insert( MODs, { "queue-to-research", "QtR" } )
 -- table.insert( MODs, { "start-with-items", "SwI" } )
@@ -75,7 +75,6 @@ for Index, MOD in pairs( MODs ) do
 
     -- Renombrar las variables
     local Name = MOD[ 1 ]
-    local Prefix = MOD[ 2 ]
 
     -- Crea la variable y renombrar la variable
     local TheMOD = GPrefix.MODs[ Name ] or { }
@@ -93,8 +92,16 @@ for Index, MOD in pairs( MODs ) do
     TheMOD.Index = Index
     TheMOD.Char  = string.char( 64 + Index )
     TheMOD.Local = GPrefix.Prefix_ .. TheMOD.Name .. "."
-    TheMOD.Prefix_MOD  = GPrefix.Prefix_ .. Prefix
-    TheMOD.Prefix_MOD_ = TheMOD.Prefix_MOD .. "-"
+    TheMOD.MOD  = MOD[ 2 ]
+    TheMOD.MOD_ = TheMOD.MOD .. "-"
+    TheMOD.Prefix_MOD  = GPrefix.Prefix_ .. TheMOD.MOD
+    TheMOD.Prefix_MOD_ = GPrefix.Prefix_ .. TheMOD.MOD_
+end
+
+for _, MOD in pairs( MODs ) do
+    if #MOD > 2 then local This = MOD[ 1 ] local Main = MOD[ 3 ]
+        GPrefix.MODs[ This ].Requires = GPrefix.MODs[ Main ]
+    end
 end
 
 ---------------------------------------------------------------------------------------------------

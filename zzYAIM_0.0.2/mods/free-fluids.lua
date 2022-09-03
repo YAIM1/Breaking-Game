@@ -35,13 +35,19 @@ function ThisMOD.Settings( )
     SettingOption.setting_type   = "startup"
     SettingOption.default_value  = true
     SettingOption.allowed_values = { "true", "false" }
-    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
-    local List = { }
-    table.insert( List, "" )
-    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
-    table.insert( List, { ThisMOD.Local .. "setting-name" } )
-    SettingOption.localised_name = List
+	local Name = { }
+    table.insert( Name, "" )
+    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
+    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
+	if ThisMOD.Requires then
+		Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+	end SettingOption.localised_name = Name
+
+	local Description = { ThisMOD.Local .. "setting-description" }
+	if ThisMOD.Requires then
+		Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+	end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
 end
@@ -397,13 +403,13 @@ function ThisMOD.LoadMachine( )
     -- Crear la nueva categoria
     data:extend( { Category } )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Inicializar y renombrar la variable
     local Info = ThisMOD.Information or { }
     ThisMOD.Information = Info
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Inicializar y renombrar la variable
     local Entities = Info.Entities or { }
@@ -418,7 +424,7 @@ function ThisMOD.LoadMachine( )
     Entity.resource_categories = nil
     Entity.fast_replaceable_group = nil
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Inicializar y renombrar la variable
     local Recipes = Info.Recipes or { }
@@ -437,7 +443,7 @@ function ThisMOD.LoadMachine( )
         Recipes[ Base ][ i ] = nil
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     local function Change( Table )
         local Localised_name = { ThisMOD.Local .. Localised }
@@ -469,7 +475,7 @@ function ThisMOD.LoadMachine( )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Habilitar la receta desde el inicia de la partida
     Recipes[ "" ] = Recipes[ Base ]
@@ -479,6 +485,7 @@ end
 -- Configuración del MOD
 function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
 
     ThisMOD.FluidWithRecibe( )   ThisMOD.FluidWithoutRecibe( )

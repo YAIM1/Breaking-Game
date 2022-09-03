@@ -464,6 +464,44 @@ function GPrefix.addLetter( Table, ThisMOD )
         if GPrefix.Entities[ Table.name ] then Type = "entity" end
         if GPrefix.Equipaments[ Table.name ] then Type = "equipment" end
         Table.localised_name = { "", { Type .. "-name." .. Table.name }, " [", " ]" }
+
+        repeat
+
+            -- Validación básica
+            if Type ~= "" then break end
+            if Table.type ~= "recipe" then break end
+
+            -- Variable contenedora
+            local Recipes = { Table, Table.expensive, Table.normal }
+            local Result = { }
+
+            -- Cargar los posibles resultados
+            for _, Recipe in pairs( Recipes ) do
+                if Recipe.result then
+                    if not GPrefix.getKey( Result, Recipe.result ) then
+                        table.insert( Result, Recipe.result )
+                    end
+                end
+
+                if Recipe.results then
+                    for _, result in pairs( Recipe.results ) do
+                        local Name = result.name or result[ 1 ]
+                        if not GPrefix.getKey( Result, Name ) then
+                            table.insert( Result, Name )
+                        end
+                    end
+                end
+            end
+
+            -- No hay un unico resultado
+            if #Result ~= 1 then
+                Table.localised_name = { "", { "recipe-name." .. Table.name }, " [", " ]" }
+                break
+            end
+
+            -- Hacer el cambio
+            Table.localised_name = { "", { "item-name." .. Result[ 1 ] } }
+        until true
     end
 
     -- El apodo es un texto
@@ -578,7 +616,7 @@ function GPrefix.newItemSubgroup( OldItem, ThisMOD )
     data:extend( { newSubGroup } )
 end
 
----> <---     ---> <---     ---> <---
+-- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 -- Call example: GPrefix.ClickRight( Data )
 

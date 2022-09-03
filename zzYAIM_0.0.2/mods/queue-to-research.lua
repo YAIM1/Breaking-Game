@@ -35,13 +35,19 @@ function ThisMOD.Settings( )
     SettingOption.setting_type   = "startup"
     SettingOption.default_value  = true
     SettingOption.allowed_values = { "true", "false" }
-    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
-    local List = { }
-    table.insert( List, "" )
-    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
-    table.insert( List, { ThisMOD.Local .. "setting-name" } )
-    SettingOption.localised_name = List
+	local Name = { }
+    table.insert( Name, "" )
+    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
+    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
+	if ThisMOD.Requires then
+		Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+	end SettingOption.localised_name = Name
+
+	local Description = { ThisMOD.Local .. "setting-description" }
+	if ThisMOD.Requires then
+		Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+	end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
 end
@@ -98,7 +104,7 @@ function ThisMOD.CreateSprite( )
     local Items = { }
     local Array = { }
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Crear una copia de la imagen
     local function DuplicateIcon( Image )
@@ -161,7 +167,7 @@ function ThisMOD.CreateSprite( )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     Array = { }
 
@@ -197,7 +203,7 @@ function ThisMOD.CreateSprite( )
         CreateIcon( Effect, Items )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     Array = { }
     table.insert( Array, "character-additional-mining-categories" )
@@ -209,7 +215,7 @@ function ThisMOD.CreateSprite( )
         CreateIcon( Effect, Items )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cargar los laboratorios
     Array = { }
@@ -226,7 +232,7 @@ function ThisMOD.CreateSprite( )
         CreateIcon( Effect, Items )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cagar las robots de combate
     Array = { }
@@ -245,7 +251,7 @@ function ThisMOD.CreateSprite( )
         CreateIcon( Effect, Items )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cagar el incerador
     Array = { }
@@ -263,7 +269,7 @@ function ThisMOD.CreateSprite( )
         CreateIcon( Effect, Items )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cagar el incerador apilable
     Array = { }
@@ -278,7 +284,7 @@ function ThisMOD.CreateSprite( )
         CreateIcon( Effect, Items )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cagar la munición de artilleria
     Array = { }
@@ -298,7 +304,7 @@ function ThisMOD.CreateSprite( )
         CreateIcon( Effect, Items )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cagar las robots logisticos y de construcción
     Array = { }
@@ -318,7 +324,7 @@ function ThisMOD.CreateSprite( )
         CreateIcon( Effect, Items )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cagar el robot de construcción
     Array = { }
@@ -335,7 +341,7 @@ function ThisMOD.CreateSprite( )
         CreateIcon( Effect, Items )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cagar los trenes
     Array = { }
@@ -351,7 +357,7 @@ function ThisMOD.CreateSprite( )
         CreateIcon( Effect, Items )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cagar los mineros
     Array = { }
@@ -367,7 +373,7 @@ function ThisMOD.CreateSprite( )
         CreateIcon( Effect, Items )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     for Type, Effect in pairs( Effects ) do
         for Name, Images in pairs( Effect ) do
@@ -382,13 +388,13 @@ function ThisMOD.CreateSprite( )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 
 
 
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Inicializar los contenedores
     local TurretAttack = { }
@@ -421,7 +427,7 @@ function ThisMOD.CreateSprite( )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cagar las turres de ataque
     Array = { }
@@ -439,7 +445,7 @@ function ThisMOD.CreateSprite( )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cagar los afectados por la velocidad
     Array = { }
@@ -483,7 +489,7 @@ function ThisMOD.CreateSprite( )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cagar las municiones
     Array = { }
@@ -557,7 +563,7 @@ function ThisMOD.CreateSprite( )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     for _, Effect in pairs( Effects ) do
         for Name, Images in pairs( Effect ) do
@@ -577,6 +583,7 @@ end
 -- Prototipos del MOD
 function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
 
     ThisMOD.CreateSprite( )   ThisMOD.KeySequence( )   ThisMOD.Shortcut( )
@@ -613,19 +620,19 @@ function ThisMOD.BuildWindowMain( Data )
     WindowFlow = WindowFrame.add( WindowFlow )
     WindowFlow.style.vertical_spacing = 9
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.WindowFrame = WindowFrame
     Data.GUI.Main.WindowFlow = WindowFlow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildWindowMainTitle( Data )
     ThisMOD.BuildWindowMainBody( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.WindowFlow = nil
@@ -797,7 +804,7 @@ function ThisMOD.BuildWindowMainTitle( Data )
     CloseButton.style.padding = 0
     CloseButton.style.margin = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.StatusLabel = StatusLabel
@@ -816,19 +823,19 @@ function ThisMOD.BuildWindowMainBody( Data )
     Flow = Data.GUI.Main.WindowFlow.add( Flow )
     Flow.style.horizontal_spacing = 9
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.WindowMainBodyFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildQueueSection( Data )
     ThisMOD.BuildMainDetailSection( Data )
     ThisMOD.BuildTecnologySection( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.WindowMainBodyFlow = nil
@@ -847,18 +854,18 @@ function ThisMOD.BuildQueueSection( Data )
     Flow.style.vertical_align = "bottom"
     Flow.style.width = 100
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.QueueSectionFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildQueueTitle( Data )
     ThisMOD.BuildQueueBody( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.QueueSectionFlow = nil
@@ -917,7 +924,7 @@ function ThisMOD.BuildQueueTitle( Data )
     EmptyWidget.style.horizontally_stretchable = true
     EmptyWidget.style.vertically_stretchable = true
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.QueueCountLabel = Count
@@ -953,17 +960,17 @@ function ThisMOD.BuildQueueBody( Data )
     Flow.style.vertical_spacing = 0
     Flow.style.padding = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.QueueFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Mostrar las tecnologías en la cola
     ThisMOD.ShowQueue( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Espacio "vacio"
     local EmptyWidget = { }
@@ -986,18 +993,18 @@ function ThisMOD.BuildMainDetailSection( Data )
     Flow.style.vertical_spacing = 0
     Flow.style.width = 573
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.DetailSectionFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildSingleSection( Data )
     ThisMOD.BuildAccumulatedSection( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.DetailSectionFlow = nil
@@ -1012,12 +1019,12 @@ function ThisMOD.BuildSingleSection( Data )
     Flow = Data.GUI.Main.DetailSectionFlow.add( Flow )
     Flow.style.vertical_spacing = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.SingleSectionFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildSingleTitle( Data )
@@ -1051,7 +1058,7 @@ function ThisMOD.BuildSingleTitle( Data )
     EmptyWidget.style.horizontally_stretchable = true
     EmptyWidget.style.vertically_stretchable = true
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.DetailTitleLabel = Label
@@ -1066,12 +1073,12 @@ function ThisMOD.BuildSingleBody( Data )
     Flow = Data.GUI.Main.SingleSectionFlow.add( Flow )
     Flow.style.horizontal_spacing = 9
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.SingleBodyFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildSinglePicture( Data )
@@ -1116,7 +1123,7 @@ function ThisMOD.BuildSinglePicture( Data )
     Picture.style.margin = 0
     Picture.style.padding = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.SinglePictureSprite = Picture
@@ -1152,19 +1159,19 @@ function ThisMOD.BuildSingleDetail( Data )
     Flow.style.left_padding = 13
     Flow.style.top_padding = 10
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.SingleDetailFlow = Flow
     Data.GUI.Main.SingleDetailScrollPane = ScrollPane
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildSingleCostSection( Data )
     ThisMOD.BuildSingleEffectsSection( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.SingleDetailFlow = nil
@@ -1182,18 +1189,18 @@ function ThisMOD.BuildSingleCostSection( Data )
     Flow.style.padding = 0
     Flow.style.width = 341
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.SingleCostSectionFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildSingleCostTitle( Data )
     ThisMOD.BuildSingleCostBody( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.SingleCostSectionFlow = nil
@@ -1257,7 +1264,7 @@ function ThisMOD.BuildSingleCostTitle( Data )
     CostValue.style.padding = 0
     CostValue.style.margin = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.SingleCostLabel = CostValue
@@ -1282,7 +1289,7 @@ function ThisMOD.BuildSingleCostBody( Data )
     Table.style.horizontal_spacing = 0
     Table.style.horizontally_stretchable = true
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.SingleIngredientsTable = Table
@@ -1301,18 +1308,18 @@ function ThisMOD.BuildSingleEffectsSection( Data )
     Flow.style.padding = 0
     Flow.style.width = 341
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.SingleEffectsSectionFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildSingleEffectsTitle( Data )
     ThisMOD.BuildSingleEffectsBody( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.SingleEffectsSectionFlow = nil
@@ -1358,7 +1365,7 @@ function ThisMOD.BuildSingleEffectsTitle( Data )
     Frame.style.left_padding = 9
     Frame.style.top_margin = 4
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.SingleTimeFrame = Frame
@@ -1383,7 +1390,7 @@ function ThisMOD.BuildSingleEffectsBody( Data )
     Table.style.horizontally_stretchable = true
     Table.style.horizontal_spacing = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.SingleEffectsTable = Table
@@ -1400,12 +1407,12 @@ function ThisMOD.BuildAccumulatedSection( Data )
     Flow = Data.GUI.Main.DetailSectionFlow.add( Flow )
     Flow.style.vertical_spacing = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.AccumulatedSectionFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildAccumulatedTitle( Data )
@@ -1469,19 +1476,19 @@ function ThisMOD.BuildAccumulatedDetail( Data )
     Flow.style.left_padding = 13
     Flow.style.top_padding = 10
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.AccumulatedDetailFlow = Flow
     Data.GUI.Main.AccumulatedDetailScrollPane = ScrollPane
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildAccumulatedCostSection( Data )
     ThisMOD.BuildAccumulatedPrerequisitesSection( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.AccumulatedDetailFlow = nil
@@ -1499,18 +1506,18 @@ function ThisMOD.BuildAccumulatedCostSection( Data )
     Flow.style.padding = 0
     Flow.style.width = 532
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.AccumulatedCostSectionFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildAccumulatedCostTitle( Data )
     ThisMOD.BuildAccumulatedCostBody( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.AccumulatedCostSectionFlow = nil
@@ -1564,7 +1571,7 @@ function ThisMOD.BuildAccumulatedCostBody( Data )
     Table.style.horizontal_spacing = 0
     Table.style.horizontally_stretchable = true
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.AccumulatedIngredientsTable = Table
@@ -1583,18 +1590,18 @@ function ThisMOD.BuildAccumulatedPrerequisitesSection( Data )
     Flow.style.padding = 0
     Flow.style.width = 532
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.AccumulatedPrerequisitesSectionFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildAccumulatedPrerequisitesTitle( Data )
     ThisMOD.BuildAccumulatedPrerequisitesBody( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.AccumulatedPrerequisitesSectionFlow = nil
@@ -1640,7 +1647,7 @@ function ThisMOD.BuildAccumulatedPrerequisitesTitle( Data )
     Frame.style.left_padding = 9
     Frame.style.top_margin = 4
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.AccumulatedTimeFrame = Frame
@@ -1665,7 +1672,7 @@ function ThisMOD.BuildAccumulatedPrerequisitesBody( Data )
     Table.style.horizontally_stretchable = true
     Table.style.horizontal_spacing = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.AccumulatedPrerequisitesTable = Table
@@ -1684,17 +1691,17 @@ function ThisMOD.BuildTecnologySection( Data )
     Flow.style.vertical_spacing = 0
     Flow.style.width = 350
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.TecnologySectionFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     ThisMOD.BuildTecnologyTitle( Data )
     ThisMOD.BuildTecnologyBody( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.TecnologySectionFlow = nil
@@ -1748,18 +1755,18 @@ function ThisMOD.BuildTecnologyBody( Data )
     Flow.style.padding = 0
     Flow.style.vertical_align = "top"
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.TecnologyBodyFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildTecnologyUnresearchedSection( Data )
     ThisMOD.BuildTecnologyResearchedSection( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.TecnologyBodyFlow = nil
@@ -1776,17 +1783,17 @@ function ThisMOD.BuildTecnologyUnresearchedSection( Data )
     Flow.style.horizontally_stretchable = true
     Flow.style.vertical_spacing = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.TecnologyUnresearchedSection = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     ThisMOD.BuildTecnologyUnresearchedTitle( Data )
     ThisMOD.BuildTecnologyUnresearchedBody( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.TecnologyUnresearchedSection = nil
@@ -1868,7 +1875,7 @@ function ThisMOD.BuildTecnologyUnresearchedTitle( Data )
     ExpandButton.style.padding = 0
     ExpandButton.style.margin = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.UnresearchedCountLabel = Count
@@ -1895,13 +1902,13 @@ function ThisMOD.BuildTecnologyUnresearchedBody( Data )
     Flow.style.vertical_spacing = 9
     Flow.style.padding = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.UnresearchedFlow = Flow
     Data.GUI.Main.UnresearchedScrollPane = ScrollPane
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cargar las tecnologías
     ThisMOD.ShowTechnologiesUnresearched( Data )
@@ -1918,17 +1925,17 @@ function ThisMOD.BuildTecnologyResearchedSection( Data )
     Flow.style.horizontally_stretchable = true
     Flow.style.vertical_spacing = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.TecnologyResearchedSection = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     ThisMOD.BuildTecnologyResearchedTitle( Data )
     ThisMOD.BuildTecnologyResearchedBody( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Main.TecnologyResearchedSection = nil
@@ -2010,7 +2017,7 @@ function ThisMOD.BuildTecnologyResearchedTitle( Data )
     ExpandButton.style.padding = 0
     ExpandButton.style.margin = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.ResearchedCountLabel = Count
@@ -2037,13 +2044,13 @@ function ThisMOD.BuildTecnologyResearchedBody( Data )
     Flow.style.vertical_spacing = 9
     Flow.style.padding = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Main.ResearchedFlow = Flow
     Data.GUI.Main.ResearchedScrollPane = ScrollPane
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cargar las tecnologías
     ThisMOD.ShowTechnologiesResearched( Data )
@@ -2078,19 +2085,19 @@ function ThisMOD.BuildWindowStatus( Data )
     WindowFlow = WindowFrame.add( WindowFlow )
     WindowFlow.style.vertical_spacing = 9
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Status.WindowFrame = WindowFrame
     Data.GUI.Status.WindowFlow = WindowFlow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildWindowStatusTitle( Data )
     ThisMOD.BuildWindowStatusBody( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Status.WindowFlow = nil
@@ -2124,7 +2131,7 @@ function ThisMOD.BuildWindowStatusTitle( Data )
     EmptyWidget.style.margin = 0
     EmptyWidget.style.top_margin = 3
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Status.WindowStatusTitleLable = TitleLable
@@ -2139,18 +2146,18 @@ function ThisMOD.BuildWindowStatusBody( Data )
     Flow = Data.GUI.Status.WindowFlow.add( Flow )
     Flow.style.horizontal_spacing = 9
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Status.WindowStatusBodyFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildStatusPicture( Data )
     ThisMOD.BuildStatusDetailSection( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Status.WindowStatusBodyFlow = nil
@@ -2196,7 +2203,7 @@ function ThisMOD.BuildStatusPicture( Data )
     Picture.style.margin = 0
     Picture.style.padding = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Status.StatusPictureSprite = Picture
@@ -2213,12 +2220,12 @@ function ThisMOD.BuildStatusDetailSection( Data )
     Flow.style.vertical_spacing = 0
     Flow.style.width = 200
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Status.StatusDetailSectionFlow = Flow
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
     ThisMOD.BuildStatusTimeBase( Data )
@@ -2227,7 +2234,7 @@ function ThisMOD.BuildStatusDetailSection( Data )
     ThisMOD.BuildStatusTimeLeft( Data )
     ThisMOD.BuildStatusQueue( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.Status.StatusDetailSectionFlow = nil
@@ -2273,7 +2280,7 @@ function ThisMOD.BuildStatusTimeBase( Data )
     Frame.style.right_padding = 9
     Frame.style.left_padding = 9
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Status.StatusTimeBaseFrame = Frame
@@ -2318,7 +2325,7 @@ function ThisMOD.BuildStatusTimeExpected( Data )
     Frame.style.right_padding = 9
     Frame.style.left_padding = 9
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Status.StatusTimeExpectedFrame = Frame
@@ -2363,7 +2370,7 @@ function ThisMOD.BuildStatusTimeElapsed( Data )
     Frame.style.right_padding = 9
     Frame.style.left_padding = 9
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Status.StatusTimeElapsedFrame = Frame
@@ -2408,7 +2415,7 @@ function ThisMOD.BuildStatusTimeLeft( Data )
     Frame.style.right_padding = 9
     Frame.style.left_padding = 9
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Status.StatusTimeLeftFrame = Frame
@@ -2461,7 +2468,7 @@ function ThisMOD.BuildStatusQueue( Data )
     QueueLabel.style.padding = 0
     QueueLabel.style.margin = 0
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
     Data.GUI.Status.StatusQueueLabel = QueueLabel
@@ -2480,7 +2487,7 @@ function ThisMOD.ToggleMOD( Data )
     if Data.Event.element ~= Data.GUI.Main.StatusLabel then return end
     if not GPrefix.ClickLeft( Data ) then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Hacer el cambio
     Data.gForce.Status = not Data.gForce.Status
@@ -2574,7 +2581,7 @@ function ThisMOD.ToggleWindowMain( Data )
     -- El MOD esta desactivado
     if not Data.GMOD.Active then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Des/habilitar botón shortcut
     local Button = Data.GMOD.Prefix_MOD
@@ -2612,7 +2619,7 @@ function ThisMOD.ToggleTextfield( Data )
     -- Validar botón
     if Button ~= Data.GUI.Main.SearchTechnologyButton then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Hacer el cambio
     GPrefix.ToggleButton( Button )
@@ -2622,7 +2629,7 @@ function ThisMOD.ToggleTextfield( Data )
     Textfield.visible = not Textfield.visible
     Textfield.text = ""
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Borrar los efectos de la busqueda
     if not Textfield.visible then
@@ -2630,7 +2637,7 @@ function ThisMOD.ToggleTextfield( Data )
         ThisMOD.SearchText( Data )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Preparar para la busqueda
     if Textfield.visible then Textfield.focus( ) end
@@ -2690,7 +2697,7 @@ function ThisMOD.ToggleTechnologies( Data )
     Flag = Flag and Button ~= UnresearchedButton
     if Flag then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Limpiar el boton de las tecnologías investigadas
     ResearchedButton.tooltip = ""
@@ -2710,7 +2717,7 @@ function ThisMOD.ToggleTechnologies( Data )
     ResearchedScrollPane.parent.style.vertically_stretchable = false
     UnresearchedScrollPane.parent.style.vertically_stretchable = false
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Expandir las tecnologías investigadas
     if Button == ResearchedButton then
@@ -2774,7 +2781,7 @@ function ThisMOD.SearchText( Data )
     Data.Search = nil
     Data.GPlayer.Search = nil
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Separar el texto por los espacios
     local function Split( String )
@@ -2856,7 +2863,7 @@ function ThisMOD.SearchText( Data )
         local Researched = Up.Flow == Data.GUI.Main.ResearchedFlow
         local Unresearched = Up.Flow == Data.GUI.Main.UnresearchedFlow
 
-        ---> <---     ---> <---     ---> <---
+        -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
         -- Buscar en la cola
         if Queue then
@@ -2879,7 +2886,7 @@ function ThisMOD.SearchText( Data )
             end
         end
 
-        ---> <---     ---> <---     ---> <---
+        -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
         -- Buscar en las tecnologías enlistada
         for _, TechnologyName in pairs( Up.List ) do
@@ -2898,7 +2905,7 @@ function ThisMOD.SearchText( Data )
             end
         end
 
-        ---> <---     ---> <---     ---> <---
+        -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
         -- No se encontro resultado alguno
         if #Up.Result < 1 then return end
@@ -2922,7 +2929,7 @@ function ThisMOD.SearchText( Data )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar la tecnolgia seleccionada
     local Flag = not GPrefix.isString( Data.Click.Selected )
@@ -2946,7 +2953,7 @@ function ThisMOD.SearchText( Data )
     TextToFind = string.lower( TextToFind )
     if TextToFind == "" then RestaureClick( ) return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Inicializar las variables
     local Here = { }
@@ -3027,7 +3034,7 @@ function ThisMOD.AddResearch( Data )
     if Tags.MOD ~= Data.GMOD.Prefix_MOD then return end
     if Tags.Location ~= Data.GUI.Main.UnresearchedFlow.name then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Agregar tecnología a la cola
     local Count = ThisMOD.AddTechnologyAndPrerequisites( Data, Tags.Technology )
@@ -3035,7 +3042,7 @@ function ThisMOD.AddResearch( Data )
     -- Acutalizar la información en pantalla
     ThisMOD.UpdateQueueAndTechnologies( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Informar del cambio
     local Here = { }
@@ -3068,7 +3075,7 @@ function ThisMOD.CancelResearch( Data )
     if Tags.MOD ~= Data.GMOD.Prefix_MOD then return end
     if Tags.Location ~= Data.GUI.Main.QueueFlow.name then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Remover tecnología de la cola
     local Count = ThisMOD.RemoveTechnologyAndDependence( Data, Tags.Technology )
@@ -3076,7 +3083,7 @@ function ThisMOD.CancelResearch( Data )
     -- Acutalizar la información en pantalla
     ThisMOD.UpdateQueueAndTechnologies( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Informar del cambio
     local Here = { }
@@ -3109,7 +3116,7 @@ function ThisMOD.PrioritizeResearch( Data )
     if Tags.MOD ~= Data.GMOD.Prefix_MOD then return end
     if Tags.Location ~= Data.GUI.Main.QueueFlow.name then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Priorizar tecnología de la cola
     local Count = ThisMOD.PrioritizeTechnologyAndPrerequisites( Data, Tags.Technology )
@@ -3118,7 +3125,7 @@ function ThisMOD.PrioritizeResearch( Data )
     -- Acutalizar la información en pantalla
     ThisMOD.UpdateQueueAndTechnologies( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Informar del cambio
     local Here = { }
@@ -3273,7 +3280,7 @@ function ThisMOD.FormatFormula( Formula )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Buscar las multiplicaciones implicitas
     local Add = { }
@@ -3299,7 +3306,7 @@ function ThisMOD.FormatFormula( Formula )
     -- Agregar el simbolo de multiplicación
     for i = #Add, 1, -1 do table.insert( Ecuacion, Add[ i ], "*" ) end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Devolver la información
     return Ecuacion
@@ -3358,7 +3365,7 @@ function ThisMOD.EvaluateFormula( Formula, Level )
                 end
             end
 
-            ---> <---     ---> <---     ---> <---
+            -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
             -- La operación ha sido identificada
             if _Index > 0 then goto JumpOperador end
@@ -3372,7 +3379,7 @@ function ThisMOD.EvaluateFormula( Formula, Level )
                 end
             end
 
-            ---> <---     ---> <---     ---> <---
+            -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
             -- La operación ha sido identificada
             if _Index > 0 then goto JumpOperador end
@@ -3386,7 +3393,7 @@ function ThisMOD.EvaluateFormula( Formula, Level )
                 end
             end
 
-            ---> <---     ---> <---     ---> <---
+            -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
             -- Ecuación invalida
             if _Index < 1 then return end
@@ -3448,7 +3455,7 @@ function ThisMOD.getButton( Data )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cargar espacio de respuesta
     local Up = Data.Temporal[ #Data.Temporal ]
@@ -3461,7 +3468,7 @@ function ThisMOD.getButton( Data )
         Up.Technology.Name = LuaTechnologyName
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Devolver el botón de la cola
     if GPrefix.getKey( Data.Queue, Up.Technology.Name ) then
@@ -3491,7 +3498,7 @@ function ThisMOD.getButton( Data )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Seleccionar la primera tecnología de la cola
     if #Data.GUI.Main.QueueFlow.children > 0 then
@@ -3518,7 +3525,7 @@ function ThisMOD.ShowTimeStatus( Data )
     -- Cargar espacio de respuesta
     local Up = Data.Temporal[ #Data.Temporal ]
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Inicializar las variables
     local Tooltip = { "" }
@@ -3546,7 +3553,7 @@ function ThisMOD.ShowTimeStatus( Data )
     -- Recepción del salto
     :: JumpTooltip ::
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Tiempo en pantalla
     Up.Frame.clear( )
@@ -3590,7 +3597,7 @@ function ThisMOD.PrintEventQueue( Data )
     -- Identificar la tecnología
     local Technology = Data.Technologies.All[ Up.Technology ]
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Mensaje para una tecnología
     local Location = { "",
@@ -3714,14 +3721,14 @@ function ThisMOD.PrepareInformation( Data )
         if Info.Name[ 1 ] ~= "" then Info.Name = { "", Info.Name, " " .. Level } end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Calcular el factor de investigación en tiempo
     Info.Factor = { }
     Data.gForce.Factor = Data.gForce.Factor or 1
     Info.Factor.Porcentage = math.floor( Data.gForce.Factor * 100 )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Costo de la tecnología individual
     Info.Researched = Data.Technologies.Researched
@@ -3729,7 +3736,7 @@ function ThisMOD.PrepareInformation( Data )
     Info.Technology.Calculated = Info.Technology.Cost / Data.gForce.Factor
     Info.Technology.Calculated = math.ceil( Info.Technology.Calculated )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Calcular el timepo acomulado
     Info.Accumulated = Info.Accumulated or { }
@@ -3795,14 +3802,14 @@ function ThisMOD.ShowInformation( Data )
     local Info = Data.Information
     local Here = { }
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cargar el Costo, el Nombre y la Imagen de la tecnología
     Data.GUI.Main.SingleCostLabel.caption = Info.Technology.Amount
     Data.GUI.Main.DetailTitleLabel.caption = Info.Name
     Data.GUI.Main.SinglePictureSprite.sprite = "technology/" .. Info.Technology.Name
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cargar los ingredientes individuales
     Here = { }
@@ -3827,7 +3834,7 @@ function ThisMOD.ShowInformation( Data )
     Here.Technology = Info.Technology
     ThisMOD.ShowEffects( Data )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Mostrar los ingredientes acomulados
     Here = { }
@@ -4811,7 +4818,7 @@ function ThisMOD.StartInitialize( )
     local NowConnected = GPrefix.toString( ListConnected )
     if NowConnected == OldConnected then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Inicializar el contenedor
     local NewConnected = { }
@@ -4862,7 +4869,7 @@ function ThisMOD.EnableShortcut( Data )
     -- Validar si exiten tecnologías disponibles
     if not Data.Force.technologies then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Renombrar la variable
     local Level = script.level
@@ -4888,7 +4895,7 @@ function ThisMOD.EnableShortcut( Data )
     -- Desactivar el MOD de ser necesario
     if level_name[ Level.level_name ] then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cargar las tecnologías en la RAM
     ThisMOD.LoadTechnologies( Data )
@@ -4933,14 +4940,14 @@ function ThisMOD.LoadTechnologies( Data )
     Data.GMOD.Technologies = Table
     Data.GForce.Researched = Researched
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cargar todas las tecnologias
     for _, Technology in pairs( Data.Force.technologies ) do
         ThisMOD.LoadTechnology( Data, Technology.name )
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cargar los niveles
     while true do
@@ -4994,7 +5001,7 @@ function ThisMOD.LoadTechnologies( Data )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cargar los prerequisitos acomulados
     for _, Technology in pairs( All ) do
@@ -5281,7 +5288,7 @@ function ThisMOD.UpdateWindowStatus( Data )
 
     table.insert( Data.Temporal, Here )
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     local function Next( Label, Index )
 
@@ -5351,7 +5358,7 @@ function ThisMOD.UpdateWindowStatus( Data )
         Here.QueueLabel.caption = 0
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- No hay información a mostrar
     if Here.ResearchName then goto JumpUpdateWindowStatus end
@@ -5385,7 +5392,7 @@ function ThisMOD.UpdateWindowStatus( Data )
     -- Recepción del salto
     :: JumpUpdateWindowStatus ::
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Inicializar las variables
     local Technology = Data.Technologies.All[ Here.ResearchName ]
@@ -5413,7 +5420,7 @@ function ThisMOD.UpdateWindowStatus( Data )
         if Name[ 1 ] ~= "" then Name = { "", Name, " " .. Level } end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- la imagen de la tecnología
     Here.PictureSprite.sprite = "technology/" .. Technology.Name
@@ -5591,7 +5598,7 @@ function ThisMOD.ValidateToggleWindow( Data )
     -- Recepción del salto
     :: JumpPressKeySequence ::
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Abriendo otra ventana
     local OpenOtherWindow = false
@@ -5609,7 +5616,7 @@ function ThisMOD.ValidateToggleWindow( Data )
     -- Recepción del salto
     :: JumpOpenOtherWindow ::
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cerrando con el boton de la ventana
     local CloseWindowButton = false
@@ -5628,7 +5635,7 @@ function ThisMOD.ValidateToggleWindow( Data )
     -- Recepción del salto
     :: JumpCloseWindowButton ::
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Usando el botón de acceso rapido
     local ButtonShortcut = false
@@ -5649,7 +5656,7 @@ function ThisMOD.ValidateToggleWindow( Data )
     -- Recepción del salto
     :: JumpButtonShortcut ::
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     return false
 end
@@ -5769,7 +5776,7 @@ function ThisMOD.SearchPrerequisite( Data )
     if not( Tags and Tags.SearchPrerequisites ) then return end
     if not Tags.MOD and Tags.MOD ~= Data.GMOD.Prefix_MOD then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Buscar la tecnología
     table.insert( Data.Temporal, { Technology = Tags.SearchPrerequisites } )
@@ -5978,7 +5985,7 @@ function ThisMOD.ResearchStarted( Event )
     -- Validar si se informa del cambio
     if #Event.force.players < 1 then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Validar si se informa o no del cambio
     if Data.gForce.Research then goto JumpTechnology end
@@ -6018,7 +6025,7 @@ function ThisMOD.ResearchStarted( Event )
     -- Recepción del salto
     :: JumpTechnology ::
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Inicializar las variables
     local ActualResearch = Data.Force.current_research
@@ -6040,7 +6047,7 @@ function ThisMOD.ResearchStarted( Event )
     Flag = Flag and not Data.gForce.Research
     if Flag then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Actulizar la ventana flotante
     for _, Player in pairs( Data.Force.players ) do
@@ -6083,7 +6090,7 @@ function ThisMOD.ResearchFinished( Event )
     -- Validar si se informa del cambio
     if #Event.force.players < 1 then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Actulizar la ventana flotante
     if not Data.gForce.Status then
@@ -6093,7 +6100,7 @@ function ThisMOD.ResearchFinished( Event )
         end
     end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Validar si el MOD está activo
     if not Data.gForce.Status then goto JumpInfo end
@@ -6178,7 +6185,7 @@ function ThisMOD.ResearchReversed( Event )
     -- Validar si se informa del cambio
     if #Event.force.players < 1 then return end
 
-    ---> <---     ---> <---     ---> <---
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Validar si el MOD está activo
     if not Data.gForce.Status then goto JumpInfo end
@@ -6229,6 +6236,7 @@ end
 
 function ThisMOD.Control( )
     if not GPrefix.getKey( { "control" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
 
     GPrefix.addEvent( {
@@ -6254,7 +6262,7 @@ function ThisMOD.Control( )
             Data.gPlayer = nil
         end,
 
-        ---> <---     ---> <---     ---> <---
+        -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
         -- Al usar la combinación de teclas
         [ { "on_event", ThisMOD.Prefix_MOD } ] = function( Event )
@@ -6271,7 +6279,7 @@ function ThisMOD.Control( )
             ThisMOD.ToggleWindowMain( ThisMOD.CreateData( Event ) )
         end,
 
-        ---> <---     ---> <---     ---> <---
+        -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
         -- Al cambiar el texto a buscar
         [ { "on_event", defines.events.on_gui_text_changed } ] = function( Event )
@@ -6298,7 +6306,7 @@ function ThisMOD.Control( )
             ThisMOD.ToggleMOD( Data )
         end,
 
-        ---> <---     ---> <---     ---> <---
+        -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
         -- Eventos de la investigación en curso
         [ { "on_event", defines.events.on_research_started } ] = ThisMOD.ResearchStarted,

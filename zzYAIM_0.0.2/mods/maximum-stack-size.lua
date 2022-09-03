@@ -36,13 +36,19 @@ function ThisMOD.Settings( )
     SettingOption.default_value = 1000
     SettingOption.minimum_value = 1
     SettingOption.maximum_value = 65000
-    SettingOption.localised_description = { ThisMOD.Local .. "setting-description" }
 
-    local List = { }
-    table.insert( List, "" )
-    table.insert( List, "[font=default-bold][ " .. ThisMOD.Char .. " ][/font] " )
-    table.insert( List, { ThisMOD.Local .. "setting-name" } )
-    SettingOption.localised_name = List
+	local Name = { }
+    table.insert( Name, "" )
+    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
+    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
+	if ThisMOD.Requires then
+		Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+	end SettingOption.localised_name = Name
+
+	local Description = { ThisMOD.Local .. "setting-description" }
+	if ThisMOD.Requires then
+		Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+	end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
 end
@@ -56,7 +62,14 @@ ThisMOD.Settings( )
 -- Configuración del MOD
 function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
+    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
+
+    -- Objectos a evitar
+    local AvoidItems = { }
+    if mods[ "space-exploration" ] then
+        table.insert( AvoidItems, "rocket-fuel" )
+    end
 
     -- Tipos a evitar
     local AvoidTypes = { }
@@ -71,7 +84,8 @@ function ThisMOD.DataFinalFixes( )
     -- Hacer el camnbio en los items del juego, si le favorece
     for _, Item in pairs( GPrefix.Items ) do
 
-        local Entity = { }
+        -- Evitar este tipo
+        if GPrefix.getKey( AvoidItems, Item.name ) then goto JumpItem end
 
         -- Evitar este tipo
         if GPrefix.getKey( AvoidTypes, Item.type ) then goto JumpItem end
@@ -108,8 +122,12 @@ function ThisMOD.DataFinalFixes( )
         if GPrefix.Compact then GPrefix.Compact.UpdateDescription( Item, ThisMOD ) end
 
         -- Actualizar la entidad
-        Entity = GPrefix.Entities[ Item.name ]
+        local Entity = GPrefix.Entities[ Item.name ]
         if Entity then GPrefix.addLetter( Entity, ThisMOD.Char ) end
+
+        -- Actualizar el equipamento
+        local Equipment = GPrefix.Equipaments[ Item.name ]
+        if Equipment then GPrefix.addLetter( Equipment, ThisMOD.Char ) end
 
         -- Actualizar sus recestas
         for _, Recipe in pairs( GPrefix.Recipes[ Item.name ] or { } ) do
