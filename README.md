@@ -8,7 +8,7 @@
 
 <p>El código contiene muchos comentarios en español y es fácil hacerle un seguimiento por si se desea hacer esos cambios o personalizar el MOD.</p>
 
-<p>Algunas opciones de este MOD funcionan de forma independiente, por lo que se pueden activar estas opciones sin las demás y esta afectará a todos los elementos objetivos (objetos, entidades, jugadores u otros), TODOS. En caso de que la opción necesite de otra para funcionar se indicada dentro de [ ], y solo se afectarán a los objetos de la opción requerida.</p>
+<p>Algunas opciones de este MOD funcionan de forma independiente, por lo que se pueden activar sin las demás y esta afectará a todos los elementos objetivos (objetos, entidades, jugadores u otros), TODOS. En caso de que la opción necesite de otra para funcionar se indicada dentro de [ ], y solo se afectarán a los objetos de la opción requerida.</p>
 
 <br>
 
@@ -25,14 +25,11 @@
 
 <p>Los objetos nuevos podrán ver incrementados alguna caracteristica en la misma cantidad de objetos usados en el compactados. Por ejemplo, si se compactan 50 carbones cuyo valor de combustión es igual a 4MJ, entonces el nuevo carbón tendrá un valor de combustión de 200MJ.</p>
 
-<p>Todos los objetos que se vean beneficiados tendrán el indicativo [ + ] en el nombre.</p>
-
 <br>
 
 <h3>Minimizar los maquinas</h3>
 
-<p>Seleccionar los taladros, hornos y otras máquinas de fabricación que no tienen ranuras para módulos y crear una copia con una ranura.</p>
--------------------------------------------------------------------------------------------
+<p>Seleccionar los taladros, hornos y otras máquinas de fabricación que no tienen requieran más de una entrada de fluido y se creará una copia "funcional".</p>
 
 <br>
 
