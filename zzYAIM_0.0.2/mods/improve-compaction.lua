@@ -1271,8 +1271,14 @@ function ThisMOD.ImproveInputFluidBox( Data )
     -- Renombrar la variable
     local Entity = Data.Entity
 
+    -- Entidades a modificar
+    local Types = { }
+    table.insert( Types, "pipe" )
+    table.insert( Types, "storage-tank" )
+    table.insert( Types, "pipe-to-ground" )
+
     -- Valdación básica
-    if Entity.type ~= "storage-tank" then return end
+    if not GPrefix.getKey( Types, Entity.type ) then return end
 
     -- Variable contenedora
     local Table = Entity.fluid_box
@@ -1294,6 +1300,20 @@ function ThisMOD.ImproveInputFluidBox( Data )
     if Table.base_area then
         Table.base_area = Table.base_area * Value
     end
+
+    if Table.base_level then
+        Table.base_level = Table.base_level * Value
+    end
+
+    -- Buscar y cambiar la distancia maxima
+    for _, value in pairs( Table.pipe_connections or { } ) do
+        if value.max_underground_distance then
+            local Distance = value.max_underground_distance
+            if Value > Distance then Distance = Value end
+            if Distance > 250 then Distance = 250 end
+            value.max_underground_distance = Distance
+        end
+    end
 end
 
 -- Mejoras el flujo saliente
@@ -1302,8 +1322,14 @@ function ThisMOD.ImproveOutputFluidBox( Data )
     -- Renombrar la variable
     local Entity = Data.Entity
 
+    -- Entidades a modificar
+    local Types = { }
+    table.insert( Types, "pipe" )
+    table.insert( Types, "storage-tank" )
+    table.insert( Types, "pipe-to-ground" )
+
     -- Valdación básica
-    if Entity.type ~= "storage-tank" then return end
+    if not GPrefix.getKey( Types, Entity.type ) then return end
 
     -- Variable contenedora
     local Table = Entity.output_fluid_box
@@ -1328,38 +1354,6 @@ function ThisMOD.ImproveOutputFluidBox( Data )
 
     if Table.base_level then
         Table.base_level = Table.base_level * Value
-    end
-end
-
--- Mejoras la capacidad y el flujo entrante
-function ThisMOD.ImproveUndergroundPipe( Data )
-
-    -- Renombrar la variable
-    local Entity = Data.Entity
-
-    -- Valdación básica
-    if Entity.type ~= "pipe-to-ground" then return end
-
-    -- Variable contenedora
-    local Table = Entity.fluid_box
-
-    -- Valdación básica
-    if not Table then return end
-
-    -- Marcar como modificado
-    Data.Modified = true
-
-    -- Renombrar la variable
-    local Value = ThisMOD.Requires.Value
-
-    -- Buscar y cambiar la distancia maxima
-    for _, value in pairs( Table.pipe_connections or { } ) do
-        if value.max_underground_distance then
-            local Distance = value.max_underground_distance
-            if Value > Distance then Distance = Value end
-            if Distance > 250 then Distance = 250 end
-            value.max_underground_distance = Distance
-        end
     end
 end
 

@@ -100,7 +100,7 @@ function ThisMOD.LoadInformation( )
             if not Table.drain then break end
 
             Entity = add( Entity )
-            Entity.energy_source.drain = nil
+            Entity.energy_source.drain = Min( Entity.energy_source.drain )
         until true
 
         if Entity.energy_usage then
