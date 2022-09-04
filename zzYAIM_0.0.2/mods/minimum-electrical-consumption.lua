@@ -161,18 +161,6 @@ function ThisMOD.LoadInformation( )
             Table.energy_consumption = Min( Table.energy_consumption )
         until true
 
-        -- Acumuladores que no liberan enegía
-        repeat
-            local EnergySource = Entity.energy_source
-            if not EnergySource then break end
-            local Output = EnergySource.output_flow_limit
-            if not Output then break end
-            if GPrefix.getNumber( Output ) > 0 then break end
-
-            Entity = add( Entity )
-            EnergySource.buffer_capacity = Min( EnergySource.buffer_capacity )
-        until true
-
         -- Recepción del salto
         :: JumpEntity ::
     end

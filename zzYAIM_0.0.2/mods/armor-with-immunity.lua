@@ -73,7 +73,9 @@ function ThisMOD.LoadInformation(  )
         { "copper-ore", 500 }
     }
 
-    -- Renombrar la variable
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Inicializar y renombrar la variable
     local Info = ThisMOD.Information or { }
     ThisMOD.Information = Info
 
@@ -82,6 +84,8 @@ function ThisMOD.LoadInformation(  )
 
     local Recipes = Info.Recipes or { }
     Info.Recipes = Recipes
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Establecer es el order
     local Order = string.char( 64 + GPrefix.getLength( data.raw[ "damage-type" ] ) + 1 )

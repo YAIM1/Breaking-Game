@@ -894,7 +894,7 @@ function ThisMOD.LoadItems( Info )
             [ 'icon_size' ] = 64,
             [ 'icon_mipmaps' ] = 4,
             [ 'stack_size' ] = 50,
-            [ 'place_result' ] = 'compact',
+            [ 'place_result' ] = ThisMOD.Prefix_MOD_ .. 'compact',
             [ 'group' ] = 'logistics',
             [ 'subgroup' ] = 'compacts',
             [ 'order' ] = 'ba',
@@ -918,7 +918,7 @@ function ThisMOD.LoadItems( Info )
             [ 'icon_size' ] = 64,
             [ 'icon_mipmaps' ] = 4,
             [ 'stack_size' ] = 50,
-            [ 'place_result' ] = 'fast-compact',
+            [ 'place_result' ] = ThisMOD.Prefix_MOD_ .. 'fast-compact',
             [ 'group' ] = 'logistics',
             [ 'subgroup' ] = 'compacts',
             [ 'order' ] = 'bb',
@@ -942,7 +942,7 @@ function ThisMOD.LoadItems( Info )
             [ 'icon_size' ] = 64,
             [ 'icon_mipmaps' ] = 4,
             [ 'stack_size' ] = 50,
-            [ 'place_result' ] = 'express-compact',
+            [ 'place_result' ] = ThisMOD.Prefix_MOD_ .. 'express-compact',
             [ 'group' ] = 'logistics',
             [ 'subgroup' ] = 'compacts',
             [ 'order' ] = 'bc',
@@ -1232,6 +1232,8 @@ function ThisMOD.CreateRecipe( OldItem )
     local Alias = nil
     if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
     if Alias and Alias( OldItem.name ) then return end
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Inicializar y renombrar la variable
     local Info = ThisMOD.Information or { }

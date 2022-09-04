@@ -94,9 +94,6 @@ function ThisMOD.LoadInformation( )
         Data.Item = GPrefix.Items[ Data.Item.name ]
         Data.Item = GPrefix.DeepCopy( Data.Item )
 
-        -- -- Valdación básica
-        -- if string.find( Data.Item.name, Find ) then goto JumpItem end
-
         -- -- Mejoras en los objetos
         ThisMOD.ImproveAmmo( Data )
         ThisMOD.ImproveFuel( Data )
@@ -115,9 +112,6 @@ function ThisMOD.LoadInformation( )
 
         -- Agregar el objeto modificado
         ThisMOD.AddModifiedItem( Data )
-
-        -- Recepción del salto
-        :: JumpItem ::
     end
 end
 
@@ -1387,6 +1381,10 @@ function ThisMOD.ImproveBelt( Data )
     local Value = Entity.speed
     Value = Value * ThisMOD.Requires.Value
     Entity.speed = Value
+
+    Value = Entity.animation_speed_coefficient
+    Value = Value / ThisMOD.Requires.Value
+    Entity.animation_speed_coefficient = Value
 end
 
 -- Mejoras los cargadores
@@ -1410,6 +1408,10 @@ function ThisMOD.ImproveLoader( Data )
     local Value = Entity.speed
     Value = Value * ThisMOD.Requires.Value
     Entity.speed = Value
+
+    Value = Entity.animation_speed_coefficient
+    Value = Value / ThisMOD.Requires.Value
+    Entity.animation_speed_coefficient = Value
 end
 
 -- Mejoras los insertadores
@@ -1455,6 +1457,10 @@ function ThisMOD.ImproveSplitter( Data )
     local Value = Entity.speed
     Value = Value * ThisMOD.Requires.Value
     Entity.speed = Value
+
+    Value = Entity.animation_speed_coefficient
+    Value = Value / ThisMOD.Requires.Value
+    Entity.animation_speed_coefficient = Value
 end
 
 -- Mejoras las cintas subterraneas
@@ -1480,6 +1486,10 @@ function ThisMOD.ImproveUndergroundBelt( Data )
     Value = Entity.speed
     Value = Value * ThisMOD.Requires.Value
     Entity.speed = Value
+
+    Value = Entity.animation_speed_coefficient
+    Value = Value / ThisMOD.Requires.Value
+    Entity.animation_speed_coefficient = Value
 end
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- --

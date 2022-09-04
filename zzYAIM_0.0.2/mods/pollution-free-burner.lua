@@ -100,7 +100,10 @@ function ThisMOD.LoadInformation( )
 
     -- Hacer los cambios
     for _, Entity in pairs( Entities ) do
-        Entity.energy_source.emissions_per_minute = nil
+        local Array = Entity.energy_source
+        if Array.emissions_per_minute > 0 then
+            Array.emissions_per_minute = nil
+        end
     end
 end
 

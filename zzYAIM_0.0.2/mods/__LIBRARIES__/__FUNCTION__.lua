@@ -552,7 +552,19 @@ function GPrefix.addLetter( Table, ThisMOD )
 
     -- Remplazar la entidad a crear
     if Table.place_result then
-        Table.place_result = Table.name
+        local Find = ""
+        local Name = ""
+
+        Find = ThisMOD.Prefix_MOD_
+        Find = string.gsub( Find, "-", "%%-" )
+        Name = Table.place_result
+        Name = string.gsub( Name, Find, "" )
+
+        Find = GPrefix.Prefix_
+        Find = string.gsub( Find, "-", "%%-" )
+        Name = string.gsub( Name, Find, "" )
+
+        Table.place_result = ThisMOD.Prefix_MOD_ .. Name
     end
 
     -- Remplazar el equipamiento a crear

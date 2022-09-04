@@ -4,11 +4,19 @@ Date: 2022.04.25
   Created:
     - queue-to-research
     - minimum-electrical-consumption
+    - pollution-free-burner
   Change:
 	- All
 		Restructure code
         Each duplicated entity and object creates its respective recipes
         Replaced the plus sign with a letter that can be seen in the MOD settings
+    - miniloader
+        This function was separated from the "compact" MOD
+    - improve-compaction
+        This function was separated from the "compact" MOD
+        The improvements of the liquid containers were limited to the pumps and the tank
+        Repair pack upgrades split 1/3 for speed and 2/3 for durability
+        Decreased the speed of anamination of transporter appointments
     - force-production
         Add more recipes
     - compact
@@ -16,7 +24,7 @@ Date: 2022.04.25
         Now entities campacted can by remplace entities original
     - force-a-slot-modules
         Name change to "force-a-modules-slot"
-        Duplicate each affected items
+        Duplicate each affected entities
 	- unlimited-robot
         Name change to "Robots-with-unlimited-electricity"
         Duplicate each affected entities
@@ -24,8 +32,6 @@ Date: 2022.04.25
         Name change to "Maximum-stack-size"
     - equipment-1x1
         Duplicate each affected equipments
-    - force-a-slot-modules
-        Duplicate each affected entities
     - immune-armors
         Name change to "Armor-with-immunity"
         Remove fish to icon
