@@ -28,15 +28,11 @@ GPrefix.Script  = { }
 
 -- Unidades de energia
 GPrefix.Unit = { }
-GPrefix.Unit.K =  3
-GPrefix.Unit.M =  6
-GPrefix.Unit.G =  9
-GPrefix.Unit.T = 12
-GPrefix.Unit.P = 15
-GPrefix.Unit.E = 18
-GPrefix.Unit.Z = 21
-GPrefix.Unit.Y = 24
-GPrefix.Unit[ 0 ] = ""
+GPrefix.Unit[ "" ] = 0
+
+for Key, Value in pairs( { "K", "M", "G", "T", "P", "E", "Z", "Y" } ) do
+    GPrefix.Unit[ Value ] = 3 * Key
+end
 
 -- Invertir valores
 for Key, Value in pairs( GPrefix.Unit ) do
@@ -48,17 +44,17 @@ end
 
 -- Crear los espacio para los MODs
 local MODs = { }
+
+-- table.insert( MODs, { Nombre, Prefijo, Dependencia } ) 
 table.insert( MODs, { "pruebas", "p" } )
 table.insert( MODs, { "compact-items", "CI" } )
-table.insert( MODs, { "maximum-stack-size", "MaxStack" } )
+table.insert( MODs, { "maximum-stack-size", "MSS" } )
 table.insert( MODs, { "improve-compaction", "IC", "compact-items" } )
-table.insert( MODs, { "miniloader", "L" } )
+-- table.insert( MODs, { "recipes-to-compact-items", "RtCI", "compact-items" } )
+table.insert( MODs, { "miniloader", "M" } )
 table.insert( MODs, { "queue-to-research", "QtR" } )
 -- table.insert( MODs, { "start-with-items", "SwI" } )
--- table.insert( MODs, { "micro-machines", "MM" } )
--- table.insert( MODs, { "better-module", "BM" } )
--- table.insert( MODs, { "uncraft", "U" } )
--- table.insert( MODs, { "Deepminer", "D" } )
+table.insert( MODs, { "free-minerals", "FM" } )
 table.insert( MODs, { "free-fluids", "FF" } )
 table.insert( MODs, { "armor-with-immunity", "AwI" } )
 table.insert( MODs, { "equipament-1x1", "E1x1" } )
@@ -100,7 +96,7 @@ end
 
 for _, MOD in pairs( MODs ) do
     if #MOD > 2 then local This = MOD[ 1 ] local Main = MOD[ 3 ]
-        GPrefix.MODs[ This ].Requires = GPrefix.MODs[ Main ]
+        GPrefix.MODs[ This ].Requires = GPrefix.MODs[ Main ] or { }
     end
 end
 

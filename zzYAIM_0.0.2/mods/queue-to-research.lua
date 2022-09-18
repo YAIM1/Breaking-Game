@@ -435,8 +435,8 @@ function ThisMOD.CreateSprite( )
 
     Items = { }
     for _, ItemName in pairs( TurretAttack ) do
-        Item = GPrefix.Items[ ItemName ]
-        table.insert( Items, Item )
+        Table = GPrefix.Items[ ItemName ]
+        table.insert( Items, Table )
     end
 
     for _, Effect in pairs( Array ) do
@@ -2932,15 +2932,15 @@ function ThisMOD.SearchText( Data )
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar la tecnolgia seleccionada
-    local Flag = not GPrefix.isString( Data.Click.Selected )
-    if Data.Click and Data.Click.Selected and Flag then
-        Data.Click.Selected = Data.Click.Selected.tags.Technology
+    local Click = Data.Click
+    if Click and Click.Selected and not Click.Selected.Name then
+        Click.Selected = Click.Selected.tags.Technology
     end
 
     -- Guardar la tecnolgia cliqueada
-    Flag = not GPrefix.isString( Data.Click.Element )
-    if Data.Click and Data.Click.Element and Flag then
-        Data.Click.Element = Data.Click.Element.tags.Technology
+    Click = not Data.Click
+    if Click and Click.Element and not Click.Element.Name then
+        Click.Element = Click.Element.tags.Technology
     end
 
     -- Cargar los valores por defecto

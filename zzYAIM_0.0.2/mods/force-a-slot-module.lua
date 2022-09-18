@@ -122,15 +122,32 @@ function ThisMOD.LoadInformation( )
 
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-    -- Inicializar y renombrar la variable
-    local Recipes = Info.Recipes or { }
-    Info.Recipes = Recipes
-
-    -- Modificar las recetas
-    for _, Recipe in pairs( Recipes ) do
-        Array = { Recipe, Recipe.normal, Recipe.expensive }
-        for _, Table in pairs( Array ) do Table.main_product = nil end
+    -- Eliminar las demas recetas
+    for _, Recipes in pairs( Info.Recipes ) do
+        for i = 2, #Recipes, 1 do
+            Recipes[ i ] = nil
+        end
     end
+
+    -- Actualizar el resultado de las recetas
+    GPrefix.updateResults( ThisMOD )
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Inicializar y renombrar la variable
+    local Items = Info.Items or { }
+    Info.Items = Items
+
+    -- Asignar la marca del MOD
+    for _, Item in pairs( Items ) do
+        GPrefix.AddIcon( Item, ThisMOD )
+    end
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Inicializar y renombrar la variable
+    local Item = Info.Item or { }
+    Info.Item = Item
 end
 
 -- Configuración del MOD

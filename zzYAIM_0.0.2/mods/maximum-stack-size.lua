@@ -104,30 +104,26 @@ function ThisMOD.DataFinalFixes( )
         -- No se puede crear
         if GPrefix.getKey( Item.flags, "spawnable" ) then goto JumpItem end
 
-        -- Establecer el apodo
-        if Item.name == "solid-fuel" then
-            local Recipes = GPrefix.Recipes[ Item.name ]
-            for _, Recipe in pairs( Recipes or { } ) do
-                if not Recipe.localised_name then
-                    Recipe.localised_name = { "item-name." .. Item.name }
-                end
-            end
-        end
-
         -- Hacer el cambio
         Item.stack_size = ThisMOD.Value
         GPrefix.addLetter( Item, ThisMOD.Char )
 
         -- Actualizar la descripción de los compactados
-        if GPrefix.Compact then GPrefix.Compact.UpdateDescription( Item, ThisMOD ) end
+        if GPrefix.Compact then
+            GPrefix.Compact.UpdateDescription( Item, ThisMOD )
+        end
 
         -- Actualizar la entidad
-        local Entity = GPrefix.Entities[ Item.name ]
-        if Entity then GPrefix.addLetter( Entity, ThisMOD.Char ) end
+        if Item.place_result then
+            local Entity = GPrefix.Entities[ Item.place_result ]
+            if Entity then GPrefix.addLetter( Entity, ThisMOD.Char ) end
+        end
 
         -- Actualizar el equipamento
-        local Equipment = GPrefix.Equipaments[ Item.name ]
-        if Equipment then GPrefix.addLetter( Equipment, ThisMOD.Char ) end
+        if Item.placed_as_equipment_result then
+            local Equipment = GPrefix.Equipaments[ Item.placed_as_equipment_result ]
+            if Equipment then GPrefix.addLetter( Equipment, ThisMOD.Char ) end
+        end
 
         -- Actualizar sus recestas
         for _, Recipe in pairs( GPrefix.Recipes[ Item.name ] or { } ) do

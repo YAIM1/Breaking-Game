@@ -319,64 +319,56 @@ function GPrefix.shortNumber( Number )
     return Output .. GPrefix.Unit[ 3 * Digits ]
 end
 
-
--- Call example. GPrefix.isIngredient( Recipe, ItemName )
-
-function GPrefix.inRecipe( Recipe, ItemName )
-	for _, Result in pairs( Recipe ) do
-		if Result.name and Result.name == ItemName then return true
-		elseif Result[ 1 ] == ItemName then return true end
-	end return false
-end
-
--- Call example. GPrefix.isIngredient( Recipe, Item )
-
-function GPrefix.isIngredient( Recipe, Item )
-	if Recipe.ingredients and GPrefix.inRecipe( Recipe.ingredients, Item ) then return true end
-	if Recipe.expensive and Recipe.expensive.ingredients and GPrefix.inRecipe( Recipe.expensive.ingredients, Item ) then return true end
-	if Recipe.normal and Recipe.normal.ingredients and GPrefix.inRecipe( Recipe.normal.ingredients, Item ) then return true end
-    return false
-end
-
 -- Call example. GPrefix.isResult( Recipe, Item )
 
 function GPrefix.isResult( Recipe, Item )
-	if Recipe.result == Item then return true end
-	if Recipe.results and GPrefix.inRecipe( Recipe.results, Item ) then return true end
+    local function inRecipe( Results, ItemName )
+        for _, Result in pairs( Results ) do
+            if Result.name and Result.name == ItemName then return true
+            elseif Result[ 1 ] and Result[ 1 ] == ItemName then return true end
+        end return false
+    end
+
+    if Recipe.result == Item then return true end
+	if Recipe.results and inRecipe( Recipe.results, Item ) then return true end
     if Recipe.normal and Recipe.normal.result == Item then return true end
-	if Recipe.normal and Recipe.normal.results and GPrefix.inRecipe( Recipe.normal.results, Item ) then return true end
+	if Recipe.normal and Recipe.normal.results and inRecipe( Recipe.normal.results, Item ) then return true end
     if Recipe.expensive and Recipe.expensive.result == Item then return true end
-	if Recipe.expensive and Recipe.expensive.results and GPrefix.inRecipe( Recipe.expensive.results, Item ) then return true end
+	if Recipe.expensive and Recipe.expensive.results and inRecipe( Recipe.expensive.results, Item ) then return true end
 	return false
 end
 
+-- Call example. GPrefix.setResult( Recipe, Result )
 
--- Call example. GPrefix.ReplaceRecipe( Recipe, OldNameItem, NewNameItem )
+function GPrefix.setResult( Recipe, Result )
 
-function GPrefix.ReplaceRecipe( Recipe, OldNameItem, NewNameItem )
-	for _, Result in pairs( Recipe ) do
-		if Result.name and Result.name == OldNameItem then Result.name = NewNameItem return
-		elseif Result[ 1 ] == OldNameItem then Result[ 1 ] = NewNameItem return end
-	end
-end
+    -- Validación básica
+    if not Recipe then return end
 
--- Call example. GPrefix.ReplaceIngredient( Recipe, OldNameItem, NewNameItem )
+    -- Eliminar los resultados
+    local function Clear( Table )
+        if not Table.ingredients then return end
+        Table.result = nil
+        Table.results = nil
+        Table.result_count = nil
+    end
 
-function GPrefix.ReplaceIngredient( Recipe, OldNameItem, NewNameItem )
-	if Recipe.ingredients then GPrefix.ReplaceRecipe( Recipe.ingredients, OldNameItem, NewNameItem ) end
-	if Recipe.normal and Recipe.normal.ingredients then GPrefix.ReplaceRecipe( Recipe.normal.ingredients, OldNameItem, NewNameItem ) end
-	if Recipe.expensive and Recipe.expensive.ingredients then GPrefix.ReplaceRecipe( Recipe.expensive.ingredients, OldNameItem, NewNameItem ) end
-end
+    -- Establecer los resultados
+    local function Set( Table )
+        if not Table.ingredients then return end
+        Table.results = Result
+    end
 
--- Call example. GPrefix.ReplaceResult( Recipe, OldNameItem, NewNameItem )
+    -- Ubicación de los resutados
+    local Tables = { }
+    table.insert( Tables, Recipe )
+    table.insert( Tables, Recipe.normal )
+    table.insert( Tables, Recipe.expensive )
 
-function GPrefix.ReplaceResult( Recipe, OldNameItem, NewNameItem )
-	if Recipe.result == OldNameItem then Recipe.result = NewNameItem end
-	if Recipe.results then GPrefix.ReplaceRecipe( Recipe.results, OldNameItem, NewNameItem ) end
-    if Recipe.normal and Recipe.normal.result == OldNameItem then Recipe.normal.result = NewNameItem end
-	if Recipe.normal and Recipe.normal.results then GPrefix.ReplaceRecipe( Recipe.normal.results, OldNameItem, NewNameItem ) end
-    if Recipe.expensive and Recipe.expensive.result == OldNameItem then Recipe.expensive.result = NewNameItem end
-	if Recipe.expensive and Recipe.expensive.results then GPrefix.ReplaceRecipe( Recipe.expensive.results, OldNameItem, NewNameItem ) end
+    -- Hacer el cambio
+    for _, Table in pairs( Tables ) do
+        Clear( Table )   Set( Table )
+    end
 end
 
 
@@ -398,60 +390,172 @@ function GPrefix.CreateIcons( Table )
     Table.icons = { Icon }
 end
 
--- Call example. GPrefix.addTechnology( OldItemName, NewRecipeName )
+-- Call example 1. GPrefix.addTechnology( OldItemName, NewRecipeName )
 
 function GPrefix.addTechnology( OldItemName, NewRecipeName )
 
     -- Variable contenedora
     local Array = { }
     Array.NewRecipe = data.raw.recipe[ NewRecipeName ]
-    Array.Enabled = { Array.NewRecipe, Array.NewRecipe.normal, Array.NewRecipe.expensive }
-    Array.Technologies = ( OldItemName and OldItemName ~= "" ) and data.raw.technology or { }
+
+    Array.Enabled = { }
+    table.insert( Array.Enabled, Array.NewRecipe )
+    table.insert( Array.Enabled, Array.NewRecipe.normal )
+    table.insert( Array.Enabled, Array.NewRecipe.expensive )
+
+    -- Saltar las tecnologías
+    if data.raw.resource[ OldItemName ] then goto JumpTechnologies end
+    if OldItemName == "" then goto JumpTechnologies end
+
+    -- Buscar las recetas del objeto
+    Array.Recipes = GPrefix.Recipes[ OldItemName ]
+    if not Array.Recipes then goto JumpTechnologies end
+
+    -- Tecnologías posibles
+    Array.Technologies = { }
+    Array.Found = { }
 
     -- Revisar cada tecnología
-    for _, Technology in pairs( Array.Technologies ) do
+    for _, Recipe in pairs( Array.Recipes ) do
 
-        -- Validar si la teccnología tiene effectos
-        if not Technology.effects then goto JumpTechnology end
+        -- Marcar como NO encontrado
+        Array.Found[ Recipe.name ] = false
 
-        -- Revsar cada efecto
-        for _, Effect in pairs( Technology.effects ) do
-
-            -- Validar la si hay recetas a desbloquar
-            if Effect.type ~= "unlock-recipe" then goto JumpEffect end
-
-            -- Validar si es la receta que se busca
-            Array.Recipe = data.raw.recipe[ Effect.recipe ]
-            Array.Recipe = GPrefix.isResult( Array.Recipe, OldItemName )
-            if not Array.Recipe then goto JumpEffect end
-
-            -- Crear el nuevo efecto
-            Array.NewEffect = { }
-            Array.NewEffect.type = "unlock-recipe"
-            Array.NewEffect.recipe = NewRecipeName
-
-            -- Guardar el nuevo efecto en la tecnología
-            table.insert( Technology.effects, Array.NewEffect )
-            for _, Table in pairs( Array.Enabled ) do Table.enabled = false end
-            if true then return end
-
-            -- Recepción del salto
-            :: JumpEffect ::
+        -- Evitar la receta
+        if Recipe.hide_from_player_crafting then
+            Array.Found[ Recipe.name ] = true
         end
 
-        -- Recepción del salto
-        :: JumpTechnology ::
+        -- Revisar las tecnologías
+        for _, Technology in pairs( data.raw.technology ) do
+            for _, Effect in pairs( Technology.effects or { } ) do
+
+                -- Validar la si hay recetas a desbloquar
+                if Effect.type ~= "unlock-recipe" then goto JumpEffect end
+
+                -- Validar si es la receta que se busca
+                if Effect.recipe ~= Recipe.name then goto JumpEffect end
+
+                -- Marcar como encontrado
+                Array.Found[ Recipe.name ] = true
+
+                -- Esta en la lista
+                Array.inList = GPrefix.getKey( Array.Technologies, Technology )
+                if Array.inList then goto JumpEffect end
+
+                -- Agregar la tecnología a la lista
+                table.insert( Array.Technologies, Technology )
+
+                -- Recepción del salto
+                :: JumpEffect ::
+            end
+        end
     end
 
+    -- No se requiere tecnología
+    if #Array.Technologies < 1 then goto JumpTechnologies end
+
+    Array.Find = GPrefix.Prefix_
+    Array.Find = string.gsub( Array.Find, "-", "%%-" )
+    for RecipeName, Found in pairs( Array.Found ) do
+        if not string.find( RecipeName, Array.Find ) then
+            if not Found then goto JumpTechnologies end
+        end
+    end
+
+    -- Formato para agregar la tecnología
+    Array.NewEffect = { }
+    Array.NewEffect.type = "unlock-recipe"
+    Array.NewEffect.recipe = NewRecipeName
+
+    -- Deshabilitar la receta
+    for _, Table in pairs( Array.Enabled ) do
+        if Table.ingredients then
+            Table.enabled = false
+        end
+    end
+
+    -- Agregar la receta a las tecnologias
+    for _, Technology in pairs( Array.Technologies ) do
+        table.insert( Technology.effects, Array.NewEffect )
+    end if true then return end
+
+    -- Recepción del salto
+    :: JumpTechnologies ::
+
     -- No se requiere una tecnología
-    for _, Table in pairs( Array.Enabled ) do Table.enabled = true end
+    for _, Table in pairs( Array.Enabled ) do
+        if Table.ingredients then
+            Table.enabled = true
+        end
+    end
 end
 
--- Call example: GPrefix.addLetter( Entity, ThisMOD )
+-- Call example: GPrefix.CreatelocalisedName( OldItem )
+
+function GPrefix.CreateLocalisedName ( Item )
+
+    -- Validación básica
+    if Item.localised_name then return end
+
+    -- Variables contenedoras
+    local Element = { }
+    local NickName = nil
+
+    -- Objeto de una entidad
+    if Item.place_result then
+        Element = GPrefix.Entities[ Item.place_result ]
+        if Element and Element.localised_name then
+            NickName = GPrefix.DeepCopy( Element.localised_name )
+        elseif Element and not Element.localised_name then
+            NickName = { "entity-name." .. Item.place_result }
+        else
+            NickName = { "entity-name." .. Item.name }
+        end
+    end
+
+
+    -- Objeto de un piso
+    if Item.place_as_tile then
+        Element = GPrefix.Tiles[ Item.place_as_tile ]
+        if Element and Element.localised_name then
+            NickName = GPrefix.DeepCopy( Element.localised_name )
+        elseif Element and not Element.localised_name then
+            NickName = { "title-name." .. Item.place_as_tile }
+        else
+            NickName = { "item-name." .. Item.name }
+        end
+    end
+
+    -- Objeto de un equipo
+    if Item.placed_as_equipment_result then
+        Element = GPrefix.Equipaments[ Item.placed_as_equipment_result ]
+        if Element and Element.localised_name then
+            NickName = GPrefix.DeepCopy( Element.localised_name )
+        elseif Element and not Element.localised_name then
+            NickName = { "equipment-name." .. Item.placed_as_equipment_result }
+        else
+            NickName = { "equipment-name." .. Item.name }
+        end
+    end
+
+    -- Objeto desconocido
+    if not NickName then
+        NickName = { "item-name." .. Item.name }
+    end
+
+    -- Establecer el apodo
+    Item.localised_name = NickName
+end
+
+-- Call example 1: GPrefix.addLetter( Entity )
+-- Call example 2: GPrefix.addLetter( Entity, Char )
+-- Call example 3: GPrefix.addLetter( Entity, ThisMOD )
 
 function GPrefix.addLetter( Table, ThisMOD )
 
-    -- Inicializsar la variable
+    -- Inicializar la variable
+    ThisMOD = ThisMOD or " ["
     if GPrefix.isString( ThisMOD ) then
         ThisMOD = { Char = ThisMOD }
         ThisMOD.Create = true
@@ -459,48 +563,89 @@ function GPrefix.addLetter( Table, ThisMOD )
 
     -- No existe el apodo
     if not Table.localised_name then
-        local Type = ""
-        if GPrefix.Items[ Table.name ] then Type = "item" end
-        if GPrefix.Entities[ Table.name ] then Type = "entity" end
-        if GPrefix.Equipaments[ Table.name ] then Type = "equipment" end
-        Table.localised_name = { "", { Type .. "-name." .. Table.name }, " [", " ]" }
 
+        -- Variables contenedoras
+        local Type = ""
+        local Element = nil
+
+        -- Identificar el elemento
+        if GPrefix.Items[ Table.name ] then
+            Element = GPrefix.Items[ Table.name ]
+            Type = "item"
+        end
+
+        if GPrefix.Fluids[ Table.name ] then
+            Element = GPrefix.Fluids[ Table.name ]
+            Type = "fluid"
+        end
+
+        if GPrefix.Entities[ Table.name ] then
+            Element = GPrefix.Entities[ Table.name ]
+            Type = "entity"
+        end
+
+        if GPrefix.Equipaments[ Table.name ] then
+            Element = GPrefix.Equipaments[ Table.name ]
+            Type = "equipment"
+        end
+
+        -- Establecer el apodo
+        if Element and Element.localised_name then
+            Table.localised_name = GPrefix.DeepCopy( Element.localised_name )
+        end
+
+        if Element and Type == "item" then
+            GPrefix.CreateLocalisedName( Element )
+            Table.localised_name = GPrefix.DeepCopy( Element.localised_name )
+        end
+
+        if Element and not Element.localised_name then
+            Table.localised_name = { "", { Type .. "-name." .. Table.name }, " [", " ]" }
+        end
+
+        -- El elemento es una receta
         repeat
 
             -- Validación básica
-            if Type ~= "" then break end
+            if Element then break end
             if Table.type ~= "recipe" then break end
 
             -- Variable contenedora
-            local Recipes = { Table, Table.expensive, Table.normal }
-            local Result = { }
-
-            -- Cargar los posibles resultados
-            for _, Recipe in pairs( Recipes ) do
-                if Recipe.result then
-                    if not GPrefix.getKey( Result, Recipe.result ) then
-                        table.insert( Result, Recipe.result )
-                    end
-                end
-
-                if Recipe.results then
-                    for _, result in pairs( Recipe.results ) do
-                        local Name = result.name or result[ 1 ]
-                        if not GPrefix.getKey( Result, Name ) then
-                            table.insert( Result, Name )
-                        end
-                    end
-                end
-            end
+            local Result = GPrefix.getResults( Table ) or { }
 
             -- No hay un unico resultado
             if #Result ~= 1 then
-                Table.localised_name = { "", { "recipe-name." .. Table.name }, " [", " ]" }
+                local Item = GPrefix.Items[ Table.main_product ]
+                local Fluid = GPrefix.Fluids[ Table.main_product ]
+
+                -- Crear el apodo del objeto
+                if Item and not Item.localised_name then
+                    GPrefix.CreateLocalisedName( Item )
+                end
+
+                -- Apodo existente
+                if Item and Item.localised_name then
+                    Table.localised_name = Item.localised_name
+                end
+                if Fluid and Fluid.localised_name then
+                    Table.localised_name = Fluid.localised_name
+                end
+
+                -- Construir el apodo
+                if Fluid and not Fluid.localised_name then
+                    Table.localised_name = { "", { "fluid-name." .. Fluid.name }, " [", " +", " ]" }
+                end
+                if not Item and not Fluid then
+                    Table.localised_name = { "", { "recipe-name." .. Table.name }, " [", " -", " ]" }
+                end
+
                 break
             end
 
             -- Hacer el cambio
-            Table.localised_name = { "", { "item-name." .. Result[ 1 ] } }
+            local Item = GPrefix.Items[ Result[ 1 ] ]
+            GPrefix.CreateLocalisedName( Item )
+            Table.localised_name = GPrefix.DeepCopy( Item.localised_name )
         until true
     end
 
@@ -521,55 +666,43 @@ function GPrefix.addLetter( Table, ThisMOD )
         table.insert( Table.localised_name, " ]" )
     end
 
-    -- Inicializar la variable contenedora
-    local OldName = Table.name   local StringFind = ""
-    if ThisMOD.Create then goto JumpPrefix end
-
-    -- Nombre del prototipo
-    StringFind = string.gsub( GPrefix.Prefix_, "-", "%%-" )
-    Table.name = string.gsub( Table.name, StringFind, "" )
-    Table.name = ThisMOD.Prefix_MOD_ .. Table.name
-
-    -- Remplazar el objeto a minar
-    Flag = true
-    Flag = Flag and ( Table.minable and true or false )
-    Flag = Flag and ( Table.minable.result and true or false )
-    Flag = Flag and Table.minable.result == OldName
-    if Flag then Table.minable.result = Table.name end
-
-    if Table.minable and Table.minable.results then
-        for _, Result in pairs( Table.minable.results ) do
-            if Result.name == OldName then
-                Result.name = Table.name
-            end
-        end
-    end
-
-    -- Remplazar el objeto de la receta
+    -- Ocultar las maquinas que usa la receta
     if Table.type == "recipe" then
-        GPrefix.ReplaceResult( Table, OldName, Table.name )
+        Table.always_show_made_in = false
     end
 
-    -- Remplazar la entidad a crear
-    if Table.place_result then
-        local Find = ""
-        local Name = ""
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-        Find = ThisMOD.Prefix_MOD_
-        Find = string.gsub( Find, "-", "%%-" )
-        Name = Table.place_result
-        Name = string.gsub( Name, Find, "" )
+    -- Crear el nuevo valor
+    local function set( Name )
+        local Find = ""
 
         Find = GPrefix.Prefix_
         Find = string.gsub( Find, "-", "%%-" )
         Name = string.gsub( Name, Find, "" )
 
-        Table.place_result = ThisMOD.Prefix_MOD_ .. Name
+        return ThisMOD.Prefix_MOD_ .. Name
+    end
+
+    -- Solo se afecta el apodo
+    if ThisMOD.Create then goto JumpPrefix end
+
+    -- Nombre del prototipo
+    Table.name = set( Table.name )
+
+    -- Remplazar el objeto a minar
+    if Table.minable and Table.minable.result then
+        Table.minable.result = set( Table.minable.result )
+    end
+
+    -- Remplazar la entidad a crear
+    if Table.place_result then
+        Table.place_result = set( Table.place_result )
     end
 
     -- Remplazar el equipamiento a crear
     if Table.placed_as_equipment_result then
-        Table.placed_as_equipment_result = Table.name
+        Table.placed_as_equipment_result = set( Table.placed_as_equipment_result )
     end
 
     -- Recepción del salto
@@ -626,6 +759,96 @@ function GPrefix.newItemSubgroup( OldItem, ThisMOD )
     newSubGroup.order = string.gsub( OldItem.order, newSubGroup.order, "" )
     newSubGroup.order = ThisMOD.Prefix_MOD_ .. OldItem.order
     data:extend( { newSubGroup } )
+end
+
+-- Call example: GPrefix.AddIcon( Table, ThisMOD )
+
+function GPrefix.AddIcon( Table, ThisMOD )
+    GPrefix.CreateIcons( Table )
+
+    -- Agregar el referencia
+    local List = { icon = "" }
+    List.icon = List.icon .. ThisMOD.Patch
+    List.icon = List.icon .. "icons/status.png"
+    List.icon_size = 32
+    table.insert( Table.icons, List )
+end
+
+-- Call example: GPrefix.getResults( Recipe )
+
+function GPrefix.getResults( Recipe )
+
+    -- Validación básica
+    if Recipe.type ~= "recipe" then return nil end
+
+    -- Variable contenedora
+    local Recipes = { Recipe, Recipe.expensive, Recipe.normal }
+    local Result = { }
+
+    -- Cargar los posibles resultados
+    for _, Array in pairs( Recipes ) do
+        if Array.result then
+            if not GPrefix.getKey( Result, Array.result ) then
+                table.insert( Result, Array.result )
+            end
+        end
+
+        if Array.results then
+            for _, result in pairs( Array.results ) do
+                local Name = result.name or result[ 1 ]
+                if not GPrefix.getKey( Result, Name ) then
+                    table.insert( Result, Name )
+                end
+            end
+        end
+    end
+
+    -- Devolver los resultados
+    return Result
+end
+
+-- Call example: GPrefix.updateResults( ThisMOD )
+
+function GPrefix.updateResults( ThisMOD )
+
+    -- Inicializar y renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Inicializar y renombrar la variable
+    local Recipes = Info.Recipes or { }
+    Info.Recipes = Recipes
+
+    -- Eliminar los ingredientes
+    for _, Recipe in pairs( Recipes ) do Recipe = Recipe[ 1 ]
+        local Results = GPrefix.getResults( Recipe ) or { }
+        if #Results == 1 then local Result = Results[ 1 ]
+
+            -- Eliminar las propiedades incesarias
+            Recipe.icon = nil
+            Recipe.icons = nil
+            Recipe.icon_size = nil
+            Recipe.main_product = nil
+            Recipe.icon_mipmaps = nil
+
+            -- Recorrer los resultados
+            for _, Table in ipairs( { Recipe, Recipe.normal, Recipe.expensive } ) do
+                if Table.ingredients then
+
+                    -- Nombre del objeto
+                    local name = GPrefix.Prefix_
+                    name = string.gsub( name, "-", "%%-" )
+                    name = string.gsub( Result, name, "" )
+
+                    -- Establecer el resultado
+                    Table.result = ThisMOD.Prefix_MOD_ .. name
+                    Table.results = nil
+                end
+            end
+        end
+    end
 end
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- --

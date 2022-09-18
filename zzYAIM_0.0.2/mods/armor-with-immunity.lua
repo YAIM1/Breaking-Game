@@ -92,7 +92,7 @@ function ThisMOD.LoadInformation(  )
 
     -- Crear la mejor armadura 
     local UltimateArmor = ThisMOD.CreateArmor( Items, "ultimate" )
-    UltimateArmor.order = Order
+    UltimateArmor.order = Order   GPrefix.AddIcon( UltimateArmor, ThisMOD )
 
     -- Crear la receta de la mejor armadura
     local UltimateRecipe = ThisMOD.CreateRecipe( Recipes, "ultimate" )
@@ -109,7 +109,7 @@ function ThisMOD.LoadInformation(  )
 
         -- Crear la armadura imune a un daño
         local DamageArmor = ThisMOD.CreateArmor( Items, Damage )
-        DamageArmor.order = Order
+        DamageArmor.order = Order   GPrefix.AddIcon( DamageArmor, ThisMOD )
 
         -- Agregar la inmunidad a las armaduras
         table.insert( DamageArmor.resistances, { type = Damage, decrease = 0, percent = 100 } )
@@ -160,12 +160,11 @@ function ThisMOD.CreateRecipe( Recipes, Name )
     Recipe.normal = nil
     Recipe.results = nil
     Recipe.expensive = nil
-    Recipe.ingredient = nil
     Recipe.Localised_description = nil
 
     -- Establece las propiedades basicas
     Recipe.name = Name
-    Recipe.result = Name
+    Recipe.result = ThisMOD.Prefix_MOD_ .. Name
     Recipe.ingredients = { }
     Recipe.localised_name = { ThisMOD.Local .. "item-name", { ThisMOD.Local .. Name } }
 

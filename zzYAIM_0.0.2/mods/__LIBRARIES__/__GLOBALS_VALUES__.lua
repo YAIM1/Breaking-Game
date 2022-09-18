@@ -507,6 +507,11 @@ local function addRecipe( NewRecipe, ThisMOD )
     data:extend( { NewRecipe } )
 end
 
+local function ActiveForceProduction( RecipeName )
+    if not GPrefix.ForceProduction then return end
+    GPrefix.ForceProduction.addRecipe( RecipeName )
+end
+
 local function createRecipe( ThisMOD )
 
     -- Renombrar la variable
@@ -521,6 +526,7 @@ local function createRecipe( ThisMOD )
         for _, Recipe in pairs( Table ) do
             GPrefix.addRecipe( Recipe, ThisMOD )
             GPrefix.addTechnology( ItemName, Recipe.name )
+            ActiveForceProduction( Recipe.name )
         end
     end
 end
@@ -551,7 +557,7 @@ local function duplicateEntity( Entity, ThisMOD )
 
     -- Nombre del objeto
     local Name = Entity.minable.result
-    if Name ~= Entity.name then return end
+    if not Name then return end
 
     -- Cargar el objeto
     local Item = GPrefix.Items[ Name ]
@@ -582,6 +588,11 @@ local function duplicateEntity( Entity, ThisMOD )
             if Compact or Uncompact then
                 table.remove( Recipe, position )
             end
+        end
+
+        -- Eliminar las recetas vacias
+        if GPrefix.getLength( Recipe ) < 1 then
+            Recipes[ Name ] = nil
         end
     end
 
@@ -862,6 +873,49 @@ local function DeleteData( )
     if #Deleted >= 1 then log( String ) end
 end
 
+-- Commpactar el objeto de ser posible
+local function ActivateCompact( ThisMOD )
+
+    -- Validación básica
+    if not GPrefix.Compact then return end
+    if not ThisMOD.Information then return end
+    if not ThisMOD.Information.Items then return end
+    if ThisMOD.Information.Break then return end
+
+    -- Renombrar la variable
+    local Items = ThisMOD.Information.Items
+    Items = GPrefix.DeepCopy( Items )
+
+    -- Crea el objeto compactado
+    GPrefix.Compact.Information = nil
+    for _, Item in pairs( Items ) do
+        GPrefix.Compact.Compact( Item, GPrefix.Compact )
+    end create( "Items", GPrefix.Compact )
+
+    -- Crear las recetas para compactar el objeto
+    GPrefix.Compact.Information = nil
+    for _, Item in pairs( Items ) do
+        GPrefix.Compact.CreateRecipe( Item )
+    end createRecipe( GPrefix.Compact )
+
+    -- Crear una versión mejorada de ser posible
+    if not GPrefix.Improve then return end
+    GPrefix.Improve.LoadStar( )
+end
+
+-- Cargar al juego las prototipos
+local function createInformation( ThisMOD )
+    if not ThisMOD.Information then return end
+
+    if ThisMOD.Information.Items then create( "Items", ThisMOD ) end
+    if ThisMOD.Information.Fluids then create( "Fluids", ThisMOD ) end
+    if ThisMOD.Information.Entities then create( "Entities", ThisMOD ) end
+    if ThisMOD.Information.Equipaments then create( "Equipaments", ThisMOD ) end
+
+    if ThisMOD.Information.Recipes then createRecipe( ThisMOD ) end
+    ActivateCompact( ThisMOD )
+end
+
 -- Cargar los valores en el prototipado
 local function DataFinalFixes( )
 
@@ -885,39 +939,7 @@ local function DataFinalFixes( )
 
     GPrefix.duplicateEntity = function ( Entity, ThisMOD ) duplicateEntity( Entity, ThisMOD ) end
 
-    GPrefix.createInformation = function( ThisMOD )
-        if not ThisMOD.Information then return end
-
-        if ThisMOD.Information.Items then create( "Items", ThisMOD ) end
-        if ThisMOD.Information.Fluids then create( "Fluids", ThisMOD ) end
-        if ThisMOD.Information.Entities then create( "Entities", ThisMOD ) end
-        if ThisMOD.Information.Equipaments then create( "Equipaments", ThisMOD ) end
-
-        if ThisMOD.Information.Recipes then createRecipe( ThisMOD ) end
-
-        -- Commpactar el objeto de ser posible
-        local Flag = GPrefix.Compact and true or false
-        Flag = Flag and ( ThisMOD.Information.Items and true or false )
-        if Flag and not ThisMOD.Information.Break then
-            local Items = ThisMOD.Information.Items
-            Items = GPrefix.DeepCopy( Items )
-
-            -- Crea el objeto compactado
-            GPrefix.Compact.Information = nil
-            for _, Item in pairs( Items ) do
-                GPrefix.Compact.Compact( Item, GPrefix.Compact )
-            end create( "Items", GPrefix.Compact )
-
-            -- Crear las recetas para compactar el objeto
-            GPrefix.Compact.Information = nil
-            for _, Item in pairs( Items ) do
-                GPrefix.Compact.CreateRecipe( Item )
-            end createRecipe( GPrefix.Compact )
-
-            -- Crear una versión mejorada de ser posible
-            if GPrefix.Improve then GPrefix.Improve.LoadInformation( ) end
-        end
-    end
+    GPrefix.createInformation = function( ThisMOD ) createInformation( ThisMOD ) end
 end
 
 -- Cargar los datos desde los prototipos

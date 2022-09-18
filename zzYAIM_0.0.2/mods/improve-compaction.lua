@@ -59,7 +59,7 @@ ThisMOD.Settings( )
 ---------------------------------------------------------------------------------------------------
 
 -- Cargar las infomación
-function ThisMOD.LoadInformation( )
+function ThisMOD.LoadStar( )
 
     -- Inicializar los valores
     local AllRecipes = ThisMOD.Requires.Information.Recipes
@@ -78,13 +78,13 @@ function ThisMOD.LoadInformation( )
         for _, Recipe in pairs( Recipes ) do
             local Name = ""
 
-            Name = Recipe.ingredients[ 1 ].name
-            if string.find( Name, Find ) then
+            Name = Recipe.name
+            if string.find( Name, Find .. "uncompact" ) then
                 Data.Uncompact = Recipe
             end
 
-            Name = Recipe.results[ 1 ].name
-            if string.find( Name, Find ) then
+            Name = Recipe.name
+            if string.find( Name, Find .. "compact" ) then
                 Data.Compact = Recipe
             end
         end
@@ -93,6 +93,7 @@ function ThisMOD.LoadInformation( )
         Data.Item = Data.Compact.ingredients[ 1 ]
         Data.Item = GPrefix.Items[ Data.Item.name ]
         Data.Item = GPrefix.DeepCopy( Data.Item )
+        GPrefix.CreateLocalisedName( Data.Item )
 
         -- -- Mejoras en los objetos
         ThisMOD.ImproveAmmo( Data )
@@ -146,9 +147,12 @@ function ThisMOD.AddModifiedItem( Data )
 
     -- Agregar la letra del MOD
     GPrefix.addLetter( Data.Item, ThisMOD )
-    ThisMOD.addLetter( Data.Item, Data.Compact )
-    ThisMOD.addLetter( Data.Item, Data.Uncompact )
-    ThisMOD.addLetter( Data.Item, Data.LocalisedName )
+    GPrefix.addLetter( Data.Compact, ThisMOD.Char )
+    GPrefix.addLetter( Data.Uncompact, ThisMOD.Char )
+    if Data.LocalisedName then
+        Data.LocalisedName.localised_name = Data.Item.localised_name
+        GPrefix.addLetter( Data.LocalisedName, ThisMOD.Char )
+    end
 
     -- Modificar las recetas
     Data.Compact.results[ 1 ].name = Data.Item.name
@@ -166,42 +170,6 @@ function ThisMOD.AddModifiedItem( Data )
     data:extend( { Data.Item } )
     GPrefix.Items[ Data.Item.name ] = Data.Item
     if Data.LocalisedName then data:extend( { Data.LocalisedName } ) end
-end
-
--- Agregar la letra indicadora del MOD
-function ThisMOD.addLetter( Source, Destiny )
-
-    -- Validación básica
-    if not Destiny then return end
-
-    -- Inicializar las varebles
-    local Array = { }
-    local Start = 0
-    local List = { }
-
-    -- Guardar los nuevos inidicadores
-    Start = 0
-    List = Source.localised_name
-    for i, Str in pairs( List ) do
-        if Str == " [" then Start = i end
-        if Start > 0 then table.insert( Array, Str ) end
-    end
-
-    -- Identificar el inicio de los inidicadores
-    Start = 0
-    List = Destiny.localised_name
-    for i, Str in pairs( List ) do
-        if Str == " [" then Start = i break end
-    end
-
-    -- Borrar los viejos idicadores
-    List = Destiny.localised_name
-    while List[ Start ] do table.remove( List, Start ) end
-
-    -- Agregar los indicadores guardados
-    for _, Str in pairs( Array ) do
-        table.insert( Destiny.localised_name, Str )
-    end
 end
 
 -- -- -- Mejoras en los objetos -- -- --
@@ -463,9 +431,13 @@ function ThisMOD.ImproveCapsuleEntities( Data, Array )
 
     -- Actualizar los valores
     Data.Element.name = Name
-    Data.Element.localised_name = { "", { "entity-name." .. Target.entity_name } }
     Data.Element.max_health = Data.Element.max_health * ThisMOD.Requires.Value
     Data.LocalisedName = Data.Element
+    if not Data.Element.localised_name then
+        Data.Element.localised_name = { "", { "entity-name." .. Target.entity_name } }
+    elseif Data.Element.localised_name then
+        Data.Element.localised_name = GPrefix.addLetter( Data.Element, "[" )
+    end
 
     -- Recepción del salto
     :: JumpElement ::
@@ -718,9 +690,6 @@ function ThisMOD.ImproveEquipament( Data )
 
     -- Guardar el nuevo equipo
     GPrefix.Equipaments[ List.Equipment.name ] = List.Equipment
-
-    -- Establecer el equipamento en el nuevo objeto
-    Item.placed_as_equipment_result = List.Equipment.name
 end
 
 -- -- -- Mejoras en los suelos -- -- --
@@ -769,6 +738,7 @@ function ThisMOD.ImproveTile( Data )
 
         -- Beneficion del suelo
         local Absorption = Tile.pollution_absorption_per_second or 0
+        Absorption = Absorption > 0 and Absorption or 0.1
         Absorption = Absorption * ThisMOD.Requires.Value
         Tile.pollution_absorption_per_second = Absorption
 
@@ -779,10 +749,12 @@ function ThisMOD.ImproveTile( Data )
         -- Guardar el nuevo suelo
         GPrefix.Tiles[ NameRef ] = GPrefix.Tiles[ NameRef ] or { }
         table.insert( GPrefix.Tiles[ NameRef ], Tile )
-        data:extend( { Tile } )
 
         -- Establecer el suelo en el nuevo objeto
-        if Key == 1 then Item.place_as_tile.result = Tile.name end
+        if Key == 1 then
+            Item.place_as_tile.result = Tile.name
+            Data.LocalisedName = Tile
+        else data:extend( { Tile } ) end
     end
 end
 
@@ -856,6 +828,7 @@ function ThisMOD.IdentifyEntity( Data )
     -- Fluidos
     ThisMOD.ImprovePump( Data )
     ThisMOD.ImproveFluidWagon( Data )
+    ThisMOD.ImprovePepeToGround( Data )
     ThisMOD.ImproveInputFluidBox( Data )
     ThisMOD.ImproveOutputFluidBox( Data )
 
@@ -874,8 +847,12 @@ function ThisMOD.IdentifyEntity( Data )
     -- Guardar la nueva entidad
     GPrefix.Entities[ Data.Entity.name ] = Data.Entity
 
-    -- Establecer la nueva entidad
-    Item.place_result = Data.Entity.name
+    -- Cambiar la mejora de la entidad
+    if Data.Entity.next_upgrade then
+        local Next = Data.Entity.next_upgrade
+        Next = string.gsub( Next, Find, "" )
+        Data.Entity.next_upgrade = ThisMOD.Prefix_MOD_ .. Next
+    end
 end
 
 -- Mejoras los laboratorios
@@ -964,8 +941,13 @@ function ThisMOD.ImproveContainer( Data )
     -- Renombrar la variable
     local Entity = Data.Entity
 
+    -- Entidades a modificar
+    local Types = { }
+    table.insert( Types, "container" )
+    table.insert( Types, "logistic-container" )
+
     -- Valdación básica
-    if Entity.type ~= "container" then return end
+    if not GPrefix.getKey( Types, Entity.type ) then return end
 
     -- Marcar como modificado
     Data.Modified = true
@@ -1266,19 +1248,45 @@ function ThisMOD.ImproveFluidWagon( Data )
 end
 
 -- Mejoras la capacidad y el flujo entrante
+function ThisMOD.ImprovePepeToGround( Data )
+
+    -- Renombrar la variable
+    local Entity = Data.Entity
+
+    -- Valdación básica
+    if Entity.type ~= "pipe-to-ground" then return end
+
+    -- Variable contenedora
+    local Table = Entity.fluid_box
+
+    -- Valdación básica
+    if not Table then return end
+
+    -- Marcar como modificado
+    Data.Modified = true
+
+    -- Renombrar la variable
+    local Value = ThisMOD.Requires.Value
+
+    -- Buscar y cambiar la distancia maxima
+    for _, value in pairs( Table.pipe_connections or { } ) do
+        if value.max_underground_distance then
+            local Distance = value.max_underground_distance
+            if Value > Distance then Distance = Value end
+            if Distance > 250 then Distance = 250 end
+            value.max_underground_distance = Distance
+        end
+    end
+end
+
+-- Mejoras la capacidad y el flujo entrante
 function ThisMOD.ImproveInputFluidBox( Data )
 
     -- Renombrar la variable
     local Entity = Data.Entity
 
-    -- Entidades a modificar
-    local Types = { }
-    table.insert( Types, "pipe" )
-    table.insert( Types, "storage-tank" )
-    table.insert( Types, "pipe-to-ground" )
-
     -- Valdación básica
-    if not GPrefix.getKey( Types, Entity.type ) then return end
+    if Entity.type ~= "storage-tank" then return end
 
     -- Variable contenedora
     local Table = Entity.fluid_box
@@ -1304,16 +1312,6 @@ function ThisMOD.ImproveInputFluidBox( Data )
     if Table.base_level then
         Table.base_level = Table.base_level * Value
     end
-
-    -- Buscar y cambiar la distancia maxima
-    for _, value in pairs( Table.pipe_connections or { } ) do
-        if value.max_underground_distance then
-            local Distance = value.max_underground_distance
-            if Value > Distance then Distance = Value end
-            if Distance > 250 then Distance = 250 end
-            value.max_underground_distance = Distance
-        end
-    end
 end
 
 -- Mejoras el flujo saliente
@@ -1322,14 +1320,8 @@ function ThisMOD.ImproveOutputFluidBox( Data )
     -- Renombrar la variable
     local Entity = Data.Entity
 
-    -- Entidades a modificar
-    local Types = { }
-    table.insert( Types, "pipe" )
-    table.insert( Types, "storage-tank" )
-    table.insert( Types, "pipe-to-ground" )
-
     -- Valdación básica
-    if not GPrefix.getKey( Types, Entity.type ) then return end
+    if Entity.type ~= "storage-tank" then return end
 
     -- Variable contenedora
     local Table = Entity.output_fluid_box
@@ -1529,7 +1521,7 @@ function ThisMOD.DataFinalFixes( )
     if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
 
-    ThisMOD.LoadInformation( )   GPrefix.Improve = ThisMOD
+    ThisMOD.LoadStar( )   GPrefix.Improve = ThisMOD
 end
 
 -- Cargar la configuración

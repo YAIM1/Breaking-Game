@@ -65,11 +65,11 @@ function ThisMOD.LoadInformation( )
     local Info = ThisMOD.Information or { }
     ThisMOD.Information = Info
 
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Inicializar y renombrar la variable
     local Entities = Info.Entities or { }
     Info.Entities = Entities
-
-    local Table = { }
-    local String = ""
 
     -- Establecer electricidad minima
     local function Min( OldValue )
@@ -85,6 +85,7 @@ function ThisMOD.LoadInformation( )
 
     -- Buscar las entidades a afectar
     for _, Entity in pairs( GPrefix.Entities ) do
+        local Table = { }
 
         -- Validar elemento
         local Alias = nil
@@ -103,48 +104,40 @@ function ThisMOD.LoadInformation( )
             Entity.energy_source.drain = Min( Entity.energy_source.drain )
         until true
 
-        if Entity.energy_usage then
-            Entity = add( Entity )
+        if Entity.energy_usage then   Entity = add( Entity )
             Entity.energy_usage = Min( Entity.energy_usage )
         end
 
         -- Entidades logicas
-        if Entity.active_energy_usage then
-            Entity = add( Entity )
+        if Entity.active_energy_usage then   Entity = add( Entity )
             Entity.active_energy_usage = Min( Entity.active_energy_usage )
         end
 
         -- Radar
-        if Entity.energy_per_nearby_scan then
-            Entity = add( Entity )
+        if Entity.energy_per_nearby_scan then   Entity = add( Entity )
             Entity.energy_per_nearby_scan = Min( Entity.energy_per_nearby_scan )
         end
 
-        if Entity.energy_per_sector then
-            Entity = add( Entity )
+        if Entity.energy_per_sector then   Entity = add( Entity )
             Entity.energy_per_sector = Min( Entity.energy_per_sector )
         end
 
         -- Insertador
-        if Entity.energy_per_movement then
-            Entity = add( Entity )
+        if Entity.energy_per_movement then   Entity = add( Entity )
             Entity.energy_per_movement = Min( Entity.energy_per_movement )
         end
 
-        if Entity.energy_per_rotation then
-            Entity = add( Entity )
+        if Entity.energy_per_rotation then   Entity = add( Entity )
             Entity.energy_per_rotation = Min( Entity.energy_per_rotation )
         end
 
         -- Lamaparas y altavoz
-        if Entity.energy_usage_per_tick then
-            Entity = add( Entity )
+        if Entity.energy_usage_per_tick then   Entity = add( Entity )
             Entity.energy_usage_per_tick = Min( Entity.energy_usage_per_tick )
         end
 
         -- Spidertron
-        if Entity.movement_energy_consumption then
-            Entity = add( Entity )
+        if Entity.movement_energy_consumption then   Entity = add( Entity )
             Entity.movement_energy_consumption = Min( Entity.movement_energy_consumption )
         end
 
@@ -163,6 +156,22 @@ function ThisMOD.LoadInformation( )
 
         -- Recepción del salto
         :: JumpEntity ::
+    end
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Actualizar el resultado de las recetas
+    GPrefix.updateResults( ThisMOD )
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Inicializar y renombrar la variable
+    local Items = Info.Items or { }
+    Info.Items = Items
+
+    -- Asignar la marca del MOD
+    for _, Item in pairs( Items ) do
+        GPrefix.AddIcon( Item, ThisMOD )
     end
 end
 

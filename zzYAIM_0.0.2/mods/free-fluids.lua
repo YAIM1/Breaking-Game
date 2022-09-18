@@ -345,22 +345,27 @@ function ThisMOD.CreateFluidRecipe( )
                 Recipe.results     = { Action == "Create" and fluid or nil }
                 Recipe.ingredients = { Action == "Delete" and fluid or nil }
 
-                Recipe.localised_name = { "fluid-name." .. Name }
+                if Fluid.localised_name then
+                    Recipe.localised_name = Fluid.localised_name
+                else
+                    Recipe.localised_name = { "fluid-name." .. Name }
+                end
 
                 -- Establecer el nombre de la receta
-                Recipe.name = ThisMOD.Prefix_MOD_
-                Recipe.name = Recipe.name .. Action .. "-"
+                Recipe.name = Action .. "-"
 
                 -- Fluido con varias temperaturas
                 if GPrefix.isNumber( temperature ) then
                     Recipe.name = Recipe.name .. Name
-                    Recipe.subgroup = Recipe.name
+                    local Subgroup = ThisMOD.Prefix_MOD_
+                    Recipe.subgroup = Subgroup .. Recipe.name
                     Recipe.name = Recipe.name .. "-" .. Number
                 end
 
                 -- Fluido con temperatura unica
                 if not GPrefix.isNumber( temperature ) then
-                    Recipe.subgroup = Recipe.name .. "0"
+                    local Subgroup = ThisMOD.Prefix_MOD_
+                    Recipe.subgroup = Subgroup .. Recipe.name .. "0"
                     Recipe.name = Recipe.name .. Name
                 end
 
@@ -419,6 +424,7 @@ function ThisMOD.LoadMachine( )
     Entity = Entities[ Entity.name ]
     Entity.energy_usage = "1W"
     Entity.next_upgrade = nil
+    Entity.collision_mask = nil
     Entity.energy_source = { type = "void" }
     Entity.crafting_categories = { ThisMOD.Prefix_MOD }
     Entity.resource_categories = nil
@@ -426,54 +432,51 @@ function ThisMOD.LoadMachine( )
 
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
+    -- Actualizar el resultado de las recetas
+    GPrefix.updateResults( ThisMOD )
+
     -- Inicializar y renombrar la variable
     local Recipes = Info.Recipes or { }
     Info.Recipes = Recipes
 
     -- Eliminar los ingredientes
-    local RecipeCost = Recipes[ Base ][ 1 ]
-    for _, Table in ipairs( { RecipeCost, RecipeCost.normal, RecipeCost.expensive } ) do
-        if not( Table.ingredient or Table.ingredients ) then goto Jump end
-        Table.ingredient = nil   Table.ingredients = { }
-        :: Jump ::
+    local Recipe = Recipes[ Base ][ 1 ]
+    for _, Table in ipairs( { Recipe, Recipe.normal, Recipe.expensive } ) do
+        if Table.ingredients then
+            Table.ingredients = { }
+            Table.results = nil
+        end
     end
 
     -- Eliminar las demas recetas
-    for i = 2, #Recipes[ Base ], 1 do
-        Recipes[ Base ][ i ] = nil
+    while #Recipes[ Base ] > 1 do
+        table.remove( Recipes[ Base ], 2 )
     end
 
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-    local function Change( Table )
-        local Localised_name = { ThisMOD.Local .. Localised }
-        if not Table.localised_name then return Localised_name end
-        if not GPrefix.isTable( Table.localised_name ) then return Localised_name end
-        if Table.localised_name[ 1 ] ~= "" then return Localised_name end
-        local Start = GPrefix.getKey( Table.localised_name, " [" )
-        if not Start then return Localised_name end
-
-        Localised_name = { "", Localised_name }
-        for i = Start, #Table.localised_name, 1 do
-            table.insert( Localised_name, Table.localised_name[ i ] )
-        end return Localised_name
-    end
-
     -- Establecer el apodo
-    local Localised_name = Change( Info.Items[ Base ] )
-    local Result = ( GPrefix.getKey( Localised_name, " [" ) or "" ) .. ""
-    local Position = tonumber( Result, 10 )
+    local Item = Info.Items[ Base ]
+    Item.localised_name = nil
+    Item.localised_description = nil
+    GPrefix.addLetter( Item, ThisMOD.Char )
+    Item.localised_name[ 2 ] = { ThisMOD.Local .. Localised }
+    Entity.localised_name = GPrefix.DeepCopy( Item.localised_name )
+    Recipe.localised_name = GPrefix.DeepCopy( Item.localised_name )
+    GPrefix.CreateIcons( Item )
 
-    for _, Table in pairs( { Info.Items[ Base ], Info.Entities[ Base ] } ) do
-        Table.localised_name = GPrefix.DeepCopy( Localised_name )
-    end
+    -- Agregar el referencia
+    local List = { }
 
-    for _, Recipe in pairs( Recipes[ Base ] ) do
-        Recipe.localised_name = GPrefix.DeepCopy( Localised_name )
-        if GPrefix.getLength( Recipes ) > 1 then
-            table.insert( Recipe.localised_name, Position, " " .. #Recipes )
-        end
-    end
+    List = { icon = "" }
+    List.icon = data.raw.fluid[ "crude-oil" ].icon
+
+    List.scale = 0.3
+    List.icon_size = 64
+    List.icon_mipmaps = 4
+    List.shift = { -10, -8 }
+
+    table.insert( Item.icons, List )
 
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 

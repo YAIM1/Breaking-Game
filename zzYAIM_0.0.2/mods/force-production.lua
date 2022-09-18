@@ -73,39 +73,77 @@ function ThisMOD.LoadInformation( )
 
     -- Duplicar los modulos de producción
     for _, Item in pairs( GPrefix.Items ) do
-
-        -- Es un modulo??
-        if not Item.limitation then goto JumpItem end
-
-        -- Validar elemento
-        local Alias = nil
-        if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
-        if Alias and Alias( Item.name ) then goto JumpItem end
-
-        -- Duplicar el objeto
-        Items[ Item.name ] = GPrefix.DeepCopy( Item )
-
-        -- Recepción del salto
-        :: JumpItem ::
+        ThisMOD.duplicateItem( Item )
     end
 
     -- Variable contenedora
     local limitation = { }
 
-    -- Guardar el nombre de las recetas que afecta
-    for _, Recipe in pairs( GPrefix.Recipes ) do
-        for _, recipe in pairs( Recipe ) do
-            if not GPrefix.getKey( limitation, recipe.name ) then
-                table.insert( limitation, recipe.name )
-            end
+    -- Guardar el nombre de las recetas que afectará
+    for _, Recipe in pairs( data.raw.recipe ) do
+        if not GPrefix.getKey( limitation, Recipe.name ) then
+            table.insert( limitation, Recipe.name )
         end
     end
 
     -- Duplicar las recestas de los modulos
-    for _, Module in pairs( Items ) do
-        Recipes[ Module.name ] = GPrefix.Recipes[ Module.name ]
-        Recipes[ Module.name ] = GPrefix.DeepCopy( Recipes[ Module.name ] )
-        Module.limitation = limitation
+    for _, Item in pairs( Items ) do
+
+        -- Duplicar las recetas
+        Recipes[ Item.name ] = GPrefix.Recipes[ Item.name ]
+        Recipes[ Item.name ] = GPrefix.DeepCopy( Recipes[ Item.name ] )
+
+        -- Hacer el cambio
+        GPrefix.AddIcon( Item, ThisMOD )
+        Item.limitation = limitation
+
+        -- Eliminar las demas recetas
+        while #Recipes[ Item.name ] > 1 do
+            table.remove( Recipes[ Item.name ], 2 )
+        end
+    end
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Actualizar el resultado de las recetas
+    GPrefix.updateResults( ThisMOD )
+end
+
+-- Duplicar el objeto si es un modulo
+function ThisMOD.duplicateItem( Item )
+
+    -- Es un modulo??
+    if not Item.limitation then return end
+
+    -- Validar elemento
+    local Alias = nil
+    if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
+    if Alias and Alias( Item.name ) then return end
+
+    -- Inicializar y renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    local Items = Info.Items or { }
+    Info.Items = Items
+
+    -- Duplicar el objeto
+    Items[ Item.name ] = GPrefix.DeepCopy( Item )
+end
+
+-- Agregar una receta a los modulos
+function ThisMOD.addRecipe( RecipeName )
+
+    -- Renombrar la variable
+    local Info = ThisMOD.Information or { }
+    ThisMOD.Information = Info
+
+    local Items = Info.Items or { }
+    Info.Items = Items
+
+    -- Agregar la receta a cada modulo
+    for _, Item in pairs( Items ) do
+        table.insert( Item.limitation, RecipeName )
     end
 end
 
@@ -116,6 +154,7 @@ function ThisMOD.DataFinalFixes( )
     if not ThisMOD.Active then return end
 
     ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
+    GPrefix.ForceProduction = ThisMOD
 end
 
 -- Cargar la configuración

@@ -100,7 +100,7 @@ function ThisMOD.LoadCompact( )
 end
 
 
--- Crear el prototipo
+-- Crear los prototipos de los compactadores
 function ThisMOD.LoadEntities( Info )
 
     -- Crear los prototipos
@@ -846,6 +846,7 @@ function ThisMOD.LoadEntities( Info )
 
     -- Modificar los prototipos
     for _, Entity in pairs( Info.Entities ) do
+
         Entity.minable = {
             [ 'mining_time' ] = 0.1,
             [ 'result' ] = Entity.name,
@@ -860,17 +861,14 @@ function ThisMOD.LoadEntities( Info )
             Entity.next_upgrade = ThisMOD.Prefix_MOD_ .. Entity.next_upgrade
         end
 
-        Entity.localised_name = {
-            ThisMOD.Local .. Entity.name
-        }
-
+        Entity.localised_name = { ThisMOD.Local .. Entity.name }
         Entity.localised_description = {
             ThisMOD.Local .. "entity-description"
         }
     end
 end
 
--- Crear el prototipo
+-- Crear los objetos de los compactadores
 function ThisMOD.LoadItems( Info )
 
     -- Crear los prototipos
@@ -894,7 +892,7 @@ function ThisMOD.LoadItems( Info )
             [ 'icon_size' ] = 64,
             [ 'icon_mipmaps' ] = 4,
             [ 'stack_size' ] = 50,
-            [ 'place_result' ] = ThisMOD.Prefix_MOD_ .. 'compact',
+            [ 'place_result' ] = 'compact',
             [ 'group' ] = 'logistics',
             [ 'subgroup' ] = 'compacts',
             [ 'order' ] = 'ba',
@@ -918,7 +916,7 @@ function ThisMOD.LoadItems( Info )
             [ 'icon_size' ] = 64,
             [ 'icon_mipmaps' ] = 4,
             [ 'stack_size' ] = 50,
-            [ 'place_result' ] = ThisMOD.Prefix_MOD_ .. 'fast-compact',
+            [ 'place_result' ] = 'fast-compact',
             [ 'group' ] = 'logistics',
             [ 'subgroup' ] = 'compacts',
             [ 'order' ] = 'bb',
@@ -942,7 +940,7 @@ function ThisMOD.LoadItems( Info )
             [ 'icon_size' ] = 64,
             [ 'icon_mipmaps' ] = 4,
             [ 'stack_size' ] = 50,
-            [ 'place_result' ] = ThisMOD.Prefix_MOD_ .. 'express-compact',
+            [ 'place_result' ] = 'express-compact',
             [ 'group' ] = 'logistics',
             [ 'subgroup' ] = 'compacts',
             [ 'order' ] = 'bc',
@@ -951,6 +949,7 @@ function ThisMOD.LoadItems( Info )
 
     -- Modificar los prototipos
     for _, Item in pairs( Info.Items ) do
+
         Item.subgroup = ThisMOD.Prefix_MOD_ .. Item.subgroup
 
         Item.localised_name = { ThisMOD.Local .. Item.name }
@@ -960,7 +959,7 @@ function ThisMOD.LoadItems( Info )
     end
 end
 
--- Crear el prototipo
+-- Crear las receras de los compactadores
 function ThisMOD.LoadRecipes( Info )
 
     -- Crear los prototipos
@@ -1065,13 +1064,28 @@ function ThisMOD.LoadRecipes( Info )
     -- Modificar los prototipos
     for _, Array in pairs( Info.Recipes ) do
         for _, Recipe in pairs( Array ) do
-            Recipe.subgroup = ThisMOD.Prefix_MOD_ .. Recipe.subgroup
 
-            Recipe.localised_name = { ThisMOD.Local .. Recipe.name }
-            Recipe.localised_description = ""
+            -- Establecer el resultado
+            Recipe.result = Prefix .. Recipe.result
 
-            for _, Value in pairs( Recipe.ingredients ) do
-                if Value[ 1 ] then Value[ 1 ] = Prefix .. Value[ 1 ] end
+            -- Establecer el sub grupo
+            Recipe.subgroup = Prefix .. Recipe.subgroup
+
+            -- Recorrer los ingredientes
+            for _, Ingredient in pairs( Recipe.ingredients ) do
+
+                -- Cargar el nomrbe del ingrediente
+                local Item = Ingredient[ 1 ] or ""
+
+                -- Identificar el compactador
+                if string.find( Item, "compact" ) then
+                    Ingredient[ 1 ] = ThisMOD.MOD_ .. Ingredient[ 1 ]
+                end
+
+                -- Renombrar el ingrediente si es un objeto
+                if Item ~= "" then
+                    Ingredient[ 1 ] = Prefix .. Ingredient[ 1 ]
+                end
             end
         end
     end
@@ -1181,35 +1195,36 @@ function ThisMOD.CreateItem( OldItem, TheMOD )
     NewItem.subgroup = string.gsub( OldItem.subgroup, NewItem.subgroup, "" )
     NewItem.subgroup = ThisMOD.Prefix_MOD_ .. NewItem.subgroup
 
-    -- Ya tiene un apodo
-    if OldItem.localised_name then goto JumpLocalised end
-
-    -- Preparar el apodo
-    if OldItem.place_result then
-        NewItem.localised_name = { "entity-name." .. OldItem.name }
-    elseif OldItem.place_as_tile then
-        NewItem.localised_name = { "item-name." .. OldItem.name }
-    elseif OldItem.placed_as_equipment_result then
-        NewItem.localised_name = { "equipment-name." .. OldItem.name }
-    else
-        NewItem.localised_name = { "item-name." .. OldItem.name }
-    end
-
-    -- Recepción del salto
-    :: JumpLocalised ::
+    -- Establecer el apodo
+    GPrefix.CreateLocalisedName( OldItem )
+    NewItem.localised_name = GPrefix.DeepCopy( OldItem.localised_name )
 
     -- Sobre escribir las descripciones
     ThisMOD.addDescription( NewItem )
 
-
-    local Icon = { icon = "" }
-    Icon.icon = Icon.icon .. ThisMOD.Patch
-    Icon.icon = Icon.icon .. "icons/status.png"
-    Icon.icon_size = 32
-
-    -- Agregar el pez de referencia
+    -- Concentras las imagenes en un campo
     GPrefix.CreateIcons( NewItem )
-    table.insert( NewItem.icons, Icon )
+
+    -- Ajustar los iconos a la imagen de referencia
+    for _, Image in pairs( NewItem.icons ) do
+
+        -- Validar el tamaño completo 
+        if not Image.icon_size then goto JumpImage end
+        if Image.icon_size < 64 then goto JumpImage end
+
+        -- Establecer la escala inicial
+        if not Image.scale then Image.scale = 1 end
+        if Image.scale < 1 then goto JumpImage end
+
+        -- Calcular la escala
+        Image.scale = Image.scale / ( Image.icon_size / 32 )
+
+        -- Recepción del salto
+        :: JumpImage ::
+    end
+
+    -- Agregar la imagen de referencia
+    GPrefix.AddIcon( NewItem, TheMOD )
 
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
@@ -1257,13 +1272,13 @@ function ThisMOD.CreateRecipe( OldItem )
     Table.uncompact  = { }
 
     -- Valores para la descompresion
-    Table.uncompact.name        = GPrefix.Prefix_ .. "uncompact-" .. NameWithOutPrefix
+    Table.uncompact.name        = "uncompact-" .. NameWithOutPrefix
     Table.uncompact.results     = { { type = "item", amount = ThisMOD.Value, name = OldItem.name } }
     Table.uncompact.ingredients = { { type = "item", amount = 1 , name = Item.name } }
     Table.uncompact.action      = true
 
     -- Valores para la compresion
-    Table.compact.name        = GPrefix.Prefix_ .. "compact-" .. NameWithOutPrefix
+    Table.compact.name        = "compact-" .. NameWithOutPrefix
     Table.compact.results     = { { type = "item", amount = 1 , name = Item.name } }
     Table.compact.ingredients = { { type = "item", amount = ThisMOD.Value, name = OldItem.name } }
 
@@ -1319,8 +1334,9 @@ function ThisMOD.CreateRecipe( OldItem )
         -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
         -- Guardar la nueva recera
-        Recipes[ OldItem.name ] = Recipes[ OldItem.name ] or { }
-        table.insert( Recipes[ OldItem.name ], NewRecipe )
+        local OldItemName = OldItem.name
+        Recipes[ OldItemName ] = Recipes[ OldItemName ] or { }
+        table.insert( Recipes[ OldItemName ], NewRecipe )
     end
 end
 
@@ -1365,6 +1381,20 @@ function ThisMOD.setCraftingCategories( )
     local GodCategories = data.raw[ 'god-controller' ][ 'default' ]
     GodCategories = GodCategories[ 'crafting_categories' ]
     table.insert( GodCategories, ThisMOD.Prefix_MOD_ .. 'uncompact' )
+end
+
+-- Validar si se debe evitar este elemento
+function ThisMOD.AvoidElement( Name )
+
+    -- Patron a buscar
+    local Find = ThisMOD.Prefix_MOD_
+    Find = string.gsub( Find, "-", "%%-" )
+
+    -- Ignonrar el elemento
+    if string.find( Name, Find ) then return true end
+
+    -- Elemento valido
+    return false
 end
 
 -- Configuración del MOD

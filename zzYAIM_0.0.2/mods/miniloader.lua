@@ -1152,6 +1152,7 @@ function ThisMOD.LoadRecipes( Info )
     -- Modificar los prototipos
     for _, Array in pairs( Info.Recipes ) do
         for _, Recipe in pairs( Array ) do
+            Recipe.result = ThisMOD.Prefix_MOD_ .. Recipe.result
             Recipe.subgroup = ThisMOD.Prefix_MOD_ .. Recipe.subgroup
             table.insert( Info.Table, Recipe )
         end

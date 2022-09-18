@@ -63,27 +63,7 @@ function ThisMOD.LoadInformation( )
 
     -- Buscar las entidades a afectar
     for _, Entity in pairs( GPrefix.Entities ) do
-
-        -- Validación básica
-        local Flag = Entity
-        if not Flag.energy_source then goto JumpEntity end
-
-        Flag = Flag.energy_source
-        if not Flag.type then goto JumpEntity end
-        if Flag.type ~= "electric" then goto JumpEntity end
-
-        if not Flag.emissions_per_minute then goto JumpEntity end
-
-        -- Validar elemento
-        local Alias = nil
-        if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
-        if Alias and Alias( Entity.name ) then goto JumpEntity end
-
-        -- Duplicar la información relacionada
-        GPrefix.duplicateEntity( Entity, ThisMOD )
-
-        -- Recepción del salto
-        :: JumpEntity ::
+        ThisMOD.duplicateEntity( Entity )
     end
 
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -105,6 +85,44 @@ function ThisMOD.LoadInformation( )
             Array.emissions_per_minute = nil
         end
     end
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Actualizar el resultado de las recetas
+    GPrefix.updateResults( ThisMOD )
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Inicializar y renombrar la variable
+    local Items = Info.Items or { }
+    Info.Items = Items
+
+    -- Asignar la marca del MOD
+    for _, Item in pairs( Items ) do
+        GPrefix.AddIcon( Item, ThisMOD )
+    end
+end
+
+-- Validar al entidad para duplicar
+function ThisMOD.duplicateEntity( Entity )
+
+    -- Validación básica
+    local Flag = Entity
+    if not Flag.energy_source then return end
+
+    Flag = Flag.energy_source
+    if not Flag.type then return end
+    if Flag.type ~= "electric" then return end
+
+    if not Flag.emissions_per_minute then return end
+
+    -- Validar elemento
+    local Alias = nil
+    if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
+    if Alias and Alias( Entity.name ) then return end
+
+    -- Duplicar la información relacionada
+    GPrefix.duplicateEntity( Entity, ThisMOD )
 end
 
 -- Configuración del MOD

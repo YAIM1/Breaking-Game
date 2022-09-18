@@ -98,6 +98,23 @@ function ThisMOD.LoadInformation( )
         Equipaments[ Name ] = GPrefix.DeepCopy( Equipament )
         Items[ Name ] = GPrefix.DeepCopy( GPrefix.Items[ Name ] )
         Recipes[ Name ] = GPrefix.DeepCopy( GPrefix.Recipes[ Name ] )
+        GPrefix.AddIcon( Items[ Name ], ThisMOD )
+
+        -- Eliminar los ingredientes
+        local Recipe = Recipes[ Name ][ 1 ]
+        for _, Table in ipairs( { Recipe, Recipe.normal, Recipe.expensive } ) do
+            if Table.ingredients then
+
+                -- Nombre del objeto
+                local name = GPrefix.Prefix_
+                name = string.gsub( name, "-", "%%-" )
+                name = string.gsub( Recipe.name, name, "" )
+
+                -- Establecer el resultado
+                Table.result = ThisMOD.Prefix_MOD_ .. name
+                Table.results = nil
+            end
+        end
     end
 
     -- Hacer el cambio

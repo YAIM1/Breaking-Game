@@ -58,8 +58,7 @@ ThisMOD.Settings( )
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Cargar la infomación de los robots de contrucción y
--- de los robots logisticos
+-- Cargar los prototipos de los robots logistico
 function ThisMOD.LoadInformation( )
 
     -- Buscar las entidades a afectar
@@ -96,6 +95,40 @@ function ThisMOD.LoadInformation( )
     for _, Entity in pairs( Entities ) do
         Entity.energy_per_tick = "0J"
         Entity.energy_per_move = "0J"
+    end
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Inicializar y renombrar la variable
+    local Recipes = Info.Recipes or { }
+    Info.Recipes = Recipes
+
+    -- Eliminar los ingredientes
+    for _, Recipe in pairs( Recipes ) do Recipe = Recipe[ 1 ]
+        for _, Table in ipairs( { Recipe, Recipe.normal, Recipe.expensive } ) do
+            if Table.ingredients then
+
+                -- Nombre del objeto
+                local name = GPrefix.Prefix_
+                name = string.gsub( name, "-", "%%-" )
+                name = string.gsub( Recipe.name, name, "" )
+
+                -- Establecer el resultado
+                Table.result = ThisMOD.Prefix_MOD_ .. name
+                Table.results = nil
+            end
+        end
+    end
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Inicializar y renombrar la variable
+    local Items = Info.Items or { }
+    Info.Items = Items
+
+    -- Asignar la marca del MOD
+    for _, Item in pairs( Items ) do
+        GPrefix.AddIcon( Item, ThisMOD )
     end
 end
 
