@@ -97,6 +97,12 @@
 
 <br>
 
+<h3>Minerales gratis</h3>
+
+<p>Crea una maquina para la cual se proporcionan grandes cantidades de los minirales existentes en el juego, sin la necesidad de ingredientes o tecnología adicionales.</p>
+
+<br>
+
 <h3>Ordenador de inventario</h3>
 
 <p>Organiza los objetos al abrir el contenedor.</p>
