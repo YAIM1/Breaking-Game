@@ -14,7 +14,7 @@ Date: 2022.04.25
         This function was separated from the "compact" MOD
     - improve-compaction
         This function was separated from the "compact" MOD
-        The improvements of the liquid containers were limited to the pumps, pepes and the tank
+        The improvements of the liquid containers were limited to the pumps and the tank
         Repair pack upgrades split 1/3 for speed and 2/3 for durability
         Decreased the speed of anamination of transporter appointments
     - force-production
