@@ -93,13 +93,13 @@
 
 <h3>Fluidos gratis</h3>
 
-<p>Crea una maquina para la cual se proporcionan o destruyen grandes cantidades de los fluidos existentes en el juego, sin la necesidad de ingredientes o tecnología adicionales.</p>
+<p>Crea una maquina la cual se proporcionan o destruyen grandes cantidades de los fluidos existentes en el juego, sin la necesidad de ingredientes o tecnología adicionales.</p>
 
 <br>
 
 <h3>Minerales gratis</h3>
 
-<p>Crea una maquina para la cual se proporcionan grandes cantidades de los minirales existentes en el juego, sin la necesidad de ingredientes o tecnología adicionales.</p>
+<p>Crea una maquina la cual se proporcionan grandes cantidades de los minirales existentes en el juego, sin la necesidad de ingredientes o tecnología adicionales.</p>
 
 <br>
 
