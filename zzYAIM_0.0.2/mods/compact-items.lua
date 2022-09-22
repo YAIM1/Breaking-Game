@@ -1415,15 +1415,15 @@ ThisMOD.DataFinalFixes( )
 ---------------------------------------------------------------------------------------------------
 
 -- Contenedor de los jugadores a inicializar
-ThisMOD.Players = { }
+ThisMOD.PlayersToInit = { }
 
 -- Lista de objetos a agregar
-ThisMOD.Items = { }
-table.insert( ThisMOD.Items, { count = 1, name = ThisMOD.Prefix_MOD_ .. "compact" } )
-table.insert( ThisMOD.Items, { count = 1, name = "iron-plate" } )
-table.insert( ThisMOD.Items, { count = 1, name = "copper-plate" } )
-table.insert( ThisMOD.Items, { count = 1, name = "stone" } )
-table.insert( ThisMOD.Items, { count = 1, name = "coal" } )
+ThisMOD.ItemsToAdd = { }
+table.insert( ThisMOD.ItemsToAdd, { count = 1, name = ThisMOD.Prefix_MOD_ .. "compact" } )
+table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "iron-plate" } )
+table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "copper-plate" } )
+table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "stone" } )
+table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "coal" } )
 
 -- Inicializa el evento
 function ThisMOD.Initialize( )
@@ -1450,13 +1450,13 @@ function ThisMOD.StartInitialize( )
     ThisMOD.addAllPlayers( )
 
     -- Validación básica
-    if #ThisMOD.Players < 1 then return end
+    if #ThisMOD.PlayersToInit < 1 then return end
 
     -- Inicializar el contenedor
-    local StrItems = GPrefix.toString( ThisMOD.Items )
+    local StrItems = GPrefix.toString( ThisMOD.ItemsToAdd )
 
     -- Verificar cada jugador
-    for _, Data in pairs( ThisMOD.Players ) do
+    for _, Data in pairs( ThisMOD.PlayersToInit ) do
 
         -- Renombrear la variable
         local ItemGiven = Data.gForce[ Data.Player.index ]
@@ -1498,12 +1498,12 @@ function ThisMOD.addItems( Data )
 
     -- El jugador se desconectó
     if not Data.Player.connected then
-        ThisMOD.Players[ IDPlayer ] = nil return
+        ThisMOD.PlayersToInit[ IDPlayer ] = nil return
     end
 
     -- No hacer nada en los escesarios especificos
     if script.level.campaign_name then
-        ThisMOD.Players[ IDPlayer ] = nil return
+        ThisMOD.PlayersToInit[ IDPlayer ] = nil return
     end
 
     -- Esperar que esté en el destino final
@@ -1520,7 +1520,7 @@ function ThisMOD.addItems( Data )
 
     -- El jugador no tiene un cuerpo
     if not Data.Player.character then
-        for _, Item in pairs( Data.GMOD.Items ) do
+        for _, Item in pairs( ThisMOD.ItemsToAdd ) do
 
             -- Buscar los objetos
             local Name = Data.GMOD.Prefix_MOD_ .. "compact-" .. Item.name
@@ -1537,7 +1537,7 @@ function ThisMOD.addItems( Data )
         local Inventory = Data.Player.character
         local IDInvertory = defines.inventory.character_main
         Inventory = Inventory.get_inventory( IDInvertory )
-        for _, Item in pairs( Data.GMOD.Items ) do
+        for _, Item in pairs( ThisMOD.ItemsToAdd ) do
 
             -- Buscar los objetos
             local Name = Data.GMOD.Prefix_MOD_ .. "compact-" .. Item.name
@@ -1552,14 +1552,14 @@ function ThisMOD.addItems( Data )
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Marcar cómo hecho
-    Data.gForce[ IDPlayer ] = GPrefix.DeepCopy( ThisMOD.Items )
-    ThisMOD.Players[ IDPlayer ] = nil
+    Data.gForce[ IDPlayer ] = GPrefix.DeepCopy( ThisMOD.ItemsToAdd )
+    ThisMOD.PlayersToInit[ IDPlayer ] = nil
 end
 
 -- Agregar los jugadores a la cola
 function ThisMOD.addPlayer( Event )
     local Data = GPrefix.CreateData( Event, ThisMOD )
-    ThisMOD.Players[ Data.Player.index ] = Data
+    ThisMOD.PlayersToInit[ Data.Player.index ] = Data
 end
 
 -- Hacer antes de borrar a un jugador
@@ -1571,7 +1571,7 @@ end
 
 -- Hacer antes e salir de la partida
 function ThisMOD.BeforeLogout( Data )
-    ThisMOD.Players[ Data.Player.index ] = nil
+    ThisMOD.PlayersToInit[ Data.Player.index ] = nil
 end
 
 -- Configuración del MOD

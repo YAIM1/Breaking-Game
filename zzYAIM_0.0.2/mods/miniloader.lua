@@ -985,92 +985,6 @@ function ThisMOD.LoadEntities( Info )
 end
 
 -- Crear el prototipo
-function ThisMOD.LoadItems( Info )
-
-    -- Crear los prototipos
-    Info.Items = {
-        [ 'loader' ] = {
-            [ 'type' ] = 'item',
-            [ 'name' ] = 'loader',
-            [ 'icons' ] = {
-                [ 1 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-base.png',
-                },
-                [ 2 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-mask.png',
-                    [ 'tint' ] = {
-                        [ 'r' ] = 210,
-                        [ 'g' ] = 180,
-                        [ 'b' ] = 80,
-                    },
-                },
-            },
-            [ 'icon_size' ] = 64,
-            [ 'icon_mipmaps' ] = 4,
-            [ 'stack_size' ] = 50,
-            [ 'place_result' ] = 'loader',
-            [ 'group' ] = 'logistics',
-            [ 'subgroup' ] = 'loaders',
-            [ 'order' ] = 'aa',
-        },
-        [ 'fast-loader' ] = {
-            [ 'type' ] = 'item',
-            [ 'name' ] = 'fast-loader',
-            [ 'icons' ] = {
-                [ 1 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-base.png',
-                },
-                [ 2 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-mask.png',
-                    [ 'tint' ] = {
-                        [ 'r' ] = 210,
-                        [ 'g' ] = 60,
-                        [ 'b' ] = 60,
-                    },
-                },
-            },
-            [ 'icon_size' ] = 64,
-            [ 'icon_mipmaps' ] = 4,
-            [ 'stack_size' ] = 50,
-            [ 'place_result' ] = 'fast-loader',
-            [ 'group' ] = 'logistics',
-            [ 'subgroup' ] = 'loaders',
-            [ 'order' ] = 'ab',
-        },
-        [ 'express-loader' ] = {
-            [ 'type' ] = 'item',
-            [ 'name' ] = 'express-loader',
-            [ 'icons' ] = {
-                [ 1 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-base.png',
-                },
-                [ 2 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-mask.png',
-                    [ 'tint' ] = {
-                        [ 'r' ] = 80,
-                        [ 'g' ] = 180,
-                        [ 'b' ] = 210,
-                    },
-                },
-            },
-            [ 'icon_size' ] = 64,
-            [ 'icon_mipmaps' ] = 4,
-            [ 'stack_size' ] = 50,
-            [ 'place_result' ] = 'express-loader',
-            [ 'group' ] = 'logistics',
-            [ 'subgroup' ] = 'loaders',
-            [ 'order' ] = 'ac',
-        },
-    }
-
-    -- Modificar los prototipos
-    for _, Item in pairs( Info.Items ) do
-        Item.subgroup = ThisMOD.Prefix_MOD_ .. Item.subgroup
-        table.insert( Info.Table, Item )
-    end
-end
-
--- Crear el prototipo
 function ThisMOD.LoadRecipes( Info )
 
     -- Crear los prototipos
@@ -1156,6 +1070,94 @@ function ThisMOD.LoadRecipes( Info )
             Recipe.subgroup = ThisMOD.Prefix_MOD_ .. Recipe.subgroup
             table.insert( Info.Table, Recipe )
         end
+    end
+end
+
+-- Crear el prototipo
+function ThisMOD.LoadItems( Info )
+
+    -- Crear los prototipos
+    Info.Items = {
+        [ 'loader' ] = {
+            [ 'type' ] = 'item',
+            [ 'name' ] = 'loader',
+            [ 'icons' ] = {
+                [ 1 ] = {
+                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-base.png',
+                },
+                [ 2 ] = {
+                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-mask.png',
+                    [ 'tint' ] = {
+                        [ 'r' ] = 210,
+                        [ 'g' ] = 180,
+                        [ 'b' ] = 80,
+                    },
+                },
+            },
+            [ 'icon_size' ] = 64,
+            [ 'icon_mipmaps' ] = 4,
+            [ 'stack_size' ] = 50,
+            [ 'place_result' ] = 'loader',
+            [ 'group' ] = 'logistics',
+            [ 'subgroup' ] = 'loaders',
+            [ 'order' ] = 'aa',
+        },
+        [ 'fast-loader' ] = {
+            [ 'type' ] = 'item',
+            [ 'name' ] = 'fast-loader',
+            [ 'icons' ] = {
+                [ 1 ] = {
+                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-base.png',
+                },
+                [ 2 ] = {
+                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-mask.png',
+                    [ 'tint' ] = {
+                        [ 'r' ] = 210,
+                        [ 'g' ] = 60,
+                        [ 'b' ] = 60,
+                    },
+                },
+            },
+            [ 'icon_size' ] = 64,
+            [ 'icon_mipmaps' ] = 4,
+            [ 'stack_size' ] = 50,
+            [ 'place_result' ] = 'fast-loader',
+            [ 'group' ] = 'logistics',
+            [ 'subgroup' ] = 'loaders',
+            [ 'order' ] = 'ab',
+        },
+        [ 'express-loader' ] = {
+            [ 'type' ] = 'item',
+            [ 'name' ] = 'express-loader',
+            [ 'icons' ] = {
+                [ 1 ] = {
+                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-base.png',
+                },
+                [ 2 ] = {
+                    [ 'icon' ] = ThisMOD.Patch .. 'icons/loader-icon-mask.png',
+                    [ 'tint' ] = {
+                        [ 'r' ] = 80,
+                        [ 'g' ] = 180,
+                        [ 'b' ] = 210,
+                    },
+                },
+            },
+            [ 'icon_size' ] = 64,
+            [ 'icon_mipmaps' ] = 4,
+            [ 'stack_size' ] = 50,
+            [ 'place_result' ] = 'express-loader',
+            [ 'group' ] = 'logistics',
+            [ 'subgroup' ] = 'loaders',
+            [ 'order' ] = 'ac',
+        },
+    }
+
+    -- Modificar los prototipos
+    for _, Item in pairs( Info.Items ) do
+        -- local ItemName = string.gsub( Item.name, "loader", "underground-belt" )
+        -- Item.stack_size = GPrefix.Items[ ItemName ].stack_size
+        Item.subgroup = ThisMOD.Prefix_MOD_ .. Item.subgroup
+        table.insert( Info.Table, Item )
     end
 end
 

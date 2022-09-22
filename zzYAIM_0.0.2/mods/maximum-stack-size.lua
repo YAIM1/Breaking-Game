@@ -59,80 +59,82 @@ ThisMOD.Settings( )
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
+-- Objectos a evitar
+ThisMOD.AvoidItems = { }
+if mods and mods[ "space-exploration" ] then
+    table.insert( ThisMOD.AvoidItems, "rocket-fuel" )
+end
+
+-- Tipos a evitar
+ThisMOD.AvoidTypes = { }
+table.insert( ThisMOD.AvoidTypes, "armor" )
+table.insert( ThisMOD.AvoidTypes, "selection-tool" )
+table.insert( ThisMOD.AvoidTypes, "belt-immunity-equipment" )
+
+-- Patrones a evitar
+ThisMOD.AvoidPatterns = { }
+table.insert( ThisMOD.AvoidPatterns, "%-remote" )
+
+-- Cargar las infomación
+function ThisMOD.ModifyItem( Item )
+
+    -- Evitar este tipo
+    if GPrefix.getKey( ThisMOD.AvoidItems, Item.name ) then return end
+
+    -- Evitar este tipo
+    if GPrefix.getKey( ThisMOD.AvoidTypes, Item.type ) then return end
+
+    -- Evitar este patron
+    for _, Pattern in pairs( ThisMOD.AvoidPatterns ) do
+        if string.find( Item.name, Pattern ) then return end
+    end
+
+    -- El cambio no le favorece el cambio
+    if Item.stack_size >= ThisMOD.Value then return end
+
+    -- No es apilable
+    if GPrefix.getKey( Item.flags, "not-stackable" ) then return end
+
+    -- No se puede crear
+    if GPrefix.getKey( Item.flags, "spawnable" ) then return end
+
+    -- Hacer el cambio
+    Item.stack_size = ThisMOD.Value
+    GPrefix.addLetter( Item, ThisMOD.Char )
+
+    -- Actualizar la descripción de los compactados
+    if GPrefix.Compact then
+        GPrefix.Compact.UpdateDescription( Item, ThisMOD )
+    end
+
+    -- Actualizar la entidad
+    if Item.place_result then
+        local Entity = GPrefix.Entities[ Item.place_result ]
+        if Entity then GPrefix.addLetter( Entity, ThisMOD.Char ) end
+    end
+
+    -- Actualizar el equipamento
+    if Item.placed_as_equipment_result then
+        local Equipment = GPrefix.Equipaments[ Item.placed_as_equipment_result ]
+        if Equipment then GPrefix.addLetter( Equipment, ThisMOD.Char ) end
+    end
+
+    -- Actualizar sus recestas
+    for _, Recipe in pairs( GPrefix.Recipes[ Item.name ] or { } ) do
+        GPrefix.addLetter( Recipe, ThisMOD.Char )
+    end
+end
+
 -- Configuración del MOD
 function ThisMOD.DataFinalFixes( )
     if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
     if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
     if not ThisMOD.Active then return end
 
-    -- Objectos a evitar
-    local AvoidItems = { }
-    if mods[ "space-exploration" ] then
-        table.insert( AvoidItems, "rocket-fuel" )
-    end
-
-    -- Tipos a evitar
-    local AvoidTypes = { }
-    table.insert( AvoidTypes, "armor" )
-    table.insert( AvoidTypes, "selection-tool" )
-    table.insert( AvoidTypes, "belt-immunity-equipment" )
-
-    -- Patrones a evitar
-    local AvoidPatterns = { }
-    table.insert( AvoidPatterns, "%-remote" )
-
-    -- Hacer el camnbio en los items del juego, si le favorece
+    --Recorrer los objetos
     for _, Item in pairs( GPrefix.Items ) do
-
-        -- Evitar este tipo
-        if GPrefix.getKey( AvoidItems, Item.name ) then goto JumpItem end
-
-        -- Evitar este tipo
-        if GPrefix.getKey( AvoidTypes, Item.type ) then goto JumpItem end
-
-        -- Evitar este patron
-        for _, Pattern in pairs( AvoidPatterns ) do
-            if string.find( Item.name, Pattern ) then goto JumpItem end
-        end
-
-        -- El cambio no le favorece el cambio
-        if Item.stack_size >= ThisMOD.Value then goto JumpItem end
-
-        -- No es apilable
-        if GPrefix.getKey( Item.flags, "not-stackable" ) then goto JumpItem end
-
-        -- No se puede crear
-        if GPrefix.getKey( Item.flags, "spawnable" ) then goto JumpItem end
-
-        -- Hacer el cambio
-        Item.stack_size = ThisMOD.Value
-        GPrefix.addLetter( Item, ThisMOD.Char )
-
-        -- Actualizar la descripción de los compactados
-        if GPrefix.Compact then
-            GPrefix.Compact.UpdateDescription( Item, ThisMOD )
-        end
-
-        -- Actualizar la entidad
-        if Item.place_result then
-            local Entity = GPrefix.Entities[ Item.place_result ]
-            if Entity then GPrefix.addLetter( Entity, ThisMOD.Char ) end
-        end
-
-        -- Actualizar el equipamento
-        if Item.placed_as_equipment_result then
-            local Equipment = GPrefix.Equipaments[ Item.placed_as_equipment_result ]
-            if Equipment then GPrefix.addLetter( Equipment, ThisMOD.Char ) end
-        end
-
-        -- Actualizar sus recestas
-        for _, Recipe in pairs( GPrefix.Recipes[ Item.name ] or { } ) do
-            GPrefix.addLetter( Recipe, ThisMOD.Char )
-        end
-
-        -- Recepción del salto
-        :: JumpItem ::
-    end
+        ThisMOD.ModifyItem( Item )
+    end GPrefix.StackSize = ThisMOD
 end
 
 -- Cargar la configuración
