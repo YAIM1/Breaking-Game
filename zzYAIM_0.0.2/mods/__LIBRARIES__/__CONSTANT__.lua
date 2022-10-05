@@ -63,6 +63,7 @@ table.insert( MODs, { "minimum-electrical-consumption", "MEC" } )
 table.insert( MODs, { "pollution-free-burner", "PFB" } )
 table.insert( MODs, { "pollution-free-electricity", "PFE" } )
 table.insert( MODs, { "force-production", "FP" } )
+table.insert( MODs, { "make-resource-finite", "MRF" } )
 
 -- eNqVkLsOgkAQRf9layYREgvpjKGgsDGxMMZigUEJsIOzS3gY/t0VE0MBMVTTzD33cX0JJUsUvuj7yz48QniAwG1dSGudkQJGGRtiwGedVSUqIxwRU22vvxucGfGpOQcQk9KG69iMCIpoIvO2s7rRFBXyvQP9yLBIoMy9OV93swyokDUpWUAhNTIkmKLSuJYSSWOQuzUBvvFb0jkWaGzrf7qKGhtQcmnHtT6TrwX4r9pnz4rYLMYbbm8SWZ5G
 
