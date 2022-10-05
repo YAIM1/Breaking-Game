@@ -705,25 +705,13 @@ function ThisMOD.BuildWindowMainTitle( Data )
     StatusLabel = StatusFlow.add( StatusLabel )
     StatusLabel.style = "bold_" .. ( StatusMOD and "green" or "red" ) .. "_label"
 
-    if Data.Player.admin then
-        local List = { "" }
-        table.insert( List, "[font=default-bold]" )
-        table.insert( List, {Data.GMOD.Local .. "turn" } )
-        table.insert( List, " [color=" .. ( not StatusMOD and "green" or "red" ) .. "]" )
-        table.insert( List, { Data.GMOD.Local .. ( not StatusMOD and "ON" or "OFF" ) } )
-        table.insert( List, "[/color][/font]" )
-        StatusLabel.tooltip = List
-    end
-
-    if not Data.Player.admin then
-        local List = { "" }
-        table.insert( List, "[font=default-bold]" )
-        table.insert( List, {Data.GMOD.Local .. "status" } )
-        table.insert( List, " [color=" .. ( StatusMOD and "green" or "red" ) .. "]" )
-        table.insert( List, { Data.GMOD.Local .. ( StatusMOD and "ON" or "OFF" ) } )
-        table.insert( List, "[/color][/font]" )
-        StatusLabel.tooltip = List
-    end
+    local List = { "" }
+    table.insert( List, "[font=default-bold]" )
+    table.insert( List, {Data.GMOD.Local .. "turn" } )
+    table.insert( List, " [color=" .. ( not StatusMOD and "green" or "red" ) .. "]" )
+    table.insert( List, { Data.GMOD.Local .. ( not StatusMOD and "ON" or "OFF" ) } )
+    table.insert( List, "[/color][/font]" )
+    StatusLabel.tooltip = List
 
 
 
@@ -2520,23 +2508,13 @@ function ThisMOD.ToggleMOD( Data )
             StatusLabel.style = "bold_" .. ( Status and "green" or "red" ) .. "_label"
 
             -- Crear el tooltip
-            if Data.Player.admin then
-                local List = { "" }
-                table.insert( List, "[font=default-bold]" )
-                table.insert( List, { Data.GMOD.Local .. "turn" } )
-                table.insert( List, " [color=" .. ( not Status and "green" or "red" ) .. "]" )
-                table.insert( List, { Data.GMOD.Local .. ( not Status and "ON" or "OFF" ) } )
-                table.insert( List, "[/color][/font]" )
-                StatusLabel.tooltip = List
-            else
-                local List = { "" }
-                table.insert( List, "[font=default-bold]" )
-                table.insert( List, { Data.GMOD.Local .. "status" } )
-                table.insert( List, " [color=" .. ( Status and "green" or "red" ) .. "]" )
-                table.insert( List, { Data.GMOD.Local .. ( Status and "ON" or "OFF" ) } )
-                table.insert( List, "[/color][/font]" )
-                StatusLabel.tooltip = List
-            end
+            local List = { "" }
+            table.insert( List, "[font=default-bold]" )
+            table.insert( List, { Data.GMOD.Local .. "turn" } )
+            table.insert( List, " [color=" .. ( not Status and "green" or "red" ) .. "]" )
+            table.insert( List, { Data.GMOD.Local .. ( not Status and "ON" or "OFF" ) } )
+            table.insert( List, "[/color][/font]" )
+            StatusLabel.tooltip = List
         until true
     end
 
