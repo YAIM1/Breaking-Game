@@ -100,6 +100,12 @@
 
 <br>
 
+<h3>Iniciar con Items</h3>
+
+<p>Le permite a los administradores el establecer el listado de objetos con el que iniciaran los jugadores.</p>
+
+<br>
+
 <h3>Cola para investigar</h3>
 
 <p>Establecer la secuencia con la cual se investigarán las tecnologías disponibles usando unicamente el ratón; se puede Agregar, Priorizar y Retirar las tecnologías de la cola.</p>
@@ -108,7 +114,7 @@
 
 <p>Al retirar una tecnología de la cola, se retitarán de la cola las tecnologías que dependan de la tecnología a retirar.</p>
 
-<p>Al priorizar una tecnología de la cola, se moverán todas las tecnologías que tengan como prerequisitos, y que esten en la cola, y la tecnología selecionada a las primeras posiciones.</p>
+<p>Al priorizar una tecnología de la cola, se moverán todas las tecnologías que tengan como prerequisitos, y que esten en la cola, a las primeras posiciones.</p>
 
 <p>En caso de intentar invetigar una tecnología que no este habilitada, esta será retirada de la cola y a todas las tecnologías que dependas de esta.</p>
 
