@@ -131,11 +131,8 @@ function ThisMOD.AddModifiedItem( Data )
     local OldItem = GPrefix.Items[ Name ]
     if not OldItem then return end
 
-    -- Oculatar el objeto comprimido
-    OldItem.flags = OldItem.flags or { "hidden" }
-    if not GPrefix.getKey( OldItem.flags, "hidden" ) then
-        table.insert( OldItem.flags, "hidden" )
-    end GPrefix.Items[ OldItem.name ] = nil
+    -- Eliminar el objeto si efectos
+    GPrefix.removeItem( OldItem.name )
 
     -- Modificar el objeto con efecto
     Data.Item.name = Data.Item.name
@@ -166,7 +163,7 @@ function ThisMOD.AddModifiedItem( Data )
     Data.Compact.icons[ #Data.Compact.icons - 1 ].icon = MODIcon
     Data.Uncompact.icons[ #Data.Uncompact.icons - 1 ].icon = MODIcon
 
-    -- Crear el objetos mejorado
+    -- Crear el objeto mejorado
     data:extend( { Data.Item } )
     GPrefix.Items[ Data.Item.name ] = Data.Item
     if Data.LocalisedName then data:extend( { Data.LocalisedName } ) end

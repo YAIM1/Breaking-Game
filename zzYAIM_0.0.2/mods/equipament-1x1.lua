@@ -119,6 +119,7 @@ function ThisMOD.LoadInformation( )
 
     -- Hacer el cambio
     for _, Equipament in pairs( Equipaments ) do
+        Equipament.take_result = nil
         Equipament.shape.width = 1
         Equipament.shape.height = 1
     end

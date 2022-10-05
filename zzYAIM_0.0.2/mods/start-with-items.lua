@@ -105,6 +105,7 @@ function ThisMOD.BuildWindow( Data )
     WindowFlow.direction = "vertical"
     WindowFlow = WindowFrame.add( WindowFlow )
     WindowFlow.style.vertical_spacing = 9
+    WindowFlow.style.horizontally_stretchable = true
 
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
@@ -116,13 +117,15 @@ function ThisMOD.BuildWindow( Data )
 
     -- Cotruir la interfaz
     ThisMOD.BuildWindowTitle( Data )
-    ThisMOD.BuildWindowBody( Data )
+    ThisMOD.BuildWindowSelection( Data )
+    ThisMOD.BuildWindowIO( Data )
 
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Eliminar la referencia
     Data.GUI.WindowFlow = nil
 end
+
 
 function ThisMOD.BuildWindowTitle( Data )
 
@@ -178,12 +181,14 @@ function ThisMOD.BuildWindowTitle( Data )
     local ExportButton = { }
     ExportButton.type = "sprite-button"
     ExportButton.sprite = "utility/export"
-    ExportButton.tooltip = { ThisMOD.Local .. "import"}
     ExportButton = Flow.add( ExportButton )
     ExportButton.style = "tool_button_blue"
     ExportButton.style.padding = 0
     ExportButton.style.margin = 0
     ExportButton.style.size = 24
+
+    -- Activar el botón
+    ExportButton.enabled = #Data.gList > 0
 
 
     -- Contenedor
@@ -193,27 +198,31 @@ function ThisMOD.BuildWindowTitle( Data )
     Flow = TitleBar.add( Flow )
     Flow.style.horizontal_spacing = 3
 
-    -- Botón para cancel los cambios
-    local DiscardButton = { }
-    DiscardButton.type = "sprite-button"
-    DiscardButton.sprite = "utility/close_fat"
-    DiscardButton.tooltip = { ThisMOD.Local .. "discard"}
-    DiscardButton = Flow.add( DiscardButton )
-    DiscardButton.style = "tool_button_red"
-    DiscardButton.style.padding = 0
-    DiscardButton.style.margin = 0
-    DiscardButton.style.size = 24
+    -- Activar el botón
+    local OldItems = GPrefix.toString( Data.gItems )
+    local NewItems = GPrefix.toString( Data.gList )
+
+    -- Botón para cancelar los cambios
+    local RedButton = { }
+    RedButton.type = "sprite-button"
+    RedButton.sprite = "utility/close_fat"
+    RedButton = Flow.add( RedButton )
+    RedButton.style = "tool_button_red"
+    RedButton.style.padding = 0
+    RedButton.style.margin = 0
+    RedButton.style.size = 24
+    RedButton.enabled = OldItems ~= NewItems
 
     -- Botón para aplicar los cambios
-    local ApplyButton = { }
-    ApplyButton.type = "sprite-button"
-    ApplyButton.sprite = "utility/play"
-    ApplyButton.tooltip = { ThisMOD.Local .. "apply"}
-    ApplyButton = Flow.add( ApplyButton )
-    ApplyButton.style = "tool_button_green"
-    ApplyButton.style.padding = 0
-    ApplyButton.style.margin = 0
-    ApplyButton.style.size = 24
+    local GreenButton = { }
+    GreenButton.type = "sprite-button"
+    GreenButton.sprite = "utility/play"
+    GreenButton = Flow.add( GreenButton )
+    GreenButton.style = "tool_button_green"
+    GreenButton.style.padding = 0
+    GreenButton.style.margin = 0
+    GreenButton.style.size = 24
+    GreenButton.enabled = OldItems ~= NewItems
 
 
     -- Contenedor
@@ -242,13 +251,17 @@ function ThisMOD.BuildWindowTitle( Data )
     Data.GUI.ExportButton = ExportButton
     Data.GUI.ImportButton = ImportButton
 
-    Data.GUI.ApplyButton = ApplyButton
-    Data.GUI.DiscardButton = DiscardButton
+    Data.GUI.GreenButton = GreenButton
+    Data.GUI.RedButton = RedButton
 
     Data.GUI.CloseWindowButton = CloseButton
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    ThisMOD.UpdateTitleButton( Data )
 end
 
-function ThisMOD.BuildWindowBody( Data )
+function ThisMOD.BuildWindowSelection( Data )
 
     -- Contenedor
     local Flow = { }
@@ -260,28 +273,23 @@ function ThisMOD.BuildWindowBody( Data )
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
-    Data.GUI.WindowBodyFlow = Flow
+    Data.GUI.WindowSelectionFlow = Flow
 
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Cotruir la interfaz
-    ThisMOD.BuildItemListSection( Data )
-    ThisMOD.BuildSelectItemSection( Data )
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Eliminar la referencia
-    Data.GUI.WindowBodyFlow = nil
+    ThisMOD.BuildSelectionListSection( Data )
+    ThisMOD.BuildSelectionItemSection( Data )
 end
 
 
-function ThisMOD.BuildItemListSection( Data )
+function ThisMOD.BuildSelectionListSection( Data )
 
     -- Fondo de la lLista
     local Frame = { }
     Frame.type = "frame"
     Frame.direction = "vertical"
-    Frame = Data.GUI.WindowBodyFlow.add( Frame )
+    Frame = Data.GUI.WindowSelectionFlow.add( Frame )
     Frame.style = "shortcut_selection_row"
     Frame.style.margin = 0
     Frame.style.padding = 0
@@ -292,8 +300,7 @@ function ThisMOD.BuildItemListSection( Data )
     ScrollPane.vertical_scroll_policy = "always"
     ScrollPane = Frame.add( ScrollPane )
     ScrollPane.style = "blurry_scroll_pane"
-    ScrollPane.style.width = 420
-    ScrollPane.style.height = 168
+    ScrollPane.style.size = { 420, 168 }
 
     -- Tabla contenedora
     local Table = { }
@@ -316,13 +323,13 @@ function ThisMOD.BuildItemListSection( Data )
     ThisMOD.ShowItems( Data )
 end
 
-function ThisMOD.BuildSelectItemSection( Data )
+function ThisMOD.BuildSelectionItemSection( Data )
 
     -- Fondo de la lLista
     local Frame = { }
     Frame.type = "frame"
     Frame.direction = "horizontal"
-    Frame = Data.GUI.WindowBodyFlow.add( Frame )
+    Frame = Data.GUI.WindowSelectionFlow.add( Frame )
     Frame.style = "shortcut_selection_row"
     Frame.style.margin = 0
     Frame.style.padding = 0
@@ -334,7 +341,29 @@ function ThisMOD.BuildSelectItemSection( Data )
     ScrollPane = Frame.add( ScrollPane )
     ScrollPane.style = "blurry_scroll_pane"
     ScrollPane.style.horizontally_stretchable = true
-    -- ScrollPane.style.height = 75
+    ScrollPane.style.size = { 420, 70 }
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Guardar instancia
+    Data.GUI.ScrollPane = ScrollPane
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Cotruir la interfaz
+    ThisMOD.BuildSelectionItem( Data )
+    ThisMOD.BuildSelectionMenssage( Data )
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Eliminar la referencia
+    Data.GUI.ScrollPane = nil
+end
+
+function ThisMOD.BuildSelectionItem( Data )
+
+    -- Inicializa la vareble y renombrar
+    local ScrollPane = Data.GUI.ScrollPane
 
     -- Contenedor
     local Flow = { }
@@ -344,27 +373,6 @@ function ThisMOD.BuildSelectItemSection( Data )
     Flow.style.horizontal_spacing = 9
     Flow.style.vertical_align = "center"
     Flow.style.margin = { 10, 20 }
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Guardar instancia
-    Data.GUI.Flow = Flow
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Cotruir la interfaz
-    ThisMOD.BuildSelectItem( Data )
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Eliminar la referencia
-    Data.GUI.Flow = nil
-end
-
-function ThisMOD.BuildSelectItem( Data )
-
-    -- Inicializa la vareble y renombrar
-    local Flow = Data.GUI.Flow
 
     -- Crear la imagen de selección
     local Picture = { }
@@ -401,7 +409,6 @@ function ThisMOD.BuildSelectItem( Data )
     local Button = { }
     Button.type = "sprite-button"
     Button.sprite = "utility/check_mark_white"
-    Button.tooltip = { ThisMOD.Local .. "add"}
     Button = Flow.add( Button )
     Button.style = "tool_button_green"
     Button.style.padding = 0
@@ -412,10 +419,146 @@ function ThisMOD.BuildSelectItem( Data )
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Guardar instancia
+    Data.GUI.SelectFlow = Flow
+
     Data.GUI.Slider = Slider
     Data.GUI.Picture = Picture
-    Data.GUI.AddButton = Button
+    Data.GUI.Button = Button
     Data.GUI.Textfield = Textfield
+end
+
+function ThisMOD.BuildSelectionMenssage( Data )
+
+    -- Inicializa la vareble y renombrar
+    local ScrollPane = Data.GUI.ScrollPane
+
+    -- Contenedor
+    local OutFlow = { }
+    OutFlow.type = "flow"
+    OutFlow.direction = "vertical"
+    OutFlow = ScrollPane.add( OutFlow )
+    OutFlow.style.vertical_spacing = 0
+    OutFlow.style.horizontal_align = "center"
+    OutFlow.style.width = 400
+    OutFlow.visible = false
+
+
+    -- Contenedor
+    local InFlow = { }
+    InFlow.type = "flow"
+    InFlow.direction = "horizontal"
+    InFlow = OutFlow.add( InFlow )
+    InFlow.style.horizontal_spacing = 0
+    InFlow.style.vertical_align = "center"
+    InFlow.style.height = 24
+
+    -- Botón para cancelar los cambios
+    local NoButton = { }
+    NoButton.type = "sprite-button"
+    NoButton.sprite = "utility/close_fat"
+    NoButton = InFlow.add( NoButton )
+    NoButton.style = "tool_button_red"
+    NoButton.style.padding = 0
+    NoButton.style.margin = 0
+    NoButton.style.size = 24
+
+    -- Espacio "vacio"
+    local LeftEmptyWidget = { }
+    LeftEmptyWidget.type = "empty-widget"
+    LeftEmptyWidget = InFlow.add( LeftEmptyWidget )
+    LeftEmptyWidget.drag_target = Data.GUI.WindowFrame
+    LeftEmptyWidget.style.horizontally_stretchable = true
+    LeftEmptyWidget.style.vertically_stretchable = true
+    LeftEmptyWidget.style.margin = 0
+
+    -- Etiqueta con el titulo
+    local Title = { }
+    Title.type = "label"
+    Title = InFlow.add( Title )
+    Title.style = "heading_1_label"
+
+    -- Espacio "vacio"
+    local RightEmptyWidget = { }
+    RightEmptyWidget.type = "empty-widget"
+    RightEmptyWidget = InFlow.add( RightEmptyWidget )
+    RightEmptyWidget.drag_target = Data.GUI.WindowFrame
+    RightEmptyWidget.style.horizontally_stretchable = true
+    RightEmptyWidget.style.vertically_stretchable = true
+    RightEmptyWidget.style.margin = 0
+
+    -- Botón para aplicar los cambios
+    local YesButton = { }
+    YesButton.type = "sprite-button"
+    YesButton.sprite = "utility/play"
+    YesButton = InFlow.add( YesButton )
+    YesButton.style = "tool_button_green"
+    YesButton.style.padding = 0
+    YesButton.style.margin = 0
+    YesButton.style.size = 24
+
+
+    -- Etiqueta con el mensaje
+    local Message = { }
+    Message.type = "label"
+    Message = OutFlow.add( Message )
+    Message.style.single_line = false
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Guardar instancia
+    Data.GUI.MessageFlow = OutFlow
+
+    Data.GUI.TitleLabel = Title
+    Data.GUI.MessageLabel = Message
+
+    Data.GUI.NoButton = NoButton
+    Data.GUI.YesButton = YesButton
+end
+
+
+function ThisMOD.BuildWindowIO( Data )
+
+    -- Contenedor - Cuerpo
+    local OutFlow = { }
+    OutFlow.type = "flow"
+    OutFlow.direction = "vertical"
+    OutFlow = Data.GUI.WindowFlow.add( OutFlow )
+    OutFlow.style.vertical_spacing = 9
+    OutFlow.style.size = { 428, 257 }
+    OutFlow.visible = false
+
+
+    -- Fondo de la lista
+    local Frame = { }
+    Frame.type = "frame"
+    Frame.direction = "vertical"
+    Frame = OutFlow.add( Frame )
+    Frame.style = "shortcut_selection_row"
+    Frame.style.margin = 0
+    Frame.style.padding = 0
+
+    -- Contenedor con scroll
+    local ScrollPane = { }
+    ScrollPane.type = "scroll-pane"
+    ScrollPane.vertical_scroll_policy = "always"
+    ScrollPane = Frame.add( ScrollPane )
+    ScrollPane.style = "blurry_scroll_pane"
+
+
+    -- Texto de entrada o salida
+    local TextBox = { }
+    TextBox.type = "text-box"
+    TextBox = ScrollPane.add( TextBox )
+    TextBox.word_wrap = true
+    TextBox.read_only = true
+    TextBox.text = ""
+    TextBox.style.size = { 400, 241 }
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Guardar instancia
+    Data.GUI.WindowIOFlow = OutFlow
+    Data.GUI.TextBox = TextBox
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -438,6 +581,530 @@ function ThisMOD.ToggleWindow( Data )
     else
         ThisMOD.CreateWindow( Data )
     end
+end
+
+function ThisMOD.ToggleSlot( Data )
+
+    -- Validar botón activado
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+
+    -- Validación básica
+    local OldButton = Data.Click and Data.Click.Selected or nil
+    if not GPrefix.ClickLeft( Data ) then return end
+
+    -- Renombrar la variable
+    local NewButton = Data.Event.element
+    local Tags = Data.Event.element.tags
+
+    -- Validar botón
+    if not( Tags and Tags.Enabled and Tags.Disabled ) then return end
+    if not Tags.MOD and Tags.MOD ~= Data.GMOD.Prefix_MOD then return end
+    if OldButton and OldButton == NewButton then return end
+    if Data.GUI.MessageFlow.visible then return end
+
+    -- Hacer el cambio
+    Data.Click.Selected = NewButton
+    for _, Button in pairs( { NewButton, OldButton } ) do
+        GPrefix.ToggleButton( Button )
+    end
+
+    -- Habilitar los elementos
+    Data.GUI.Slider.enabled = true
+    Data.GUI.Button.enabled = true
+    Data.GUI.Textfield.enabled = true
+
+    -- Selecionar un objeto
+    local ItemName = string.gsub( NewButton.sprite, "item/", "" )
+    local StackSize = game.item_prototypes[ ItemName ].stack_size
+    Data.GUI.Slider.set_slider_minimum_maximum( 0, 10 * StackSize )
+    Data.GUI.Slider.set_slider_value_step( StackSize )
+
+    Data.GUI.Picture.elem_value = ItemName
+    Data.GUI.Slider.slider_value = NewButton.number or 0
+    Data.GUI.Textfield.text = tostring( NewButton.number or 0 )
+    Data.GUI.Button.tooltip = { ThisMOD.Local .. "update"}
+end
+
+
+function ThisMOD.ChangeSlider( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.Slider then return end
+
+    -- Establecer el valor
+    local Value = Data.GUI.Slider.slider_value
+    Data.GUI.Textfield.text = tostring( Value )
+end
+
+function ThisMOD.ChangeCount( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.Textfield then return end
+
+    -- Establecer el valor
+    local Text = Data.GUI.Textfield.text
+    local Value = tonumber( Text, 10 ) or 0
+    if Value > Data.GUI.Slider.get_slider_maximum( ) then
+        Value = Data.GUI.Slider.get_slider_maximum( )
+    end Data.GUI.Slider.slider_value = Value
+end
+
+
+function ThisMOD.NewItem( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.Picture then return end
+
+    local ItemName = Data.GUI.Picture.elem_value
+    if not GPrefix.isString( ItemName ) then return end
+
+    -- Limpiar el objeto seleccionado
+    if Data.Click and Data.Click.Selected then
+        local Item = Data.GUI.Picture.elem_value
+        Data.Event.element = Data.GUI.Picture
+        Data.GUI.Picture.elem_value = nil
+        ThisMOD.ClearItem( Data )
+        Data.GUI.Picture.elem_value = Item
+    end
+
+    -- Habilitar los elementos
+    Data.GUI.Slider.enabled = true
+    Data.GUI.Button.enabled = true
+    Data.GUI.Textfield.enabled = true
+
+    -- Establecer los valores
+    local StackSize = game.item_prototypes[ ItemName ].stack_size
+    Data.GUI.Slider.set_slider_minimum_maximum( 0, 10 * StackSize )
+    Data.GUI.Slider.set_slider_value_step( StackSize )
+
+    Data.GUI.Textfield.text = tostring( StackSize )
+    Data.GUI.Slider.slider_value = StackSize
+    Data.GUI.Button.tooltip = { ThisMOD.Local .. "add"}
+end
+
+function ThisMOD.ClearItem( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.Picture then return end
+
+    local ItemName = Data.GUI.Picture.elem_value
+    if GPrefix.isString( ItemName ) then return end
+
+    if Data.Click and Data.Click.Selected then
+        GPrefix.ToggleButton( Data.Click.Selected )
+        Data.Click.Selected = nil
+    end
+
+    -- Limpiar los valores
+    Data.GUI.Button.tooltip = ""
+    Data.GUI.Textfield.text = ""
+    Data.GUI.Slider.slider_value = 0
+
+    -- Deshabilitar los elementos
+    Data.GUI.Slider.enabled = false
+    Data.GUI.Button.enabled = false
+    Data.GUI.Textfield.enabled = false
+end
+
+function ThisMOD.AddItem( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.Button then return end
+    if Data.Click and Data.Click.Selected then return end
+
+    -- Guardar el objeto
+    local Text = Data.GUI.Textfield.text
+    local Count = tonumber( Text, 10 ) or 0
+    table.insert( Data.gList, {
+        name = Data.GUI.Picture.elem_value,
+        count = Count > 0 and Count or nil,
+    } )
+
+    -- Establecer el valor
+    ThisMOD.DisableSelection( Data )
+end
+
+function ThisMOD.UpdateItem( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.Button then return end
+    if not Data.Click or not Data.Click.Selected then return end
+
+    -- Guardar el objeto
+    local Text = Data.GUI.Textfield.text
+    local Count = tonumber( Text, 10 ) or 0
+    local ItemName = Data.GUI.Picture.elem_value
+    for _, Item in pairs( Data.gList ) do
+        if ItemName == Item.name then
+            Item.count = Count > 0 and Count or nil
+            Data.Click.Selected = nil break
+        end
+    end
+
+    -- Establecer el valor
+    ThisMOD.DisableSelection( Data )
+end
+
+function ThisMOD.RemoveItem( Data )
+
+    -- Validar botón activado
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+
+    -- Validación básica
+    if not GPrefix.ClickRight( Data ) then return end
+
+    -- Renombrar la variable
+    local Tags = Data.Event.element.tags
+
+    -- Validar botón
+    if not( Tags and Tags.Enabled and Tags.Disabled ) then return end
+    if not Tags.MOD and Tags.MOD ~= Data.GMOD.Prefix_MOD then return end
+    if Data.GUI.MessageFlow.visible then return end
+
+    -- Renombrar la variable
+    local NewButton = Data.Event.element
+
+    -- Remover el objeto de la lista
+    local ItemName = string.gsub( NewButton.sprite, "item/", "" )
+    local Items = Data.gList
+    for Key, Item in pairs( Items ) do
+        if ItemName == Item.name then
+            table.remove( Items, Key )
+            Data.Click.Selected = nil break
+        end
+    end
+
+    -- Establecer el valor
+    ThisMOD.DisableSelection( Data )
+end
+
+
+function ThisMOD.ApplyItems( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.GreenButton then return end
+    if not Data.GUI.WindowSelectionFlow.visible then return end
+
+    -- Habilitar los botones necesarios
+    ThisMOD.UpdateTitleButton( Data )
+
+    -- Desactivar el botón
+    Data.GUI.GreenButton.enabled = false
+    Data.GUI.GreenButton.tooltip = ""
+
+    -- Actualizar el mensaje y el titulo
+    Data.GUI.TitleLabel.caption = { Data.GMOD.Local .. "apply" }
+    Data.GUI.MessageLabel.caption = { Data.GMOD.Local .. "apply-message" }
+
+    -- Limpiar el objeto seleccionado
+    Data.Event.element = Data.GUI.Picture
+    Data.GUI.Picture.elem_value = nil
+    ThisMOD.ClearItem( Data )
+
+    -- Hacer visible la seccion
+    Data.GUI.MessageFlow.visible = true
+    Data.GUI.SelectFlow.visible = false
+end
+
+function ThisMOD.ApplyItemsCancel( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.NoButton then return end
+    if Data.GUI.GreenButton.enabled then return end
+
+    -- Hacer visible la seccion
+    Data.GUI.MessageFlow.visible = false
+    Data.GUI.SelectFlow.visible = true
+
+    -- Establecer el valor
+    ThisMOD.DisableSelection( Data )
+end
+
+function ThisMOD.ApplyItemsConfirm( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.YesButton then return end
+    if Data.GUI.GreenButton.enabled then return end
+
+    -- Guardar el objeto
+    Data.gItems = GPrefix.DeepCopy( Data.gList )
+    Data.gMOD.Items = Data.gItems
+
+    -- Establecer el valor
+    ThisMOD.DisableSelection( Data )
+
+    -- Agregar los objetos selecionados
+    ThisMOD.CheckAllPlayers = true
+    ThisMOD.addAllPlayers( )
+
+    -- Hacer visible la seccion
+    Data.GUI.MessageFlow.visible = false
+    Data.GUI.SelectFlow.visible = true
+
+    -- Informar del cambio
+    game.print( { "",
+        "[color=default]",
+        { Data.GMOD.Local .. "setting-name" },
+        ": [/color]",
+        {
+            Data.GMOD.Local .. "status-change",
+            {
+                "",
+                "[img=utility/character_mining_speed_modifier_icon][color=" ..
+                Data.Player.color.r .. "," ..
+                Data.Player.color.g .. "," ..
+                Data.Player.color.b .. "]",
+                Data.Player.name,
+                "[/color]"
+            },
+        }
+    } )
+end
+
+
+function ThisMOD.DiscardItems( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.RedButton then return end
+    if not Data.GUI.WindowSelectionFlow.visible then return end
+
+    -- Habilitar los botones necesarios
+    ThisMOD.UpdateTitleButton( Data )
+
+    -- Desactivar el botón
+    Data.GUI.RedButton.enabled = false
+    Data.GUI.RedButton.tooltip = ""
+
+    -- Actualizar el mensaje y el titulo
+    Data.GUI.TitleLabel.caption = { Data.GMOD.Local .. "discard" }
+    Data.GUI.MessageLabel.caption = { Data.GMOD.Local .. "discard-message" }
+
+    -- Limpiar el objeto seleccionado
+    Data.Event.element = Data.GUI.Picture
+    Data.GUI.Picture.elem_value = nil
+    ThisMOD.ClearItem( Data )
+
+    -- Hacer visible la seccion
+    Data.GUI.MessageFlow.visible = true
+    Data.GUI.SelectFlow.visible = false
+end
+
+function ThisMOD.DiscardItemsCancel( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.NoButton then return end
+    if Data.GUI.RedButton.enabled then return end
+
+    -- Hacer visible la seccion
+    Data.GUI.MessageFlow.visible = false
+    Data.GUI.SelectFlow.visible = true
+
+    -- Establecer el valor
+    ThisMOD.DisableSelection( Data )
+end
+
+function ThisMOD.DiscardItemsConfirm( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.YesButton then return end
+    if Data.GUI.RedButton.enabled then return end
+
+    -- Guardar el objeto
+    Data.gList = GPrefix.DeepCopy( Data.gItems )
+    Data.gPlayer.List = Data.gList
+
+    -- Hacer visible la seccion
+    Data.GUI.MessageFlow.visible = false
+    Data.GUI.SelectFlow.visible = true
+
+    -- Establecer el valor
+    ThisMOD.DisableSelection( Data )
+end
+
+
+function ThisMOD.ImportButton( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.ImportButton then return end
+
+    -- Habilitar los botones necesarios
+    ThisMOD.UpdateTitleButton( Data )
+
+    -- Hacer visible la seccion
+    Data.GUI.MessageFlow.visible = false
+    Data.GUI.SelectFlow.visible = true
+
+    -- Hacer visible la seccion de IO
+    Data.GUI.TextBox.read_only = false
+    Data.GUI.WindowIOFlow.visible = true
+    Data.GUI.WindowSelectionFlow.visible = false
+
+    -- Deshabilitar el botón
+    Data.GUI.ImportButton.enabled = false
+    Data.GUI.ImportButton.tooltip = ""
+
+    Data.GUI.GreenButton.enabled = false
+    Data.GUI.GreenButton.tooltip = ""
+
+    -- Habilitar el botón
+    Data.GUI.RedButton.enabled = true
+    Data.GUI.RedButton.tooltip = { ThisMOD.Local .. "cancel" }
+
+    -- Limipiar y enfocar
+    Data.GUI.TextBox.text = ""
+    Data.GUI.TextBox.focus( )
+end
+
+function ThisMOD.ImportProsses( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.GreenButton then return end
+    if not Data.GUI.WindowIOFlow.visible then return end
+    if Data.GUI.TextBox.read_only then return end
+
+    -- Contenedor
+    local Table = { }
+
+    -- Guardar la nueva lista objeto
+    Table.Text = Data.GUI.TextBox.text
+    Table.JSON = game.decode_string( Table.Text )
+    if not Table.JSON then goto JumpTrayAgain end
+    Table.Items = game.json_to_table( Table.JSON ) or { }
+    if #Table.Items < 1 then goto JumpTrayAgain end
+
+    -- Acutualizar la lista
+    Data.gPlayer.List = Table.Items
+    Data.gList = Table.Items
+    ThisMOD.ShowItems( Data )
+
+    -- Volver a la lista
+    Data.Event.element = Data.GUI.RedButton
+    ThisMOD.CloseWinowIO( Data )
+
+    -- Todo salió bien
+    if true then return end
+
+    -- Recepción del salto
+    :: JumpTrayAgain ::
+
+    -- Volver al inicio
+    Data.GUI.GreenButton.enabled = false
+    Data.GUI.TextBox.text = ""
+    Data.GUI.TextBox.focus( )
+end
+
+function ThisMOD.ExportButton( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.ExportButton then return end
+
+    -- Habilitar los botones necesarios
+    ThisMOD.UpdateTitleButton( Data )
+
+    -- Hacer visible la seccion
+    Data.GUI.MessageFlow.visible = false
+    Data.GUI.SelectFlow.visible = true
+
+    -- Hacer visible la seccion de IO
+    Data.GUI.TextBox.read_only = true
+    Data.GUI.WindowIOFlow.visible = true
+    Data.GUI.WindowSelectionFlow.visible = false
+
+    -- Deshabilitar el botón
+    Data.GUI.ExportButton.enabled = false
+    Data.GUI.ExportButton.tooltip = ""
+
+    Data.GUI.GreenButton.enabled = false
+    Data.GUI.GreenButton.tooltip = ""
+
+    -- Habilitar el botón
+    Data.GUI.RedButton.enabled = true
+    Data.GUI.RedButton.tooltip = { ThisMOD.Local .. "cancel" }
+
+    -- Limipiar y enfocar
+    Data.GUI.TextBox.text = game.table_to_json( Data.gList )
+    Data.GUI.TextBox.text = game.encode_string( Data.GUI.TextBox.text )
+    Data.GUI.TextBox.select_all( )
+    Data.GUI.TextBox.focus( )
+end
+
+function ThisMOD.CloseWinowIO( Data )
+
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.RedButton then return end
+    if not Data.GUI.WindowIOFlow.visible then return end
+
+    -- Cancelar la entrada de datos
+    Data.GUI.ImportButton.enabled = true
+    Data.GUI.WindowIOFlow.visible = false
+    Data.GUI.WindowSelectionFlow.visible = true
+    ThisMOD.UpdateTitleButton( Data )
+end
+
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+
+-- Funciones de soporte
+
+function ThisMOD.CreateData( Event )
+    local Data = GPrefix.CreateData( Event, ThisMOD )
+
+    -- Inicializar las varebles y renombrar la vareble
+    Data.gMOD.Items = Data.gMOD.Items or { }
+    Data.gItems = Data.gMOD.Items
+
+    local Items = GPrefix.DeepCopy( Data.gItems )
+    Data.gPlayer.List = Data.gPlayer.List or Items
+    Data.gList = Data.gPlayer.List
+
+    Data.gPlayer.Given = Data.gPlayer.Given or { }
+    Data.gGiven = Data.gPlayer.Given
+
+    -- Devolver la información
+    return Data
+end
+
+
+function ThisMOD.DisableSelection( Data )
+    Data.GUI.Picture.elem_value = nil
+    Data.Event.element = Data.GUI.Picture
+    ThisMOD.ShowItems( Data )
+    ThisMOD.UpdateTitleButton( Data )
+    ThisMOD.ClearItem( Data )
 end
 
 
@@ -512,124 +1179,31 @@ function ThisMOD.ValidateToggleWindow( Data )
     return false
 end
 
--- Selecionar un objeto
-function ThisMOD.NewSelection( Data )
-
-    -- Validación basica
-    if not Data.Event.element then return end
-    if not Data.Event.element.valid then return end
-    if Data.Event.element ~= Data.GUI.Picture then return end
-
-    local ItemName = Data.Event.element.elem_value
-    if not GPrefix.isString( ItemName ) then return end
-
-    -- Habilitar los elementos
-    Data.GUI.Slider.enabled = true
-    Data.GUI.AddButton.enabled = true
-    Data.GUI.Textfield.enabled = true
-
-    -- Establecer los valores
-    local StackSize = game.item_prototypes[ ItemName ].stack_size
-    Data.GUI.Slider.set_slider_minimum_maximum( 0, 10 * StackSize )
-    Data.GUI.Slider.set_slider_value_step( StackSize )
-
-    Data.GUI.Textfield.text = tostring( StackSize )
-    Data.GUI.Slider.slider_value = StackSize
-end
-
--- Borrar el objeto selecionado
-function ThisMOD.ClearSelection( Data )
-
-    -- Validación basica
-    if not Data.Event.element then return end
-    if not Data.Event.element.valid then return end
-    if Data.Event.element ~= Data.GUI.Picture then return end
-
-    local ItemName = Data.Event.element.elem_value
-    if GPrefix.isString( ItemName ) then return end
-
-    -- Limpiar los valores
-    Data.GUI.Textfield.text = ""
-    Data.GUI.Slider.slider_value = 0
-
-    -- Deshabilitar los elementos
-    Data.GUI.Slider.enabled = false
-    Data.GUI.AddButton.enabled = false
-    Data.GUI.Textfield.enabled = false
-end
-
--- Establecer la cantidad del objeto
-function ThisMOD.setCount( Data )
-
-    -- Validación basica
-    if not Data.Event.element then return end
-    if not Data.Event.element.valid then return end
-    if Data.Event.element ~= Data.GUI.Slider then return end
-
-    -- Establecer el valor
-    local Value = Data.Event.element.slider_value
-    Data.GUI.Textfield.text = tostring( Value )
-end
-
-function ThisMOD.setValue( Data )
-
-    -- Validación basica
-    if not Data.Event.element then return end
-    if not Data.Event.element.valid then return end
-    if Data.Event.element ~= Data.GUI.Textfield then return end
-
-    -- Establecer el valor
-    local Text = Data.Event.element.text
-    local Value = tonumber( Text, 10 ) or 0
-    if Value > Data.GUI.Slider.get_slider_maximum( ) then
-        Value = Data.GUI.Slider.get_slider_maximum( )
-    end Data.GUI.Slider.slider_value = Value
-end
-
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
-
--- Funciones de soporte
 
 function ThisMOD.ShowItems( Data )
 
-    -- Inicializa la vareble y renombrar
+    -- Renombrar las varebles
     local Table = Data.GUI.ItemsTable
-
-    Data.gMOD.Items = Data.gMOD.Items or { }
-    local Items = Data.gMOD.Items
-
-    -- Valores temporales
-    table.insert( Items, { count = 1, name = "wooden-chest" } )
-    table.insert( Items, { count = 1, name = "iron-chest" } )
-    table.insert( Items, { count = 1, name = "steel-chest" } )
-    table.insert( Items, { count = 1, name = "wood" } )
-    table.insert( Items, { count = 1, name = "coal" } )
-    table.insert( Items, { count = 1, name = "stone" } )
-    table.insert( Items, { count = 1, name = "iron-ore" } )
-    table.insert( Items, { count = 1, name = "copper-ore" } )
-    table.insert( Items, { count = 1, name = "iron-plate" } )
-    table.insert( Items, { count = 1, name = "copper-plate" } )
-    table.insert( Items, { count = 1, name = "copper-cable" } )
-    table.insert( Items, { count = 1, name = "iron-stick" } )
-    table.insert( Items, { count = 1, name = "electronic-circuit" } )
+    local Items = Data.gList
 
     -- Valores predeterminados
     local Tags = { }
-    Tags.enabled = "inventory_slot"
-    Tags.selected = "filter_inventory_slot"
-    Tags.size = 40
+    Tags.Disabled = "inventory_slot"
+    Tags.Enabled = "image_tab_selected_slot"
+    Tags.Size = 40
+    Tags.MOD = ThisMOD.Prefix_MOD
 
     -- Agregar los objetos
     Table.clear( )
     ThisMOD.SortItems( Data )
     for _, Item in pairs( Items ) do
         local Picture = { }
+        Picture.tags = Tags
         Picture.type = "sprite-button"
         Picture.sprite = "item/" .. Item.name
         Picture.number = Item.count
         Picture = Table.add( Picture )
-        Picture.style = Tags.enabled
+        Picture.style = Tags.Disabled
         Picture.style.padding = 0
         Picture.style.margin  = 0
         Picture.style.size = Tags.size
@@ -646,7 +1220,7 @@ function ThisMOD.ShowItems( Data )
         local Picture = { }
         Picture.type = "sprite-button"
         Picture = Table.add( Picture )
-        Picture.style = Tags.enabled
+        Picture.style = Tags.Disabled
         Picture.style.padding = 0
         Picture.style.margin  = 0
         Picture.style.size = Tags.size
@@ -655,291 +1229,166 @@ end
 
 function ThisMOD.SortItems( Data )
 
+    -- Renombrar la vareble
+    local Items = Data.gList
+
+    -- Validación básica
+    if #Items < 2 then return end
+
     -- Inicializa la vareble y renombrar
-    local Array = { }
-    Data.gMOD.Items = Data.gMOD.Items or { }
-    local Items = Data.gMOD.Items
+    local Table = { ToSort = { }, Source = { } }
+    Table.Source = GPrefix.DeepCopy( Items )
 
     -- Eliminar las redundancias
-    local i = 1
-    while i < #Items do
-        local j = #Items
-        while j > i do
-            local iItem = Items[ i ]
-            local jItem = Items[ j ]
-            if iItem.name == jItem.name then
-                iItem.count = iItem.count + jItem.count
-                table.remove( Items, j )
-            end j = j - 1
-        end i = i + 1
+    if true then
+        local i = 1
+        while i < #Table.Source do
+            local iItem = Table.Source[ i ]
+            local j = #Table.Source
+            while j > i do
+                local jItem = Table.Source[ j ]
+                if iItem.name == jItem.name then
+                    iItem.count = iItem.count + jItem.count
+                    table.remove( Table.Source, j )
+                end j = j - 1
+            end i = i + 1
+        end
     end
 
     -- Cargar los objetos
-    for _, Item in pairs( Items ) do
-        table.insert( Array, Item.name )
+    for _, Item in pairs( Table.Source ) do
+        Item.order = game.item_prototypes[ Item.name ].order
+        table.insert( Table.ToSort, Item.order or "" )
     end
 
     -- Ordenar los objetos
-    table.sort( Array )
+    table.sort( Table.ToSort )
 
     -- Duplicar los detalles del objeto
-    for Pos, Name in pairs( Array ) do
-        for _, Item in pairs( Items ) do
-            if Item.name == Name then
-                Array[ Pos ] = Item
+    for Key, order in pairs( Table.ToSort ) do
+        for key, Item in pairs( Table.Source ) do
+            if Item.order == order then
+                Table.ToSort[ Key ] = Item
+                table.remove( Table.Source, key )
+                break
             end
         end
     end
 
-    -- Eliminar el orden actual
-    while #Items > 0 do
-        table.remove( Items, 1 )
+    -- Eliminar la lista vacia
+    if #Table.Source < 1 then
+        Table.Source = Table.ToSort
+        Table.ToSort = nil
     end
 
-    -- Establecer el nuevo orden
-    for _, Item in pairs( Array ) do
+    -- Hay almenos un objeto sin ordenar
+    if Table.ToSort then
+        local Msg = "ERROR: No se pudo organizar todos los objetos"
+        GPrefix.Log( Msg, Items, Table )
+        return
+    end
+
+    -- Ordernar los order duplicados
+    if true then
+        local i = 1
+        while i < #Table.Source do
+
+            -- Separar a los duplicados
+            local iItem = Table.Source[ i ]
+            Table.ToSort = { iItem.name }
+            local j = i + 1
+            while j <= #Table.Source do
+                local jItem = Table.Source[ j ]
+                if iItem.order == jItem.order then
+                    table.insert( Table.ToSort, jItem.name )
+                end j = j + 1
+            end
+
+            -- No hace falta ordenar
+            if #Table.ToSort < 2 then goto JumpItem end
+
+            -- Ordenarlos los duplicados
+            table.sort( Table.ToSort )
+
+            -- Guardar los duplicados
+            for Key, ItemName in pairs( Table.ToSort ) do
+                for key, Item in pairs( Table.Source ) do
+                    if Item.name == ItemName then
+                        Table.Source[ key ] = nil
+                        Table.ToSort[ Key ] = Item
+                    end
+                end
+            end
+
+            -- Establecer el nuevo orden
+            for k, Item in pairs( Table.ToSort ) do
+                Table.Source[ i + k - 1 ] = Item
+            end
+
+            -- Recepción del salto
+            :: JumpItem ::
+
+            -- Saltar los duplicados
+            i = i + #Table.ToSort
+            Table.ToSort = nil
+        end
+    end
+
+    -- Asignar el nuevo orden
+    while #Items > 0 do table.remove( Items, 1 ) end
+    for _, Item in pairs( Table.Source ) do
         table.insert( Items, Item )
+        Item.order = nil
     end
 end
 
+function ThisMOD.UpdateTitleButton( Data )
 
+    -- Activar el botón
+    local OldItems = GPrefix.toString( Data.gItems )
+    local NewItems = GPrefix.toString( Data.gList )
+    local Eneable = false
+    local Button = { }
 
+    -- Actualizar el boton
+    Eneable = OldItems ~= NewItems
+    Button = Data.GUI.GreenButton
+    Button.enabled = Eneable
+    Button.tooltip = Eneable and { ThisMOD.Local .. "apply"} or ""
 
+    -- Actualizar el boton
+    Eneable = OldItems ~= NewItems
+    Button = Data.GUI.RedButton
+    Button.enabled = Eneable
+    Button.tooltip = Eneable and { ThisMOD.Local .. "discard"} or ""
 
+    -- Actualizar el boton
+    Eneable = #Data.gList > 0
+    Button = Data.GUI.ExportButton
+    Button.enabled = Eneable
+    Button.tooltip = Eneable and { ThisMOD.Local .. "export"} or ""
 
-local function TemporalAction( Data )
+    -- Actualizar el boton
+    Eneable = true
+    Button = Data.GUI.ImportButton
+    Button.enabled = Eneable
+    Button.tooltip = Eneable and { ThisMOD.Local .. "import"} or ""
+end
 
-    local Element = Data.Event.element
-    if not Element then return end
-    if not Element.valid then return end
+function ThisMOD.EnableImportProsses( Data )
 
-    local Tags = Data.Event.element.tags
-    if not( Tags and Tags.Temporal ) then return end
+    -- Validación básica
+    if not Data.Event.element then return end
+    if not Data.Event.element.valid then return end
+    if Data.Event.element ~= Data.GUI.TextBox then return end
+    if not Data.GUI.WindowIOFlow.visible then return end
+    if Data.GUI.TextBox.read_only then return end
 
-    Data.GPrefix.TMP = Data.GPrefix.TMP or { }
-
-    -- Estilo
-    if Tags.Temporal == "style" then
-
-        local xButton = {
-            [ 1 ] = 'button',
-            [ 2 ] = 'green_button',
-            [ 3 ] = 'rounded_button',
-            [ 4 ] = 'back_button',
-            [ 5 ] = 'red_back_button',
-            [ 6 ] = 'forward_button',
-            [ 7 ] = 'confirm_button',
-            [ 8 ] = 'confirm_button_without_tooltip',
-            [ 9 ] = 'confirm_double_arrow_button',
-            [ 10 ] = 'map_generator_preview_button',
-            [ 11 ] = 'map_generator_close_preview_button',
-            [ 12 ] = 'map_generator_confirm_button',
-            [ 13 ] = 'confirm_in_load_game_button',
-            [ 14 ] = 'red_confirm_button',
-            [ 15 ] = 'red_button',
-            [ 16 ] = 'tool_button_red',
-            [ 17 ] = 'tool_button',
-            [ 18 ] = 'tool_button_green',
-            [ 19 ] = 'tool_button_blue',
-            [ 20 ] = 'mini_button',
-            [ 21 ] = 'mini_button_aligned_to_text_vertically',
-            [ 22 ] = 'mini_button_aligned_to_text_vertically_when_centered',
-            [ 23 ] = 'highlighted_tool_button',
-            [ 24 ] = 'tip_notice_button',
-            [ 25 ] = 'dialog_button',
-            [ 26 ] = 'menu_button',
-            [ 27 ] = 'menu_button_continue',
-            [ 28 ] = 'side_menu_button',
-            [ 29 ] = 'map_view_options_button',
-            [ 30 ] = 'map_view_add_button',
-            [ 31 ] = 'mod_gui_button',
-            [ 32 ] = 'image_tab_slot',
-            [ 33 ] = 'image_tab_selected_slot',
-            [ 34 ] = 'logistic_slot_button',
-            [ 35 ] = 'yellow_logistic_slot_button',
-            [ 36 ] = 'red_logistic_slot_button',
-            [ 37 ] = 'red_circuit_network_content_slot',
-            [ 38 ] = 'green_circuit_network_content_slot',
-            [ 39 ] = 'compact_slot',
-            [ 40 ] = 'slot',
-            [ 41 ] = 'red_slot',
-            [ 42 ] = 'yellow_slot',
-            [ 43 ] = 'green_slot',
-            [ 44 ] = 'blue_slot',
-            [ 45 ] = 'tool_equip_virtual_slot',
-            [ 46 ] = 'working_tool_equip_virtual_slot',
-            [ 47 ] = 'not_working_tool_equip_virtual_slot',
-            [ 48 ] = 'tool_equip_ammo_slot',
-            [ 49 ] = 'inventory_slot',
-            [ 50 ] = 'filter_inventory_slot',
-            [ 51 ] = 'closed_inventory_slot',
-            [ 52 ] = 'recipe_slot_button',
-            [ 53 ] = 'tracking_off_button',
-            [ 54 ] = 'tracking_on_button',
-            [ 55 ] = 'research_queue_cancel_button',
-            [ 56 ] = 'transparent_slot',
-            [ 57 ] = 'frame_button',
-            [ 58 ] = 'frame_action_button',
-            [ 59 ] = 'tip_notice_close_button',
-            [ 60 ] = 'blueprint_record_slot_button',
-            [ 61 ] = 'blueprint_record_selection_button',
-            [ 62 ] = 'drop_target_button',
-            [ 63 ] = 'compact_red_slot',
-            [ 64 ] = 'inventory_limit_slot_button',
-            [ 65 ] = 'working_weapon_button',
-            [ 66 ] = 'not_working_weapon_button',
-            [ 67 ] = 'omitted_technology_slot',
-            [ 68 ] = 'crafting_queue_slot',
-            [ 69 ] = 'promised_crafting_queue_slot',
-            [ 70 ] = 'control_settings_button',
-            [ 71 ] = 'control_settings_section_button',
-            [ 72 ] = 'dropdown_button',
-            [ 73 ] = 'not_accessible_station_in_station_selection',
-            [ 74 ] = 'partially_accessible_station_in_station_selection',
-            [ 75 ] = 'new_game_header_list_box_item',
-            [ 76 ] = 'list_box_item',
-            [ 77 ] = 'train_status_button',
-            [ 78 ] = 'station_train_status_button',
-            [ 79 ] = 'title_tip_item',
-            [ 80 ] = 'item_and_count_select_confirm',
-            [ 81 ] = 'filter_group_button_tab',
-            [ 82 ] = 'filter_group_button_tab_slightly_larger',
-            [ 83 ] = 'button_with_shadow',
-            [ 84 ] = 'train_schedule_add_wait_condition_button',
-            [ 85 ] = 'train_schedule_add_station_button',
-            [ 86 ] = 'train_schedule_action_button',
-            [ 87 ] = 'train_schedule_comparison_type_button',
-            [ 88 ] = 'locomotive_minimap_button',
-            [ 89 ] = 'target_station_in_schedule_in_train_view_list_box_item',
-            [ 90 ] = 'no_path_station_in_schedule_in_train_view_list_box_item',
-            [ 91 ] = 'default_permission_group_list_box_item',
-            [ 92 ] = 'browse_games_gui_toggle_favorite_on_button',
-            [ 93 ] = 'browse_games_gui_toggle_favorite_off_button',
-            [ 94 ] = 'cancel_close_button',
-            [ 95 ] = 'close_button',
-            [ 96 ] = 'current_research_info_button',
-            [ 97 ] = 'open_armor_button',
-            [ 98 ] = 'quick_bar_page_button',
-            [ 99 ] = 'tool_bar_open_button',
-            [ 100 ] = 'dark_rounded_button',
-            [ 101 ] = 'train_schedule_item_select_button',
-            [ 102 ] = 'train_schedule_fulfilled_item_select_button',
-            [ 103 ] = 'slot_button',
-            [ 104 ] = 'big_slot_button',
-            [ 105 ] = 'slot_button_in_shallow_frame',
-            [ 106 ] = 'statistics_slot_button',
-            [ 107 ] = 'yellow_slot_button',
-            [ 108 ] = 'red_slot_button',
-            [ 109 ] = 'quick_bar_slot_button',
-            [ 110 ] = 'slot_sized_button',
-            [ 111 ] = 'compact_slot_sized_button',
-            [ 112 ] = 'slot_button_that_fits_textline',
-            [ 113 ] = 'slot_sized_button_pressed',
-            [ 114 ] = 'slot_sized_button_blue',
-            [ 115 ] = 'slot_sized_button_red',
-            [ 116 ] = 'slot_sized_button_green',
-            [ 117 ] = 'shortcut_bar_button',
-            [ 118 ] = 'shortcut_bar_button_blue',
-            [ 119 ] = 'shortcut_bar_button_red',
-            [ 120 ] = 'shortcut_bar_button_green',
-            [ 121 ] = 'shortcut_bar_button_small',
-            [ 122 ] = 'shortcut_bar_button_small_green',
-            [ 123 ] = 'shortcut_bar_button_small_red',
-            [ 124 ] = 'shortcut_bar_button_small_blue',
-            [ 125 ] = 'slider_button',
-            [ 126 ] = 'left_slider_button',
-            [ 127 ] = 'right_slider_button',
-            [ 128 ] = 'entity_variation_button',
-            [ 129 ] = 'tile_variation_button',
-            [ 130 ] = 'train_schedule_fulfilled_delete_button',
-            [ 131 ] = 'train_schedule_temporary_station_delete_button',
-            [ 132 ] = 'other_settings_gui_button',
-            [ 133 ] = 'dark_button',
-            [ 134 ] = 'train_schedule_delete_button',
-            [ 135 ] = 'train_schedule_condition_time_selection_button',
-            [ 136 ] = 'shortcut_bar_expand_button',
-            [ 137 ] = 'choose_chat_icon_button',
-            [ 138 ] = 'choose_chat_icon_in_textbox_button',
-        } local wWw = xButton
-
-        local xXx = { }
-        local vVv = { }
-
-        if #vVv == 0 then
-            for i = 1, #wWw, 1 do
-                table.insert( vVv, i )
-            end
-        end
-
-        for _, value in pairs( vVv ) do
-            table.insert( xXx, { value, wWw[ value ] } )
-        end
-
-        local Style = Data.GPrefix.TMP.Style
-        Style = Style or 0
-        Style = Style < #xXx and Style + 1 or 1
-        Data.GPrefix.TMP.Style = Style
-
-        Element.style = xXx[ Style ][ 2 ]
-        Element.tooltip =  "[ " .. xXx[ Style ][ 1 ] .. " ] = " .. xXx[ Style ][ 2 ]
-        Element.style.size = 28
-        -- Element.style.horizontally_stretchable = true
-    end
-
-    -- Alto
-    if Tags.Temporal == "height" then
-
-        local Height = Data.GPrefix.TMP.Height
-        Height = Height or 0
-        Height = Height < Tags.height and Height + 1 or 1
-        Data.GPrefix.TMP.Height = Height
-
-        Element.style.height = Tags.height + Height
-    end
-
-    -- Ancho
-    if Tags.Temporal == "width" then
-
-        local Width = Data.GPrefix.TMP.Width
-        Width = Width or 0
-        Width = Width < Tags.Width and Width + 1 or 1
-        Data.GPrefix.TMP.Width = Width
-
-        Element.style.width = Tags.Width + Width
-    end
-
-    -- Tamaño
-    if Tags.Temporal == "size" then
-
-        local Size = Data.GPrefix.TMP.Size
-        Size = Size or 0
-        Size = Size < Tags.Size and Size + 1 or 1
-        Data.GPrefix.TMP.Size = Size
-
-        Element.style.size = Tags.Size + Size
-    end
-
-    -- Espacio horizontal
-    if Tags.Temporal == "horizontal_spacing" then
-
-        local Horizontal = Data.GPrefix.TMP.Horizontal
-        Horizontal = Horizontal or 0
-        Horizontal = Horizontal < Tags.Horizontal and Horizontal + 1 or 1
-        Data.GPrefix.TMP.Horizontal = Horizontal
-
-        Element.horizontal_spacing = Tags.Horizontal + Horizontal
-    end
-
-    -- Espacio vertical
-    if Tags.Temporal == "vertical_spacing" then
-
-        local Vertical = Data.GPrefix.TMP.Vertical
-        Vertical = Vertical or 0
-        Vertical = Vertical < Tags.Vertical and Vertical + 1 or 1
-        Data.GPrefix.TMP.Vertical = Vertical
-
-        Element.vertical_spacing = Tags.Vertical + Vertical
-    end
+    -- Actualizar el boton
+    local Eneable = string.len( Data.GUI.TextBox.text ) > 0
+    local Button = Data.GUI.GreenButton
+    Button.enabled = Eneable
+    Button.tooltip = Eneable and { ThisMOD.Local .. "import"} or ""
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -947,12 +1396,6 @@ end
 
 -- Contenedor de los jugadores a inicializar
 ThisMOD.PlayersToInit = { }
-
--- Lista de objetos a agregar
-ThisMOD.ItemsToAdd = { }
-table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "iron-chest" } )
-table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "steel-chest" } )
-table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "wooden-chest" } )
 
 -- Inicializa el evento
 function ThisMOD.Initialize( )
@@ -968,10 +1411,10 @@ function ThisMOD.Initialize( )
     GPrefix.addOnTick( Data )
 
     -- Revizar que todos los jugadores esten inicializados
-    GPrefix.CheckAllPlayers = true
+    ThisMOD.CheckAllPlayers = true
 end
 
--- Validación basica
+-- Validación básica
 function ThisMOD.StartInitialize( )
 
     -- Se añadé a todos los jugadores al cargar la partida y
@@ -981,19 +1424,9 @@ function ThisMOD.StartInitialize( )
     -- Validación básica
     if #ThisMOD.PlayersToInit < 1 then return end
 
-    -- Inicializar el contenedor
-    local StrItems = GPrefix.toString( ThisMOD.ItemsToAdd )
-
     -- Verificar cada jugador
     for _, Data in pairs( ThisMOD.PlayersToInit ) do
-
-        -- Renombrear la variable
-        local ItemGiven = Data.gForce[ Data.Player.index ]
-
-        -- Validar si se le ha dado estos objetos
-        if not ItemGiven or GPrefix.toString( ItemGiven ) ~= StrItems then
-            ThisMOD.addItems( Data )
-        end
+        ThisMOD.addItems( Data )
     end
 end
 
@@ -1001,7 +1434,7 @@ end
 function ThisMOD.addAllPlayers( )
 
     -- Validación básica
-    if not GPrefix.CheckAllPlayers then return end
+    if not ThisMOD.CheckAllPlayers then return end
 
     -- Agregar los jugadores
     for _, Player in pairs( game.players ) do
@@ -1009,7 +1442,7 @@ function ThisMOD.addAllPlayers( )
     end
 
     -- Eliminar varible bandera
-    GPrefix.CheckAllPlayers = nil
+    ThisMOD.CheckAllPlayers = nil
 end
 
 -- Agregar los objetos al jugador
@@ -1045,11 +1478,55 @@ function ThisMOD.addItems( Data )
     Flag = Flag and Data.Player.force.index < 2
     if Flag then return end
 
+    -- Validar si se entregarón todos los objetos
+    local ItemsToAdd = { }
+    for _, NewItem in pairs( Data.gItems ) do
+
+        -- Objetos agregados
+        local Start = #ItemsToAdd
+
+        -- Recorrer los objetos entregados
+        for _, OldItem in pairs( Data.gGiven ) do
+
+            -- Contenedor
+            local Item = { }
+
+            -- Identificar al objeto
+            if NewItem.name ~= OldItem.name then goto JumpOldItem end
+
+            -- Calcular la cantidad de objetos a gregar
+            Item.name = NewItem.name
+            Item.count = NewItem.count - OldItem.count
+
+            -- No es necesario agregar el objeto
+            if Item.count < 1 then goto JumpNewItem end
+
+            -- Agregar el objeto  a la lista
+            table.insert( ItemsToAdd, Item )
+
+            -- Recepción del salto
+            :: JumpOldItem ::
+        end
+
+        -- Agregar el objeto  a la lista
+        if Start == #ItemsToAdd then
+            table.insert( ItemsToAdd, NewItem )
+        end
+
+        -- Recepción del salto
+        :: JumpNewItem ::
+    end
+
+    -- Se le ha dado los objetos con anterioridad
+    if #ItemsToAdd < 1 then
+        ThisMOD.PlayersToInit[ IDPlayer ] = nil return
+    end
+
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- El jugador no tiene un cuerpo
     if not Data.Player.character then
-        for _, Item in pairs( ThisMOD.ItemsToAdd ) do
+        for _, Item in pairs( ItemsToAdd ) do
             Data.Player.insert( Item )
         end
     end
@@ -1059,7 +1536,7 @@ function ThisMOD.addItems( Data )
         local Inventory = Data.Player.character
         local IDInvertory = defines.inventory.character_main
         Inventory = Inventory.get_inventory( IDInvertory )
-        for _, Item in pairs( ThisMOD.ItemsToAdd ) do
+        for _, Item in pairs( ItemsToAdd ) do
             Inventory.insert( Item )
         end
     end
@@ -1067,13 +1544,24 @@ function ThisMOD.addItems( Data )
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Marcar cómo hecho
-    Data.gForce[ IDPlayer ] = GPrefix.DeepCopy( ThisMOD.ItemsToAdd )
     ThisMOD.PlayersToInit[ IDPlayer ] = nil
+    for _, NewItem in pairs( Data.gItems ) do
+        local AddItems = true
+        for _, OldItem in pairs( Data.gGiven ) do
+            if OldItem.name == NewItem.name then
+                OldItem.count = NewItem.count
+                AddItems = false break
+            end
+        end
+        if AddItems then
+            table.insert( Data.gGiven, NewItem )
+        end
+    end
 end
 
 -- Agregar los jugadores a la cola
 function ThisMOD.addPlayer( Event )
-    local Data = GPrefix.CreateData( Event, ThisMOD )
+    local Data = ThisMOD.CreateData( Event )
     ThisMOD.PlayersToInit[ Data.Player.index ] = Data
 end
 
@@ -1108,72 +1596,82 @@ function ThisMOD.Control( )
 
         -- Antes de eliminar un jugador
         [ { "on_event", defines.events.on_pre_player_removed } ] = function( Event )
-            ThisMOD.BeforeDelete( GPrefix.CreateData( Event, ThisMOD ) )
+            ThisMOD.BeforeDelete( ThisMOD.CreateData( Event ) )
         end,
 
         -- Al usar la combinación de teclas
         [ { "on_event", ThisMOD.Prefix_MOD } ] = function( Event )
-            ThisMOD.ToggleWindow( GPrefix.CreateData( Event, ThisMOD ) )
+            ThisMOD.ToggleWindow( ThisMOD.CreateData( Event ) )
         end,
 
         -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
         -- Antes de salir del juego
         [ { "on_event", defines.events.on_pre_player_left_game } ] = function( Event )
-            ThisMOD.BeforeLogout( GPrefix.CreateData( Event, ThisMOD ) )
+            ThisMOD.BeforeLogout( ThisMOD.CreateData( Event ) )
         end,
 
         -- Al cerrar la interfaz cuando se abre otra
         [ { "on_event", defines.events.on_gui_closed } ] = function( Event )
-            ThisMOD.ToggleWindow( GPrefix.CreateData( Event, ThisMOD ) )
+            ThisMOD.ToggleWindow( ThisMOD.CreateData( Event ) )
         end,
 
         -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-        -- Al cambiar el texto a buscar
-        [ { "on_event", defines.events.on_gui_text_changed } ] = function( Event )
-            ThisMOD.setValue( GPrefix.CreateData( Event, ThisMOD ) )
-        end,
-
         -- Se cambia el valor del Slider
         [ { "on_event", defines.events.on_gui_value_changed } ] = function( Event )
-            ThisMOD.setCount( GPrefix.CreateData( Event, ThisMOD ) )
+            ThisMOD.ChangeSlider( ThisMOD.CreateData( Event ) )
+        end,
+
+        -- Al cambiar el texto a buscar
+        [ { "on_event", defines.events.on_gui_text_changed } ] = function( Event )
+
+            -- Cargar la información en una estructura
+            local Data = ThisMOD.CreateData( Event )
+
+            -- Acciones del jugador
+            ThisMOD.ChangeCount( Data )
+            ThisMOD.EnableImportProsses( Data )
         end,
 
         -- Se cambió el objeto selecionado
         [ { "on_event", defines.events.on_gui_elem_changed } ] = function( Event )
 
             -- Cargar la información en una estructura
-            local Data = GPrefix.CreateData( Event, ThisMOD )
+            local Data = ThisMOD.CreateData( Event )
 
             -- Acciones del jugador
-            ThisMOD.NewSelection( Data )
-            ThisMOD.ClearSelection( Data )
+            ThisMOD.NewItem( Data )
+            ThisMOD.ClearItem( Data )
         end,
 
         -- Al hacer click en un elemento
         [ { "on_event", defines.events.on_gui_click } ] = function( Event )
 
             -- Cargar la información en una estructura
-            local Data = GPrefix.CreateData( Event, ThisMOD )
+            local Data = ThisMOD.CreateData( Event )
 
             -- Acciones del jugador
-            -- ThisMOD.PrioritizeResearch( Data )
-            -- ThisMOD.SearchPrerequisite( Data )
-            -- ThisMOD.CancelResearch( Data )
-            -- ThisMOD.AddResearch( Data )
+            ThisMOD.DiscardItemsConfirm( Data )
+            ThisMOD.DiscardItemsCancel( Data )
+            ThisMOD.DiscardItems( Data )
 
-            -- ThisMOD.ToggleWindowStatus( Data )
-            -- ThisMOD.ToggleTechnologies( Data )
-            -- ThisMOD.ToggleTechnology( Data )
+            ThisMOD.ApplyItemsConfirm( Data )
+            ThisMOD.ApplyItemsCancel( Data )
+            ThisMOD.ApplyItems( Data )
+
+            ThisMOD.UpdateItem( Data )
+            ThisMOD.RemoveItem( Data )
+            ThisMOD.AddItem( Data )
+
+            ThisMOD.ImportProsses( Data )
+            ThisMOD.ExportButton( Data )
+            ThisMOD.ImportButton( Data )
+            ThisMOD.CloseWinowIO( Data )
+
             ThisMOD.ToggleWindow( Data )
-            -- ThisMOD.ToggleTextfield( Data )
-            -- ThisMOD.ToggleMOD( Data )
-
-
-            TemporalAction( Data )
+            ThisMOD.ToggleSlot( Data )
         end,
-
     } )
 end
 

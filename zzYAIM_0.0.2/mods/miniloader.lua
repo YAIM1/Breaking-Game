@@ -1154,8 +1154,6 @@ function ThisMOD.LoadItems( Info )
 
     -- Modificar los prototipos
     for _, Item in pairs( Info.Items ) do
-        -- local ItemName = string.gsub( Item.name, "loader", "underground-belt" )
-        -- Item.stack_size = GPrefix.Items[ ItemName ].stack_size
         Item.subgroup = ThisMOD.Prefix_MOD_ .. Item.subgroup
         table.insert( Info.Table, Item )
     end

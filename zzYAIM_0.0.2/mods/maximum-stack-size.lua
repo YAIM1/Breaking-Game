@@ -78,6 +78,9 @@ table.insert( ThisMOD.AvoidPatterns, "%-remote" )
 -- Cargar las infomación
 function ThisMOD.ModifyItem( Item )
 
+    -- Validación básica
+    if not Item.stack_size then return end
+
     -- Evitar este tipo
     if GPrefix.getKey( ThisMOD.AvoidItems, Item.name ) then return end
 

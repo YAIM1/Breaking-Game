@@ -46,11 +46,10 @@ end
 local MODs = { }
 
 -- table.insert( MODs, { Nombre, Prefijo, Dependencia } ) 
-table.insert( MODs, { "pruebas", "p" } )
+-- table.insert( MODs, { "pruebas", "p" } )
 table.insert( MODs, { "compact-items", "CI" } )
 table.insert( MODs, { "maximum-stack-size", "MSS" } )
 table.insert( MODs, { "improve-compaction", "IC", "compact-items" } )
-table.insert( MODs, { "miniloader", "M" } )
 table.insert( MODs, { "queue-to-research", "QtR" } )
 table.insert( MODs, { "start-with-items", "SwI" } )
 table.insert( MODs, { "free-minerals", "FM" } )
@@ -64,6 +63,8 @@ table.insert( MODs, { "minimum-electrical-consumption", "MEC" } )
 table.insert( MODs, { "pollution-free-burner", "PFB" } )
 table.insert( MODs, { "pollution-free-electricity", "PFE" } )
 table.insert( MODs, { "force-production", "FP" } )
+
+-- eNqVkLsOgkAQRf9layYREgvpjKGgsDGxMMZigUEJsIOzS3gY/t0VE0MBMVTTzD33cX0JJUsUvuj7yz48QniAwG1dSGudkQJGGRtiwGedVSUqIxwRU22vvxucGfGpOQcQk9KG69iMCIpoIvO2s7rRFBXyvQP9yLBIoMy9OV93swyokDUpWUAhNTIkmKLSuJYSSWOQuzUBvvFb0jkWaGzrf7qKGhtQcmnHtT6TrwX4r9pnz4rYLMYbbm8SWZ5G
 
 GPrefix.MODs = GPrefix.MODs or { }
 for Index, MOD in pairs( MODs ) do

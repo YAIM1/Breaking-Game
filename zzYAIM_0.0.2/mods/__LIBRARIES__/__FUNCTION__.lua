@@ -390,7 +390,7 @@ function GPrefix.CreateIcons( Table )
     Table.icons = { Icon }
 end
 
--- Call example 1. GPrefix.addTechnology( OldItemName, NewRecipeName )
+-- Call example. GPrefix.addTechnology( OldItemName, NewRecipeName )
 
 function GPrefix.addTechnology( OldItemName, NewRecipeName )
 
@@ -491,6 +491,100 @@ function GPrefix.addTechnology( OldItemName, NewRecipeName )
     end
 end
 
+-- Call example. GPrefix.removeTechnologies( Recipe )
+
+function GPrefix.removeTechnologies( Recipe )
+
+    -- Eliminar la receta
+    local function DeleteRecipe( Table )
+
+        -- Inicializar las variables
+        Table.Deleted = Table.Deleted or { }
+        Table.Results = GPrefix.getResults( Table.Recipe )
+
+        -- Validar los resultados
+        for _, ItemName in pairs( Table.Results ) do
+            for _Key, _Recipe in pairs( GPrefix.Recipes[ ItemName ] or { } ) do
+                if _Recipe.name == Table.Recipe.name then
+                    table.insert( Table.Deleted, 1, {
+                        name = ItemName, Key = _Key
+                    } )
+                end
+            end
+        end
+
+        -- Eliminar las recetas del listado
+        for _, Array in pairs( Table.Deleted or { } ) do
+            table.remove( GPrefix.Recipes[ Array.name ], Array.key )
+            if #GPrefix.Recipes[ Array.name ] < 1 then
+                GPrefix.Recipes[ Array.name ] = nil
+            end
+        end
+
+        -- Cargar los resultados
+        for _, Result in pairs( Table.Results ) do
+            Table.ResultsDeleted = Table.ResultsDeleted or { }
+            table.insert( Table.ResultsDeleted, Result )
+        end
+    end
+
+    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    -- Variable contenedora
+    local Table = { }
+    Table.Recipe = Recipe
+    Table.Technologies = data.raw.technology
+
+    -- Cargar los indices de las recestas
+    Table.Keys = { }
+    for Key, _ in pairs( Table.Technologies ) do
+        table.insert( Table.Keys, Key )
+    end
+
+    -- Revisar las tecnologías
+    while true do
+
+        -- Siguiente tecnología
+        Table.iTechnologies = Table.iTechnologies or 0
+        Table.iTechnologies = Table.iTechnologies + 1
+        if Table.iTechnologies > #Table.Keys then break end
+
+        -- Cargar los detalles
+        Table.Key = Table.Keys[ Table.iTechnologies ]
+        Table.Technology = Table.Technologies[ Table.Key ]
+        Table.Effects = Table.Technology.effects or { }
+        Table.iEffect = 1
+
+        while true do
+
+            -- Validación básica
+            if Table.iEffect > #Table.Effects then break end
+            Table.Effect = Table.Effects[ Table.iEffect ]
+
+            -- Validar la si hay recetas a desbloquar
+            Table.Found = Table.Effect.type == "unlock-recipe"
+            if not Table.Found then Table.iEffect = Table.iEffect + 1 end
+            if not Table.Found then goto JumpEffect end
+
+            -- No es la receta que se busca
+            Table.Found = Table.Effect.recipe == Table.Recipe.name
+            if not Table.Found then Table.iEffect = Table.iEffect + 1 end
+            if not Table.Found then goto JumpEffect end
+
+            -- Eliminar la receta
+            DeleteRecipe( Table )
+            table.remove( Table.Effects, Table.iEffect )
+            data.raw[ Table.Recipe.type ][ Table.Recipe.name ] = nil
+
+            -- Eliminar las indicador vacio
+            if #Table.Effects < 1 then Table.Technologies[ Table.Key ] = nil end
+
+            -- Recepción del salto
+            :: JumpEffect ::
+        end
+    end
+end
+
 -- Call example: GPrefix.CreatelocalisedName( OldItem )
 
 function GPrefix.CreateLocalisedName ( Item )
@@ -561,6 +655,10 @@ function GPrefix.addLetter( Table, ThisMOD )
         ThisMOD.Create = true
     end
 
+    if Table.name == "bio-fuel-2" then
+        GPrefix.Log( Table, ThisMOD )
+    end
+
     -- No existe el apodo
     if not Table.localised_name then
 
@@ -601,6 +699,10 @@ function GPrefix.addLetter( Table, ThisMOD )
 
         if Element and not Element.localised_name then
             Table.localised_name = { "", { Type .. "-name." .. Table.name }, " [", " ]" }
+        end
+
+        if Element and Table.place_result then
+            Table.localised_name[ 2 ] = { Type .. "-name." .. Table.place_result }
         end
 
         -- El elemento es una receta
@@ -849,6 +951,15 @@ function GPrefix.updateResults( ThisMOD )
             end
         end
     end
+end
+
+-- Call example: GPrefix.removeItem( ItemName )
+
+function GPrefix.removeItem( ItemName )
+    local Item = GPrefix.Items[ ItemName ]
+    if not Item then return end
+    data.raw[ Item.type ][ Item.name ] = nil
+    GPrefix.Items[ ItemName ] = nil
 end
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- --

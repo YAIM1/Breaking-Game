@@ -5170,7 +5170,7 @@ function ThisMOD.ValidateQueue( Data )
     if Data.GForce.ValidateQueue then return end
 
     -- Crear la cola si no existe
-    Data.gForce.Queue = Data.gForce.Queue or { }
+    Data.gForce.Queue = Data.gForce.Queue or { "rocket-silo" }
     Data.Queue = Data.gForce.Queue
 
     -- Inicializar
@@ -5267,7 +5267,7 @@ end
 
 function ThisMOD.UpdateWindowStatus( Data )
 
-    -- Validación basica
+    -- Validación básica
     if not Data.GUI.Status then return end
     if not Data.GUI.Status.WindowFrame then return end
 

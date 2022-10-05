@@ -62,6 +62,14 @@ ThisMOD.Settings( )
 
 -- Cargar las infomación
 function ThisMOD.LoadCompact( )
+    ThisMOD.newRecipeCategory( )
+    ThisMOD.setRecipeCategory( )
+    ThisMOD.removeRecipes( )
+    ThisMOD.removeItems( )
+end
+
+-- Crear las categorias para las recetas
+function ThisMOD.newRecipeCategory( )
 
     -- Crear el sub grupo
     data:extend( { {
@@ -74,7 +82,7 @@ function ThisMOD.LoadCompact( )
     -- Existen las categorias
     local RecipeCategory = data.raw[ 'recipe-category' ]
     RecipeCategory = RecipeCategory[ ThisMOD.Prefix_MOD_ .. 'compact' ]
-    if RecipeCategory then goto JumpRecipeCategory end
+    if RecipeCategory then return end
 
     -- Crear la categoria
     data:extend( { {
@@ -86,1008 +94,66 @@ function ThisMOD.LoadCompact( )
         [ 'type' ] = 'recipe-category',
         [ 'name' ] = ThisMOD.Prefix_MOD_ .. 'uncompact',
     } } )
-
-    -- Recepción del salto
-    :: JumpRecipeCategory ::
-
-    -- Inicializar el contenedor
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    ThisMOD.LoadEntities( Info )
-    ThisMOD.LoadRecipes( Info )
-    ThisMOD.LoadItems( Info )
 end
 
+-- Establecer las nuevas recetas
+function ThisMOD.setRecipeCategory( )
 
--- Crear los prototipos de los compactadores
-function ThisMOD.LoadEntities( Info )
+    -- indicador de las entidades
+    local Beltbox = "transport%-belt%-beltbox"
 
-    -- Crear los prototipos
-    Info.Entities = {
-        [ 'compact' ] = {
-            [ 'type' ] = 'furnace',
-            [ 'name' ] = 'compact',
-            [ 'icons' ] = {
-                [ 1 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-base.png',
-                },
-                [ 2 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-mask.png',
-                    [ 'tint' ] = {
-                        [ 'r' ] = 210,
-                        [ 'g' ] = 180,
-                        [ 'b' ] = 80,
-                    },
-                },
-            },
-            [ 'icon_size' ] = 64,
-            [ 'icon_mipmaps' ] = 4,
-            [ 'flags' ] = {
-                [ 1 ] = 'placeable-neutral',
-                [ 2 ] = 'placeable-player',
-                [ 3 ] = 'player-creation',
-            },
-            [ 'animation' ] = {
-                [ 'layers' ] = {
-                    [ 1 ] = {
-                        [ 'hr_version' ] = {
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-base.png',
-                            [ 'animation_speed' ] = 1,
-                            [ 'priority' ] = 'high',
-                            [ 'frame_count' ] = 60,
-                            [ 'line_length' ] = 10,
-                            [ 'height' ] = 96,
-                            [ 'scale' ] = 0.5,
-                            [ 'shift' ] = {
-                                [ 1 ] = 0,
-                                [ 2 ] = 0,
-                            },
-                            [ 'width' ] = 96,
-                        },
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-base.png',
-                        [ 'animation_speed' ] = 1,
-                        [ 'priority' ] = 'high',
-                        [ 'frame_count' ] = 60,
-                        [ 'line_length' ] = 10,
-                        [ 'height' ] = 48,
-                        [ 'scale' ] = 1,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0,
-                            [ 2 ] = 0,
-                        },
-                        [ 'width' ] = 48,
-                    },
-                    [ 2 ] = {
-                        [ 'hr_version' ] = {
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-mask.png',
-                            [ 'animation_speed' ] = 1,
-                            [ 'priority' ] = 'high',
-                            [ 'repeat_count' ] = 60,
-                            [ 'height' ] = 96,
-                            [ 'scale' ] = 0.5,
-                            [ 'shift' ] = {
-                                [ 1 ] = 0,
-                                [ 2 ] = 0,
-                            },
-                            [ 'width' ] = 96,
-                            [ 'tint' ] = {
-                                [ 'r' ] = 210,
-                                [ 'g' ] = 180,
-                                [ 'b' ] = 80,
-                            },
-                        },
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-mask.png',
-                        [ 'animation_speed' ] = 1,
-                        [ 'priority' ] = 'high',
-                        [ 'repeat_count' ] = 60,
-                        [ 'height' ] = 48,
-                        [ 'scale' ] = 1,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0,
-                            [ 2 ] = 0,
-                        },
-                        [ 'width' ] = 48,
-                        [ 'tint' ] = {
-                            [ 'r' ] = 210,
-                            [ 'g' ] = 180,
-                            [ 'b' ] = 80,
-                        },
-                    },
-                    [ 3 ] = {
-                        [ 'hr_version' ] = {
-                            [ 'draw_as_shadow' ] = true,
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-shadow.png',
-                            [ 'animation_speed' ] = 1,
-                            [ 'frame_count' ] = 60,
-                            [ 'line_length' ] = 10,
-                            [ 'height' ] = 96,
-                            [ 'scale' ] = 0.5,
-                            [ 'shift' ] = {
-                                [ 1 ] = 0.5,
-                                [ 2 ] = 0,
-                            },
-                            [ 'width' ] = 144,
-                        },
-                        [ 'draw_as_shadow' ] = true,
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-shadow.png',
-                        [ 'animation_speed' ] = 1,
-                        [ 'frame_count' ] = 60,
-                        [ 'line_length' ] = 10,
-                        [ 'height' ] = 48,
-                        [ 'scale' ] = 1,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0.5,
-                            [ 2 ] = 0,
-                        },
-                        [ 'width' ] = 72,
-                    },
-                },
-            },
-            [ 'working_visualisations' ] = {
-                [ 1 ] = {
-                    [ 'animation' ] = {
-                        [ 'hr_version' ] = {
-                            [ 'animation_speed' ] = 1,
-                            [ 'blend_mode' ] = 'additive',
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-working.png',
-                            [ 'frame_count' ] = 30,
-                            [ 'line_length' ] = 10,
-                            [ 'height' ] = 96,
-                            [ 'priority' ] = 'high',
-                            [ 'scale' ] = 0.5,
-                            [ 'tint' ] = {
-                                [ 'r' ] = 225,
-                                [ 'g' ] = 210,
-                                [ 'b' ] = 160,
-                            },
-                            [ 'width' ] = 96,
-                        },
-                        [ 'animation_speed' ] = 1,
-                        [ 'blend_mode' ] = 'additive',
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-working.png',
-                        [ 'frame_count' ] = 30,
-                        [ 'line_length' ] = 10,
-                        [ 'height' ] = 48,
-                        [ 'priority' ] = 'high',
-                        [ 'tint' ] = {
-                            [ 'r' ] = 210,
-                            [ 'g' ] = 180,
-                            [ 'b' ] = 80,
-                        },
-                        [ 'width' ] = 48,
-                    },
-                    [ 'light' ] = {
-                        [ 'color' ] = {
-                            [ 'r' ] = 225,
-                            [ 'g' ] = 210,
-                            [ 'b' ] = 160,
-                        },
-                        [ 'intensity' ] = 0.4,
-                        [ 'size' ] = 3,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0,
-                            [ 2 ] = 0.25,
-                        },
-                    },
-                },
-            },
-            [ 'dying_explosion' ] = 'explosion',
-            [ 'corpse' ] = 'small-remnants',
-            [ 'module_specification' ] = {
-                [ 'module_slots' ] = 0,
-                [ 'module_info_icon_shift' ] = {
-                    [ 1 ] = 0,
-                    [ 2 ] = 0.25,
-                },
-            },
-            [ 'allowed_effects' ] = {
-                [ 1 ] = 'consumption',
-            },
-            [ 'max_health' ] = 180,
-            [ 'collision_box' ] = {
-                [ 1 ] = {
-                    [ 1 ] = -0.2,
-                    [ 2 ] = -0.2,
-                },
-                [ 2 ] = {
-                    [ 1 ] = 0.2,
-                    [ 2 ] = 0.2,
-                },
-            },
-            [ 'selection_box' ] = {
-                [ 1 ] = {
-                    [ 1 ] = -0.5,
-                    [ 2 ] = -0.5,
-                },
-                [ 2 ] = {
-                    [ 1 ] = 0.5,
-                    [ 2 ] = 0.5,
-                },
-            },
-            [ 'drawing_box' ] = {
-                [ 1 ] = {
-                    [ 1 ] = -0.5,
-                    [ 2 ] = -0.5,
-                },
-                [ 2 ] = {
-                    [ 1 ] = 0.5,
-                    [ 2 ] = 0.5,
-                },
-            },
-            [ 'result_inventory_size' ] = 1,
-            [ 'source_inventory_size' ] = 1,
-            [ 'crafting_speed' ] = 1,
-            [ 'energy_source' ] = {
-                [ 'type' ] = 'electric',
-                [ 'emissions_per_minute' ] = 3,
-                [ 'usage_priority' ] = 'secondary-input',
-                [ 'drain' ] = '15kW',
-            },
-            [ 'energy_usage' ] = '90kW',
-            [ 'resistances' ] = {
-                [ 1 ] = {
-                    [ 'type' ] = 'fire',
-                    [ 'percent' ] = 50,
-                },
-            },
-            [ 'vehicle_impact_sound' ] = {
-                [ 'filename' ] = '__base__/sound/car-metal-impact.ogg',
-                [ 'volume' ] = 1,
-            },
-            [ 'working_sound' ] = {
-                [ 'match_speed_to_activity' ] = true,
-                [ 'idle_sound' ] = {
-                    [ 'filename' ] = '__base__/sound/idle1.ogg',
-                    [ 'volume' ] = 0.6,
-                },
-                [ 'sound' ] = {
-                    [ 'filename' ] = ThisMOD.Patch .. 'sounds/fan.ogg',
-                    [ 'volume' ] = 1,
-                },
-                [ 'max_sounds_per_type' ] = 3,
-            },
-            [ 'show_recipe_icon' ] = true,
-            [ 'fast_replaceable_group' ] = 'transport-belt',
-            [ 'next_upgrade' ] = 'fast-compact',
-        },
-        [ 'fast-compact' ] = {
-            [ 'type' ] = 'furnace',
-            [ 'name' ] = 'fast-compact',
-            [ 'icons' ] = {
-                [ 1 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-base.png',
-                },
-                [ 2 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-mask.png',
-                    [ 'tint' ] = {
-                        [ 'r' ] = 210,
-                        [ 'g' ] = 60,
-                        [ 'b' ] = 60,
-                    },
-                },
-            },
-            [ 'icon_size' ] = 64,
-            [ 'icon_mipmaps' ] = 4,
-            [ 'flags' ] = {
-                [ 1 ] = 'placeable-neutral',
-                [ 2 ] = 'placeable-player',
-                [ 3 ] = 'player-creation',
-            },
-            [ 'animation' ] = {
-                [ 'layers' ] = {
-                    [ 1 ] = {
-                        [ 'hr_version' ] = {
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-base.png',
-                            [ 'animation_speed' ] = 0.5,
-                            [ 'priority' ] = 'high',
-                            [ 'frame_count' ] = 60,
-                            [ 'line_length' ] = 10,
-                            [ 'height' ] = 96,
-                            [ 'scale' ] = 0.5,
-                            [ 'shift' ] = {
-                                [ 1 ] = 0,
-                                [ 2 ] = 0,
-                            },
-                            [ 'width' ] = 96,
-                        },
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-base.png',
-                        [ 'animation_speed' ] = 0.5,
-                        [ 'priority' ] = 'high',
-                        [ 'frame_count' ] = 60,
-                        [ 'line_length' ] = 10,
-                        [ 'height' ] = 48,
-                        [ 'scale' ] = 1,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0,
-                            [ 2 ] = 0,
-                        },
-                        [ 'width' ] = 48,
-                    },
-                    [ 2 ] = {
-                        [ 'hr_version' ] = {
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-mask.png',
-                            [ 'animation_speed' ] = 0.5,
-                            [ 'priority' ] = 'high',
-                            [ 'repeat_count' ] = 60,
-                            [ 'height' ] = 96,
-                            [ 'scale' ] = 0.5,
-                            [ 'shift' ] = {
-                                [ 1 ] = 0,
-                                [ 2 ] = 0,
-                            },
-                            [ 'width' ] = 96,
-                            [ 'tint' ] = {
-                                [ 'r' ] = 210,
-                                [ 'g' ] = 60,
-                                [ 'b' ] = 60,
-                            },
-                        },
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-mask.png',
-                        [ 'animation_speed' ] = 0.5,
-                        [ 'priority' ] = 'high',
-                        [ 'repeat_count' ] = 60,
-                        [ 'height' ] = 48,
-                        [ 'scale' ] = 1,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0,
-                            [ 2 ] = 0,
-                        },
-                        [ 'width' ] = 48,
-                        [ 'tint' ] = {
-                            [ 'r' ] = 210,
-                            [ 'g' ] = 60,
-                            [ 'b' ] = 60,
-                        },
-                    },
-                    [ 3 ] = {
-                        [ 'hr_version' ] = {
-                            [ 'draw_as_shadow' ] = true,
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-shadow.png',
-                            [ 'animation_speed' ] = 0.5,
-                            [ 'frame_count' ] = 60,
-                            [ 'line_length' ] = 10,
-                            [ 'height' ] = 96,
-                            [ 'scale' ] = 0.5,
-                            [ 'shift' ] = {
-                                [ 1 ] = 0.5,
-                                [ 2 ] = 0,
-                            },
-                            [ 'width' ] = 144,
-                        },
-                        [ 'draw_as_shadow' ] = true,
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-shadow.png',
-                        [ 'animation_speed' ] = 0.5,
-                        [ 'frame_count' ] = 60,
-                        [ 'line_length' ] = 10,
-                        [ 'height' ] = 48,
-                        [ 'scale' ] = 1,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0.5,
-                            [ 2 ] = 0,
-                        },
-                        [ 'width' ] = 72,
-                    },
-                },
-            },
-            [ 'working_visualisations' ] = {
-                [ 1 ] = {
-                    [ 'animation' ] = {
-                        [ 'hr_version' ] = {
-                            [ 'animation_speed' ] = 0.5,
-                            [ 'blend_mode' ] = 'additive',
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-working.png',
-                            [ 'frame_count' ] = 30,
-                            [ 'line_length' ] = 10,
-                            [ 'height' ] = 96,
-                            [ 'priority' ] = 'high',
-                            [ 'scale' ] = 0.5,
-                            [ 'tint' ] = {
-                                [ 'r' ] = 225,
-                                [ 'g' ] = 150,
-                                [ 'b' ] = 150,
-                            },
-                            [ 'width' ] = 96,
-                        },
-                        [ 'animation_speed' ] = 0.5,
-                        [ 'blend_mode' ] = 'additive',
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-working.png',
-                        [ 'frame_count' ] = 30,
-                        [ 'line_length' ] = 10,
-                        [ 'height' ] = 48,
-                        [ 'priority' ] = 'high',
-                        [ 'tint' ] = {
-                            [ 'r' ] = 210,
-                            [ 'g' ] = 60,
-                            [ 'b' ] = 60,
-                        },
-                        [ 'width' ] = 48,
-                    },
-                    [ 'light' ] = {
-                        [ 'color' ] = {
-                            [ 'r' ] = 225,
-                            [ 'g' ] = 150,
-                            [ 'b' ] = 150,
-                        },
-                        [ 'intensity' ] = 0.4,
-                        [ 'size' ] = 3,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0,
-                            [ 2 ] = 0.25,
-                        },
-                    },
-                },
-            },
-            [ 'dying_explosion' ] = 'explosion',
-            [ 'corpse' ] = 'small-remnants',
-            [ 'module_specification' ] = {
-                [ 'module_slots' ] = 0,
-                [ 'module_info_icon_shift' ] = {
-                    [ 1 ] = 0,
-                    [ 2 ] = 0.25,
-                },
-            },
-            [ 'allowed_effects' ] = {
-                [ 1 ] = 'consumption',
-            },
-            [ 'max_health' ] = 180,
-            [ 'collision_box' ] = {
-                [ 1 ] = {
-                    [ 1 ] = -0.2,
-                    [ 2 ] = -0.2,
-                },
-                [ 2 ] = {
-                    [ 1 ] = 0.2,
-                    [ 2 ] = 0.2,
-                },
-            },
-            [ 'selection_box' ] = {
-                [ 1 ] = {
-                    [ 1 ] = -0.5,
-                    [ 2 ] = -0.5,
-                },
-                [ 2 ] = {
-                    [ 1 ] = 0.5,
-                    [ 2 ] = 0.5,
-                },
-            },
-            [ 'drawing_box' ] = {
-                [ 1 ] = {
-                    [ 1 ] = -0.5,
-                    [ 2 ] = -0.5,
-                },
-                [ 2 ] = {
-                    [ 1 ] = 0.5,
-                    [ 2 ] = 0.5,
-                },
-            },
-            [ 'result_inventory_size' ] = 1,
-            [ 'source_inventory_size' ] = 1,
-            [ 'crafting_speed' ] = 2,
-            [ 'energy_source' ] = {
-                [ 'type' ] = 'electric',
-                [ 'emissions_per_minute' ] = 1.5,
-                [ 'usage_priority' ] = 'secondary-input',
-                [ 'drain' ] = '15kW',
-            },
-            [ 'energy_usage' ] = '180kW',
-            [ 'resistances' ] = {
-                [ 1 ] = {
-                    [ 'type' ] = 'fire',
-                    [ 'percent' ] = 50,
-                },
-            },
-            [ 'vehicle_impact_sound' ] = {
-                [ 'filename' ] = '__base__/sound/car-metal-impact.ogg',
-                [ 'volume' ] = 1,
-            },
-            [ 'working_sound' ] = {
-                [ 'match_speed_to_activity' ] = true,
-                [ 'idle_sound' ] = {
-                    [ 'filename' ] = '__base__/sound/idle1.ogg',
-                    [ 'volume' ] = 0.6,
-                },
-                [ 'sound' ] = {
-                    [ 'filename' ] = ThisMOD.Patch .. 'sounds/fan.ogg',
-                    [ 'volume' ] = 1,
-                },
-                [ 'max_sounds_per_type' ] = 3,
-            },
-            [ 'show_recipe_icon' ] = true,
-            [ 'fast_replaceable_group' ] = 'transport-belt',
-            [ 'next_upgrade' ] = 'express-compact',
-        },
-        [ 'express-compact' ] = {
-            [ 'type' ] = 'furnace',
-            [ 'name' ] = 'express-compact',
-            [ 'icons' ] = {
-                [ 1 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-base.png',
-                },
-                [ 2 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-mask.png',
-                    [ 'tint' ] = {
-                        [ 'r' ] = 80,
-                        [ 'g' ] = 180,
-                        [ 'b' ] = 210,
-                    },
-                },
-            },
-            [ 'icon_size' ] = 64,
-            [ 'icon_mipmaps' ] = 4,
-            [ 'flags' ] = {
-                [ 1 ] = 'placeable-neutral',
-                [ 2 ] = 'placeable-player',
-                [ 3 ] = 'player-creation',
-            },
-            [ 'animation' ] = {
-                [ 'layers' ] = {
-                    [ 1 ] = {
-                        [ 'hr_version' ] = {
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-base.png',
-                            [ 'animation_speed' ] = 0.33333333333333,
-                            [ 'priority' ] = 'high',
-                            [ 'frame_count' ] = 60,
-                            [ 'line_length' ] = 10,
-                            [ 'height' ] = 96,
-                            [ 'scale' ] = 0.5,
-                            [ 'shift' ] = {
-                                [ 1 ] = 0,
-                                [ 2 ] = 0,
-                            },
-                            [ 'width' ] = 96,
-                        },
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-base.png',
-                        [ 'animation_speed' ] = 0.33333333333333,
-                        [ 'priority' ] = 'high',
-                        [ 'frame_count' ] = 60,
-                        [ 'line_length' ] = 10,
-                        [ 'height' ] = 48,
-                        [ 'scale' ] = 1,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0,
-                            [ 2 ] = 0,
-                        },
-                        [ 'width' ] = 48,
-                    },
-                    [ 2 ] = {
-                        [ 'hr_version' ] = {
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-mask.png',
-                            [ 'animation_speed' ] = 0.33333333333333,
-                            [ 'priority' ] = 'high',
-                            [ 'repeat_count' ] = 60,
-                            [ 'height' ] = 96,
-                            [ 'scale' ] = 0.5,
-                            [ 'shift' ] = {
-                                [ 1 ] = 0,
-                                [ 2 ] = 0,
-                            },
-                            [ 'width' ] = 96,
-                            [ 'tint' ] = {
-                                [ 'r' ] = 80,
-                                [ 'g' ] = 180,
-                                [ 'b' ] = 210,
-                            },
-                        },
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-mask.png',
-                        [ 'animation_speed' ] = 0.33333333333333,
-                        [ 'priority' ] = 'high',
-                        [ 'repeat_count' ] = 60,
-                        [ 'height' ] = 48,
-                        [ 'scale' ] = 1,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0,
-                            [ 2 ] = 0,
-                        },
-                        [ 'width' ] = 48,
-                        [ 'tint' ] = {
-                            [ 'r' ] = 80,
-                            [ 'g' ] = 180,
-                            [ 'b' ] = 210,
-                        },
-                    },
-                    [ 3 ] = {
-                        [ 'hr_version' ] = {
-                            [ 'draw_as_shadow' ] = true,
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-shadow.png',
-                            [ 'animation_speed' ] = 0.33333333333333,
-                            [ 'frame_count' ] = 60,
-                            [ 'line_length' ] = 10,
-                            [ 'height' ] = 96,
-                            [ 'scale' ] = 0.5,
-                            [ 'shift' ] = {
-                                [ 1 ] = 0.5,
-                                [ 2 ] = 0,
-                            },
-                            [ 'width' ] = 144,
-                        },
-                        [ 'draw_as_shadow' ] = true,
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-shadow.png',
-                        [ 'animation_speed' ] = 0.33333333333333,
-                        [ 'frame_count' ] = 60,
-                        [ 'line_length' ] = 10,
-                        [ 'height' ] = 48,
-                        [ 'scale' ] = 1,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0.5,
-                            [ 2 ] = 0,
-                        },
-                        [ 'width' ] = 72,
-                    },
-                },
-            },
-            [ 'working_visualisations' ] = {
-                [ 1 ] = {
-                    [ 'animation' ] = {
-                        [ 'hr_version' ] = {
-                            [ 'animation_speed' ] = 0.33333333333333,
-                            [ 'blend_mode' ] = 'additive',
-                            [ 'filename' ] = ThisMOD.Patch .. 'entity/high/beltbox-working.png',
-                            [ 'frame_count' ] = 30,
-                            [ 'line_length' ] = 10,
-                            [ 'height' ] = 96,
-                            [ 'priority' ] = 'high',
-                            [ 'scale' ] = 0.5,
-                            [ 'tint' ] = {
-                                [ 'r' ] = 160,
-                                [ 'g' ] = 210,
-                                [ 'b' ] = 225,
-                            },
-                            [ 'width' ] = 96,
-                        },
-                        [ 'animation_speed' ] = 0.33333333333333,
-                        [ 'blend_mode' ] = 'additive',
-                        [ 'filename' ] = ThisMOD.Patch .. 'entity/low/beltbox-working.png',
-                        [ 'frame_count' ] = 30,
-                        [ 'line_length' ] = 10,
-                        [ 'height' ] = 48,
-                        [ 'priority' ] = 'high',
-                        [ 'tint' ] = {
-                            [ 'r' ] = 80,
-                            [ 'g' ] = 180,
-                            [ 'b' ] = 210,
-                        },
-                        [ 'width' ] = 48,
-                    },
-                    [ 'light' ] = {
-                        [ 'color' ] = {
-                            [ 'r' ] = 160,
-                            [ 'g' ] = 210,
-                            [ 'b' ] = 225,
-                        },
-                        [ 'intensity' ] = 0.4,
-                        [ 'size' ] = 3,
-                        [ 'shift' ] = {
-                            [ 1 ] = 0,
-                            [ 2 ] = 0.25,
-                        },
-                    },
-                },
-            },
-            [ 'dying_explosion' ] = 'explosion',
-            [ 'corpse' ] = 'small-remnants',
-            [ 'module_specification' ] = {
-                [ 'module_slots' ] = 0,
-                [ 'module_info_icon_shift' ] = {
-                    [ 1 ] = 0,
-                    [ 2 ] = 0.25,
-                },
-            },
-            [ 'allowed_effects' ] = {
-                [ 1 ] = 'consumption',
-            },
-            [ 'max_health' ] = 180,
-            [ 'collision_box' ] = {
-                [ 1 ] = {
-                    [ 1 ] = -0.2,
-                    [ 2 ] = -0.2,
-                },
-                [ 2 ] = {
-                    [ 1 ] = 0.2,
-                    [ 2 ] = 0.2,
-                },
-            },
-            [ 'selection_box' ] = {
-                [ 1 ] = {
-                    [ 1 ] = -0.5,
-                    [ 2 ] = -0.5,
-                },
-                [ 2 ] = {
-                    [ 1 ] = 0.5,
-                    [ 2 ] = 0.5,
-                },
-            },
-            [ 'drawing_box' ] = {
-                [ 1 ] = {
-                    [ 1 ] = -0.5,
-                    [ 2 ] = -0.5,
-                },
-                [ 2 ] = {
-                    [ 1 ] = 0.5,
-                    [ 2 ] = 0.5,
-                },
-            },
-            [ 'result_inventory_size' ] = 1,
-            [ 'source_inventory_size' ] = 1,
-            [ 'crafting_speed' ] = 3,
-            [ 'energy_source' ] = {
-                [ 'type' ] = 'electric',
-                [ 'emissions_per_minute' ] = 1,
-                [ 'usage_priority' ] = 'secondary-input',
-                [ 'drain' ] = '15kW',
-            },
-            [ 'energy_usage' ] = '270kW',
-            [ 'resistances' ] = {
-                [ 1 ] = {
-                    [ 'type' ] = 'fire',
-                    [ 'percent' ] = 50,
-                },
-            },
-            [ 'vehicle_impact_sound' ] = {
-                [ 'filename' ] = '__base__/sound/car-metal-impact.ogg',
-                [ 'volume' ] = 1,
-            },
-            [ 'working_sound' ] = {
-                [ 'match_speed_to_activity' ] = true,
-                [ 'idle_sound' ] = {
-                    [ 'filename' ] = '__base__/sound/idle1.ogg',
-                    [ 'volume' ] = 0.6,
-                },
-                [ 'sound' ] = {
-                    [ 'filename' ] = ThisMOD.Patch .. 'sounds/fan.ogg',
-                    [ 'volume' ] = 1,
-                },
-                [ 'max_sounds_per_type' ] = 3,
-            },
-            [ 'show_recipe_icon' ] = true,
-            [ 'fast_replaceable_group' ] = 'transport-belt',
-        },
-    }
+    -- Buscar las entidades
+    for _, Entity in pairs( GPrefix.Entities ) do
+        if string.find( Entity.name, Beltbox )  then
 
-    -- Modificar los prototipos
-    for _, Entity in pairs( Info.Entities ) do
-
-        Entity.minable = {
-            [ 'mining_time' ] = 0.1,
-            [ 'result' ] = Entity.name,
-        }
-
-        Entity.crafting_categories = {
-            [ 1 ] = ThisMOD.Prefix_MOD_ .. "compact",
-            [ 2 ] = ThisMOD.Prefix_MOD_ .. "uncompact",
-        }
-
-        if Entity.next_upgrade then
-            Entity.next_upgrade = ThisMOD.Prefix_MOD_ .. Entity.next_upgrade
+            -- Establecer las recestas
+            Entity.crafting_categories = {
+                ThisMOD.Prefix_MOD_ .. 'compact',
+                ThisMOD.Prefix_MOD_ .. 'uncompact',
+            }
         end
-
-        Entity.localised_name = { ThisMOD.Local .. Entity.name }
-        Entity.localised_description = {
-            ThisMOD.Local .. "entity-description"
-        }
     end
 end
 
--- Crear los objetos de los compactadores
-function ThisMOD.LoadItems( Info )
+-- Buscar las recetas
+function ThisMOD.removeRecipes( )
 
-    -- Crear los prototipos
-    Info.Items = {
-        [ 'compact' ] = {
-            [ 'type' ] = 'item',
-            [ 'name' ] = 'compact',
-            [ 'icons' ] = {
-                [ 1 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-base.png',
-                },
-                [ 2 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-mask.png',
-                    [ 'tint' ] = {
-                        [ 'r' ] = 210,
-                        [ 'g' ] = 180,
-                        [ 'b' ] = 80,
-                    },
-                },
-            },
-            [ 'icon_size' ] = 64,
-            [ 'icon_mipmaps' ] = 4,
-            [ 'stack_size' ] = 50,
-            [ 'place_result' ] = 'compact',
-            [ 'group' ] = 'logistics',
-            [ 'subgroup' ] = 'compacts',
-            [ 'order' ] = 'ba',
-        },
-        [ 'fast-compact' ] = {
-            [ 'type' ] = 'item',
-            [ 'name' ] = 'fast-compact',
-            [ 'icons' ] = {
-                [ 1 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-base.png',
-                },
-                [ 2 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-mask.png',
-                    [ 'tint' ] = {
-                        [ 'r' ] = 210,
-                        [ 'g' ] = 60,
-                        [ 'b' ] = 60,
-                    },
-                },
-            },
-            [ 'icon_size' ] = 64,
-            [ 'icon_mipmaps' ] = 4,
-            [ 'stack_size' ] = 50,
-            [ 'place_result' ] = 'fast-compact',
-            [ 'group' ] = 'logistics',
-            [ 'subgroup' ] = 'compacts',
-            [ 'order' ] = 'bb',
-        },
-        [ 'express-compact' ] = {
-            [ 'type' ] = 'item',
-            [ 'name' ] = 'express-compact',
-            [ 'icons' ] = {
-                [ 1 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-base.png',
-                },
-                [ 2 ] = {
-                    [ 'icon' ] = ThisMOD.Patch .. 'icons/beltbox-icon-mask.png',
-                    [ 'tint' ] = {
-                        [ 'r' ] = 80,
-                        [ 'g' ] = 180,
-                        [ 'b' ] = 210,
-                    },
-                },
-            },
-            [ 'icon_size' ] = 64,
-            [ 'icon_mipmaps' ] = 4,
-            [ 'stack_size' ] = 50,
-            [ 'place_result' ] = 'express-compact',
-            [ 'group' ] = 'logistics',
-            [ 'subgroup' ] = 'compacts',
-            [ 'order' ] = 'bc',
-        },
-    }
+    -- Valores de referencia
+    local Categories = { "stacking", "unstacking" }
 
-    -- Modificar los prototipos
-    for _, Item in pairs( Info.Items ) do
+    -- Eliminar la categorias
+    local RecipeCategory = data.raw[ 'recipe-category' ]
+    for Key, _ in pairs( Categories ) do
+        RecipeCategory[ Key ] = nil
+    end
 
-        Item.subgroup = ThisMOD.Prefix_MOD_ .. Item.subgroup
-
-        Item.localised_name = { ThisMOD.Local .. Item.name }
-        Item.localised_description = {
-            ThisMOD.Local .. "entity-description"
-        }
+    -- Buscar las recetas a eliminar
+    for _, Recipe in pairs( data.raw.recipe ) do
+        if GPrefix.getKey( Categories, Recipe.category ) then
+            GPrefix.removeTechnologies( Recipe )
+        end
     end
 end
 
--- Crear las receras de los compactadores
-function ThisMOD.LoadRecipes( Info )
+function ThisMOD.removeItems( )
 
-    -- Crear los prototipos
-    Info.Recipes = {
-        [ 'underground-belt' ] = {
-            [ 1 ] = {
-                [ 'type' ] = 'recipe',
-                [ 'name' ] = 'compact',
-                [ 'group' ] = 'logistics',
-                [ 'subgroup' ] = 'compacts',
-                [ 'order' ] = 'ba',
-                [ 'enabled' ] = false,
-                [ 'ingredients' ] = {
-                    [ 1 ] = {
-                        [ 1 ] = 'transport-belt',
-                        [ 2 ] = 4,
-                    },
-                    [ 2 ] = {
-                        [ 1 ] = 'iron-plate',
-                        [ 2 ] = 10,
-                    },
-                    [ 3 ] = {
-                        [ 1 ] = 'iron-gear-wheel',
-                        [ 2 ] = 10,
-                    },
-                    [ 4 ] = {
-                        [ 1 ] = 'electronic-circuit',
-                        [ 2 ] = 4,
-                    },
-                },
-                [ 'result' ] = 'compact',
-                [ 'energy_required' ] = 3,
-            },
-        },
-        [ 'fast-underground-belt' ] = {
-            [ 1 ] = {
-                [ 'type' ] = 'recipe',
-                [ 'name' ] = 'fast-compact',
-                [ 'group' ] = 'logistics',
-                [ 'subgroup' ] = 'compacts',
-                [ 'order' ] = 'bb',
-                [ 'enabled' ] = false,
-                [ 'ingredients' ] = {
-                    [ 1 ] = {
-                        [ 1 ] = 'compact',
-                        [ 2 ] = 1,
-                    },
-                    [ 2 ] = {
-                        [ 1 ] = 'iron-plate',
-                        [ 2 ] = 20,
-                    },
-                    [ 3 ] = {
-                        [ 1 ] = 'iron-gear-wheel',
-                        [ 2 ] = 20,
-                    },
-                    [ 4 ] = {
-                        [ 1 ] = 'advanced-circuit',
-                        [ 2 ] = 2,
-                    },
-                },
-                [ 'result' ] = 'fast-compact',
-                [ 'energy_required' ] = 3,
-            },
-        },
-        [ 'express-underground-belt' ] = {
-            [ 1 ] = {
-                [ 'type' ] = 'recipe',
-                [ 'name' ] = 'express-compact',
-                [ 'category' ] = 'crafting-with-fluid',
-                [ 'group' ] = 'logistics',
-                [ 'subgroup' ] = 'compacts',
-                [ 'order' ] = 'bc',
-                [ 'enabled' ] = false,
-                [ 'ingredients' ] = {
-                    [ 1 ] = {
-                        [ 1 ] = 'fast-compact',
-                        [ 2 ] = 1,
-                    },
-                    [ 2 ] = {
-                        [ 1 ] = 'iron-plate',
-                        [ 2 ] = 30,
-                    },
-                    [ 3 ] = {
-                        [ 1 ] = 'iron-gear-wheel',
-                        [ 2 ] = 30,
-                    },
-                    [ 4 ] = {
-                        [ 'name' ] = 'lubricant',
-                        [ 'type' ] = 'fluid',
-                        [ 'amount' ] = 100,
-                    },
-                },
-                [ 'result' ] = 'express-compact',
-                [ 'energy_required' ] = 3,
-            },
-        },
-    }
+    -- Contenedor de los valores
+    local Table = { }
 
-    -- Renombrar la variable
-    local Prefix = ThisMOD.Prefix_MOD_
+    -- Identificador los objetos
+    Table.Find = "deadlock%-stack%-"
 
-    -- Modificar los prototipos
-    for _, Array in pairs( Info.Recipes ) do
-        for _, Recipe in pairs( Array ) do
-
-            -- Establecer el resultado
-            Recipe.result = Prefix .. Recipe.result
-
-            -- Establecer el sub grupo
-            Recipe.subgroup = Prefix .. Recipe.subgroup
-
-            -- Recorrer los ingredientes
-            for _, Ingredient in pairs( Recipe.ingredients ) do
-
-                -- Cargar el nomrbe del ingrediente
-                local Item = Ingredient[ 1 ] or ""
-
-                -- Identificar el compactador
-                if string.find( Item, "compact" ) then
-                    Ingredient[ 1 ] = ThisMOD.MOD_ .. Ingredient[ 1 ]
-                end
-
-                -- Renombrar el ingrediente si es un objeto
-                if Item ~= "" then
-                    Ingredient[ 1 ] = Prefix .. Ingredient[ 1 ]
-                end
-            end
+    -- Cargar los indices de los objetos
+    Table.Keys = { }
+    for Key, _ in pairs( GPrefix.Items ) do
+        if string.find( Key, Table.Find ) then
+            table.insert( Table.Keys, Key )
         end
+    end
+
+    -- Eliminar los objetos
+    for _, ItemName in pairs( Table.Keys or { } ) do
+        GPrefix.removeItem( ItemName )
     end
 end
 
@@ -1302,9 +368,14 @@ function ThisMOD.CreateRecipe( OldItem )
         NewRecipe.ingredients  = Recipe.ingredients
         NewRecipe.main_product = ""
 
+
+        NewRecipe.allow_decomposition = true
+        NewRecipe.always_show_made_in = false
+        NewRecipe.always_show_products = false
+
+
         NewRecipe.energy_required = 10
-        NewRecipe.allow_decomposition = false
-        NewRecipe.hide_from_player_crafting = not not Recipe.action
+        NewRecipe.hide_from_player_crafting = not Recipe.action
         NewRecipe.localised_name = GPrefix.DeepCopy( Item.localised_name )
         table.insert( NewRecipe.localised_name, 2, { ThisMOD.Local .. Category .. "-process" } )
         table.insert( NewRecipe.localised_name, 3, " " )
@@ -1376,11 +447,11 @@ function ThisMOD.setCraftingCategories( )
 
     local CharacterCategories = data.raw[ 'character' ][ 'character' ]
     CharacterCategories = CharacterCategories[ 'crafting_categories' ]
-    table.insert( CharacterCategories, ThisMOD.Prefix_MOD_ .. 'uncompact' )
+    table.insert( CharacterCategories, 1, ThisMOD.Prefix_MOD_ .. 'uncompact' )
 
     local GodCategories = data.raw[ 'god-controller' ][ 'default' ]
     GodCategories = GodCategories[ 'crafting_categories' ]
-    table.insert( GodCategories, ThisMOD.Prefix_MOD_ .. 'uncompact' )
+    table.insert( GodCategories, 1, ThisMOD.Prefix_MOD_ .. 'uncompact' )
 end
 
 -- Validar si se debe evitar este elemento
@@ -1405,7 +476,7 @@ function ThisMOD.DataFinalFixes( )
 
     ThisMOD.LoadCompact( )   GPrefix.createInformation( ThisMOD )
     ThisMOD.StartItems( )   GPrefix.Compact = ThisMOD
-    ThisMOD.setCraftingCategories( )
+    -- ThisMOD.setCraftingCategories( )
 end
 
 -- Cargar la configuración
@@ -1419,11 +490,21 @@ ThisMOD.PlayersToInit = { }
 
 -- Lista de objetos a agregar
 ThisMOD.ItemsToAdd = { }
-table.insert( ThisMOD.ItemsToAdd, { count = 1, name = ThisMOD.Prefix_MOD_ .. "compact" } )
 table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "iron-plate" } )
 table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "copper-plate" } )
 table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "stone" } )
 table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "coal" } )
+
+function ThisMOD.CreateData( Event )
+    local Data = GPrefix.CreateData( Event, ThisMOD )
+
+    -- Crear el espacio para los objetos entregados
+    Data.gGiven = Data.gForce[ Data.Player.index ] or { }
+    Data.gForce[ Data.Player.index ] = Data.gGiven
+
+    -- Devolver la información
+    return Data
+end
 
 -- Inicializa el evento
 function ThisMOD.Initialize( )
@@ -1439,10 +520,10 @@ function ThisMOD.Initialize( )
     GPrefix.addOnTick( Data )
 
     -- Revizar que todos los jugadores esten inicializados
-    GPrefix.CheckAllPlayers = true
+    ThisMOD.CheckAllPlayers = true
 end
 
--- Validación basica
+-- Validación básica
 function ThisMOD.StartInitialize( )
 
     -- Se añadé a todos los jugadores al cargar la partida y
@@ -1452,19 +533,9 @@ function ThisMOD.StartInitialize( )
     -- Validación básica
     if #ThisMOD.PlayersToInit < 1 then return end
 
-    -- Inicializar el contenedor
-    local StrItems = GPrefix.toString( ThisMOD.ItemsToAdd )
-
     -- Verificar cada jugador
     for _, Data in pairs( ThisMOD.PlayersToInit ) do
-
-        -- Renombrear la variable
-        local ItemGiven = Data.gForce[ Data.Player.index ]
-
-        -- Validar si se le ha dado estos objetos
-        if not ItemGiven or GPrefix.toString( ItemGiven ) ~= StrItems then
-            ThisMOD.addItems( Data )
-        end
+        ThisMOD.addItems( Data )
     end
 end
 
@@ -1472,7 +543,7 @@ end
 function ThisMOD.addAllPlayers( )
 
     -- Validación básica
-    if not GPrefix.CheckAllPlayers then return end
+    if not ThisMOD.CheckAllPlayers then return end
 
     -- Agregar los jugadores
     for _, Player in pairs( game.players ) do
@@ -1480,7 +551,7 @@ function ThisMOD.addAllPlayers( )
     end
 
     -- Eliminar varible bandera
-    GPrefix.CheckAllPlayers = nil
+    ThisMOD.CheckAllPlayers = nil
 end
 
 -- Agregar los objetos al jugador
@@ -1495,6 +566,7 @@ function ThisMOD.addItems( Data )
     -- Renombrar las variables
     local IDPlayer = Data.Player.index
     local Level = script.level.level_name
+    local Beltbox = { count = 1, name = "express-transport-belt-beltbox" }
 
     -- El jugador se desconectó
     if not Data.Player.connected then
@@ -1516,14 +588,59 @@ function ThisMOD.addItems( Data )
     Flag = Flag and Data.Player.force.index < 2
     if Flag then return end
 
+    -- Validar si se entregarón todos los objetos
+    local ItemsToAdd = { }
+    for _, NewItem in pairs( ThisMOD.ItemsToAdd ) do
+
+        -- Objetos agregados
+        local Start = #ItemsToAdd
+
+        -- Recorrer los objetos entregados
+        for _, OldItem in pairs( Data.gGiven ) do
+
+            -- Contenedor
+            local Item = { }
+
+            -- Identificar al objeto
+            if NewItem.name ~= OldItem.name then goto JumpOldItem end
+
+            -- Calcular la cantidad de objetos a gregar
+            Item.name = NewItem.name
+            Item.count = NewItem.count - OldItem.count
+
+            -- No es necesario agregar el objeto
+            if Item.count < 1 then goto JumpNewItem end
+
+            -- Agregar el objeto  a la lista
+            table.insert( ItemsToAdd, Item )
+
+            -- Recepción del salto
+            :: JumpOldItem ::
+        end
+
+        -- Agregar el objeto  a la lista
+        if Start == #ItemsToAdd then
+            table.insert( ItemsToAdd, NewItem )
+        end
+
+        -- Recepción del salto
+        :: JumpNewItem ::
+    end
+
+    -- Se le ha dado los objetos con anterioridad
+    if #ItemsToAdd < 1 then
+        ThisMOD.PlayersToInit[ IDPlayer ] = nil return
+    end
+
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- El jugador no tiene un cuerpo
     if not Data.Player.character then
-        for _, Item in pairs( ThisMOD.ItemsToAdd ) do
+        Data.Player.insert( Beltbox )
+        for _, Item in pairs( ItemsToAdd ) do
 
             -- Buscar los objetos
-            local Name = Data.GMOD.Prefix_MOD_ .. "compact-" .. Item.name
+            local Name = ThisMOD.Prefix_MOD_ .. "compact-" .. Item.name
             local Recipe = game.recipe_prototypes[ Name ]
             if Recipe then Item.name = Recipe.products[ 1 ].name end
 
@@ -1537,10 +654,11 @@ function ThisMOD.addItems( Data )
         local Inventory = Data.Player.character
         local IDInvertory = defines.inventory.character_main
         Inventory = Inventory.get_inventory( IDInvertory )
-        for _, Item in pairs( ThisMOD.ItemsToAdd ) do
+        Inventory.insert( Beltbox )
+        for _, Item in pairs( ItemsToAdd ) do
 
             -- Buscar los objetos
-            local Name = Data.GMOD.Prefix_MOD_ .. "compact-" .. Item.name
+            local Name = ThisMOD.Prefix_MOD_ .. "compact-" .. Item.name
             local Recipe = game.recipe_prototypes[ Name ]
             if Recipe then Item.name = Recipe.products[ 1 ].name end
 
@@ -1552,13 +670,24 @@ function ThisMOD.addItems( Data )
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Marcar cómo hecho
-    Data.gForce[ IDPlayer ] = GPrefix.DeepCopy( ThisMOD.ItemsToAdd )
     ThisMOD.PlayersToInit[ IDPlayer ] = nil
+    for _, NewItem in pairs( ThisMOD.ItemsToAdd ) do
+        local AddItems = true
+        for _, OldItem in pairs( Data.gGiven ) do
+            if OldItem.name == NewItem.name then
+                OldItem.count = NewItem.count
+                AddItems = false break
+            end
+        end
+        if AddItems then
+            table.insert( Data.gGiven, NewItem )
+        end
+    end
 end
 
 -- Agregar los jugadores a la cola
 function ThisMOD.addPlayer( Event )
-    local Data = GPrefix.CreateData( Event, ThisMOD )
+    local Data = ThisMOD.CreateData( Event )
     ThisMOD.PlayersToInit[ Data.Player.index ] = Data
 end
 
@@ -1592,12 +721,12 @@ function ThisMOD.Control( )
 
         -- Antes de eliminar un jugador
         [ { "on_event", defines.events.on_pre_player_removed } ] = function( Event )
-            ThisMOD.BeforeDelete( GPrefix.CreateData( Event, ThisMOD ) )
+            ThisMOD.BeforeDelete( ThisMOD.CreateData( Event ) )
         end,
 
         -- Antes de salir del juego
         [ { "on_event", defines.events.on_pre_player_left_game } ] = function( Event )
-            ThisMOD.BeforeLogout( GPrefix.CreateData( Event, ThisMOD ) )
+            ThisMOD.BeforeLogout( ThisMOD.CreateData( Event ) )
         end,
 
         -- Jugadores a inicializar

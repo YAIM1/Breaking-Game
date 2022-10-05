@@ -401,8 +401,6 @@ local function LoadOnTick( )
     } )
 end
 
-
-
 -- Cargar los valores en tiempo de ejecución
 local function Control( )
 
@@ -449,6 +447,9 @@ local function create( Type, ThisMOD )
     -- Cambiar los objetos
     for _, Table in pairs( Tables ) do
         add( Type, Table, ThisMOD )
+        if GPrefix.StackSize then
+            GPrefix.StackSize.ModifyItem( Table )
+        end
     end
 end
 
