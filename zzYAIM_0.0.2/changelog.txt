@@ -5,13 +5,12 @@ Date: 2022.04.25
     - queue-to-research
     - minimum-electrical-consumption
     - pollution-free-burner
-  Change:
+    - start-with-items
+  Changed:
 	- All
 		Restructure code
         Each duplicated entity and object creates its respective recipes
         Replaced the plus sign with a letter that can be seen in the MOD settings
-    - miniloader
-        This function was separated from the "compact" MOD
     - improve-compaction
         This function was separated from the "compact" MOD
         The improvements of the liquid containers were limited to the pumps and the tank
