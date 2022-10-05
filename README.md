@@ -16,20 +16,11 @@
 
 <p>Crea un objeto que represente la cantidad indicado del objeto original. Esta opción esta pensada en la logística, es decir, los objetos resultantes no tendrán funcionalidad.</p>
 
-<p>Las imágenes, las animaciones y sonidos, han sido tomados del MOD
-<strong><a href="https://mods.factorio.com/mod/deadlock-beltboxes-loaders “Deadlock’s Stacking Beltboxes &amp; Compact Loaders”">Deadlock’s Stacking Beltboxes &amp; Compact Loaders</a></strong></p>
-
 <br>
 
 <h3>Mejorar los objetos compactados [ Compactar objetos ]</h3>
 
 <p>Los objetos nuevos podrán ver incrementados alguna caracteristica en la misma cantidad de objetos usados en el compactados. Por ejemplo, si se compactan 50 carbones cuyo valor de combustión es igual a 4MJ, entonces el nuevo carbón tendrá un valor de combustión de 200MJ.</p>
-
-<br>
-
-<h3>Minimizar los maquinas</h3>
-
-<p>Seleccionar los taladros, hornos y otras máquinas de fabricación que no tienen requieran más de una entrada de fluido y se creará una copia "funcional".</p>
 
 <br>
 
