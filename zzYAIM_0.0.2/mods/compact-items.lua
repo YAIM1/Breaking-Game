@@ -60,12 +60,63 @@ ThisMOD.Settings( )
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
+-- Valores de referencia
+ThisMOD.Categories = { "stacking", "unstacking" }
+
 -- Cargar las infomación
 function ThisMOD.LoadCompact( )
+    ThisMOD.ReplaceIngredients( )
     ThisMOD.newRecipeCategory( )
     ThisMOD.setRecipeCategory( )
     ThisMOD.removeRecipes( )
     ThisMOD.removeItems( )
+end
+
+-- Remplazar los ingredientes
+function ThisMOD.ReplaceIngredients( )
+
+    -- Contenedor
+    local Table = { }
+
+    -- Buscar las entidades
+    for _, Entity in pairs( GPrefix.Entities ) do
+        if not Entity.crafting_categories then goto JumpEntity end
+
+        -- Validar las categorias disponibles
+        for _, Category in pairs( Entity.crafting_categories ) do
+
+            -- Validación básica
+            Table.Category = GPrefix.getKey( ThisMOD.Categories, Category )
+            if not Table.Category then goto JumpCategory end
+            if not Entity.minable then goto JumpCategory end
+            if not Entity.minable.result then goto JumpCategory end
+
+            -- Guardar las referencias
+            Table.Result = Entity.minable.result
+            Table.Item = GPrefix.Items[ Table.Result ]
+            Table.Recipes = GPrefix.Recipes[ Table.Item.name ]
+
+            -- Recorrer las recetas
+            for _, Recipe in pairs( Table.Recipes ) do
+                if not Recipe.ingredients then goto JumpIngredients end
+
+                -- Corregir los ingredientes
+                for _, Ingredients in pairs( Recipe.ingredients ) do
+                    Ingredients[ 2 ] = Ingredients[ 2 ] and Ingredients[ 2 ] * ThisMOD.Value or nil
+                    Ingredients.amount = Ingredients.amount and Ingredients.amount * ThisMOD.Value or nil
+                end
+
+                -- Recepción del salto
+                :: JumpIngredients ::
+            end break
+
+            -- Recepción del salto
+            :: JumpCategory ::
+        end
+
+        -- Recepción del salto
+        :: JumpEntity ::
+    end
 end
 
 -- Crear las categorias para las recetas
@@ -99,42 +150,47 @@ end
 -- Establecer las nuevas recetas
 function ThisMOD.setRecipeCategory( )
 
-    -- indicador de las entidades
-    local Beltbox = "transport%-belt%-beltbox"
-
     -- Buscar las entidades
     for _, Entity in pairs( GPrefix.Entities ) do
-        if string.find( Entity.name, Beltbox )  then
+        if not Entity.crafting_categories then goto JumpEntity end
 
-            -- Establecer las recestas
+        -- Validar las categorias disponibles
+        for _, Category in pairs( Entity.crafting_categories ) do
+            if not GPrefix.getKey( ThisMOD.Categories, Category ) then goto JumpCategory end
+
+            -- Establecer el las nuevas recetas
             Entity.crafting_categories = {
                 ThisMOD.Prefix_MOD_ .. 'compact',
                 ThisMOD.Prefix_MOD_ .. 'uncompact',
-            }
+            } break
+
+            -- Recepción del salto
+            :: JumpCategory ::
         end
+
+        -- Recepción del salto
+        :: JumpEntity ::
     end
 end
 
 -- Buscar las recetas
 function ThisMOD.removeRecipes( )
 
-    -- Valores de referencia
-    local Categories = { "stacking", "unstacking" }
-
     -- Eliminar la categorias
     local RecipeCategory = data.raw[ 'recipe-category' ]
-    for Key, _ in pairs( Categories ) do
+    for Key, _ in pairs( ThisMOD.Categories ) do
         RecipeCategory[ Key ] = nil
     end
 
     -- Buscar las recetas a eliminar
     for _, Recipe in pairs( data.raw.recipe ) do
-        if GPrefix.getKey( Categories, Recipe.category ) then
+        if GPrefix.getKey( ThisMOD.Categories, Recipe.category ) then
             GPrefix.removeTechnologies( Recipe )
         end
     end
 end
 
+-- Eliminar los objetos inecesarios
 function ThisMOD.removeItems( )
 
     -- Contenedor de los valores
@@ -156,6 +212,10 @@ function ThisMOD.removeItems( )
         GPrefix.removeItem( ItemName )
     end
 end
+
+
+
+
 
 
 -- Identificar los objetos a compactar
@@ -442,18 +502,6 @@ function ThisMOD.UpdateDescription( Table, TheMOD )
     GPrefix.addLetter( Array, TheMOD.Char )
 end
 
--- Asiganr la descompactación al jugador
-function ThisMOD.setCraftingCategories( )
-
-    local CharacterCategories = data.raw[ 'character' ][ 'character' ]
-    CharacterCategories = CharacterCategories[ 'crafting_categories' ]
-    table.insert( CharacterCategories, 1, ThisMOD.Prefix_MOD_ .. 'uncompact' )
-
-    local GodCategories = data.raw[ 'god-controller' ][ 'default' ]
-    GodCategories = GodCategories[ 'crafting_categories' ]
-    table.insert( GodCategories, 1, ThisMOD.Prefix_MOD_ .. 'uncompact' )
-end
-
 -- Validar si se debe evitar este elemento
 function ThisMOD.AvoidElement( Name )
 
@@ -476,7 +524,6 @@ function ThisMOD.DataFinalFixes( )
 
     ThisMOD.LoadCompact( )   GPrefix.createInformation( ThisMOD )
     ThisMOD.StartItems( )   GPrefix.Compact = ThisMOD
-    -- ThisMOD.setCraftingCategories( )
 end
 
 -- Cargar la configuración
@@ -501,6 +548,9 @@ function ThisMOD.CreateData( Event )
     -- Crear el espacio para los objetos entregados
     Data.gGiven = Data.gForce[ Data.Player.index ] or { }
     Data.gForce[ Data.Player.index ] = Data.gGiven
+
+    Data.gMOD.Players = nil
+    Data.gPlayers = nil
 
     -- Devolver la información
     return Data
@@ -588,6 +638,13 @@ function ThisMOD.addItems( Data )
     Flag = Flag and Data.Player.force.index < 2
     if Flag then return end
 
+    -- Validar los nombres de los objetos a entregar
+    for _, NewItem in pairs( ThisMOD.ItemsToAdd ) do
+        local Name = ThisMOD.Prefix_MOD_ .. "compact-" .. NewItem.name
+        local Recipe = game.recipe_prototypes[ Name ]
+        if Recipe then NewItem.name = Recipe.products[ 1 ].name end
+    end
+
     -- Validar si se entregarón todos los objetos
     local ItemsToAdd = { }
     for _, NewItem in pairs( ThisMOD.ItemsToAdd ) do
@@ -638,13 +695,6 @@ function ThisMOD.addItems( Data )
     if not Data.Player.character then
         Data.Player.insert( Beltbox )
         for _, Item in pairs( ItemsToAdd ) do
-
-            -- Buscar los objetos
-            local Name = ThisMOD.Prefix_MOD_ .. "compact-" .. Item.name
-            local Recipe = game.recipe_prototypes[ Name ]
-            if Recipe then Item.name = Recipe.products[ 1 ].name end
-
-            -- Agregar los objetos
             Data.Player.insert( Item )
         end
     end
@@ -656,13 +706,6 @@ function ThisMOD.addItems( Data )
         Inventory = Inventory.get_inventory( IDInvertory )
         Inventory.insert( Beltbox )
         for _, Item in pairs( ItemsToAdd ) do
-
-            -- Buscar los objetos
-            local Name = ThisMOD.Prefix_MOD_ .. "compact-" .. Item.name
-            local Recipe = game.recipe_prototypes[ Name ]
-            if Recipe then Item.name = Recipe.products[ 1 ].name end
-
-            -- Agregar los objetos
             Inventory.insert( Item )
         end
     end
