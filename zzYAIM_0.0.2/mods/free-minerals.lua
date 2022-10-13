@@ -28,23 +28,23 @@ local function Settings( )
     local SettingOption =  { }
     SettingOption.name  = ThisMOD.Prefix_MOD
     SettingOption.type  = "bool-setting"
-	SettingOption.order = ThisMOD.Char
+    SettingOption.order = ThisMOD.Char
     SettingOption.setting_type   = "startup"
     SettingOption.default_value  = true
     SettingOption.allowed_values = { "true", "false" }
 
-	local Name = { }
+    local Name = { }
     table.insert( Name, "" )
     table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
     table.insert( Name, { ThisMOD.Local .. "setting-name" } )
-	if ThisMOD.Requires then
-		Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
-	end SettingOption.localised_name = Name
+    if ThisMOD.Requires then
+        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+    end SettingOption.localised_name = Name
 
-	local Description = { ThisMOD.Local .. "setting-description" }
-	if ThisMOD.Requires then
-		Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
-	end SettingOption.localised_description = Description
+    local Description = { ThisMOD.Local .. "setting-description" }
+    if ThisMOD.Requires then
+        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+    end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
     if true then return end
@@ -76,15 +76,15 @@ function ThisMOD.CreateMineralRecipe( )
     data:extend( { subGroup } )
 
     -- Crar cada uno de los recursos
-    for _, Resources in pairs( data.raw[ "resource" ] ) do
+    for _, Resource in pairs( data.raw.resource ) do
 
         -- Validar los resutados
         local Results = { }
-        Resources = Resources.minable
-        if Resources.result then
-            Results = { { name = Resources.result } }
-        elseif Resources.results then
-            Results = Resources.results
+        Resource = Resource.minable
+        if Resource.result then
+            Results = { { name = Resource.result } }
+        elseif Resource.results then
+            Results = Resource.results
         end
 
         -- Crear una receta por cada recurso

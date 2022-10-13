@@ -38,18 +38,18 @@ function ThisMOD.Settings( )
     SettingOption.minimum_value = 1
     SettingOption.maximum_value = 65000
 
-	local Name = { }
+    local Name = { }
     table.insert( Name, "" )
     table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
     table.insert( Name, { ThisMOD.Local .. "setting-name" } )
-	if ThisMOD.Requires then
-		Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
-	end SettingOption.localised_name = Name
+    if ThisMOD.Requires then
+        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+    end SettingOption.localised_name = Name
 
-	local Description = { ThisMOD.Local .. "setting-description" }
-	if ThisMOD.Requires then
-		Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
-	end SettingOption.localised_description = Description
+    local Description = { ThisMOD.Local .. "setting-description" }
+    if ThisMOD.Requires then
+        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+    end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
 end
@@ -65,58 +65,10 @@ ThisMOD.Categories = { "stacking", "unstacking" }
 
 -- Cargar las infomación
 function ThisMOD.LoadCompact( )
-    ThisMOD.ReplaceIngredients( )
     ThisMOD.newRecipeCategory( )
     ThisMOD.setRecipeCategory( )
     ThisMOD.removeRecipes( )
     ThisMOD.removeItems( )
-end
-
--- Remplazar los ingredientes
-function ThisMOD.ReplaceIngredients( )
-
-    -- Contenedor
-    local Table = { }
-
-    -- Buscar las entidades
-    for _, Entity in pairs( GPrefix.Entities ) do
-        if not Entity.crafting_categories then goto JumpEntity end
-
-        -- Validar las categorias disponibles
-        for _, Category in pairs( Entity.crafting_categories ) do
-
-            -- Validación básica
-            Table.Category = GPrefix.getKey( ThisMOD.Categories, Category )
-            if not Table.Category then goto JumpCategory end
-            if not Entity.minable then goto JumpCategory end
-            if not Entity.minable.result then goto JumpCategory end
-
-            -- Guardar las referencias
-            Table.Result = Entity.minable.result
-            Table.Item = GPrefix.Items[ Table.Result ]
-            Table.Recipes = GPrefix.Recipes[ Table.Item.name ]
-
-            -- Recorrer las recetas
-            for _, Recipe in pairs( Table.Recipes ) do
-                if not Recipe.ingredients then goto JumpIngredients end
-
-                -- Corregir los ingredientes
-                for _, Ingredients in pairs( Recipe.ingredients ) do
-                    Ingredients[ 2 ] = Ingredients[ 2 ] and Ingredients[ 2 ] * ThisMOD.Value or nil
-                    Ingredients.amount = Ingredients.amount and Ingredients.amount * ThisMOD.Value or nil
-                end
-
-                -- Recepción del salto
-                :: JumpIngredients ::
-            end break
-
-            -- Recepción del salto
-            :: JumpCategory ::
-        end
-
-        -- Recepción del salto
-        :: JumpEntity ::
-    end
 end
 
 -- Crear las categorias para las recetas
@@ -429,9 +381,10 @@ function ThisMOD.CreateRecipe( OldItem )
         NewRecipe.main_product = ""
 
 
-        NewRecipe.allow_decomposition = true
+        NewRecipe.allow_decomposition = not Recipe.action
         NewRecipe.always_show_made_in = false
         NewRecipe.always_show_products = false
+        NewRecipe.allow_as_intermediate = true
 
 
         NewRecipe.energy_required = 10

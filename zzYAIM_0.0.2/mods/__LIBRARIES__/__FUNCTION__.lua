@@ -330,12 +330,12 @@ function GPrefix.isResult( Recipe, Item )
     end
 
     if Recipe.result == Item then return true end
-	if Recipe.results and inRecipe( Recipe.results, Item ) then return true end
+    if Recipe.results and inRecipe( Recipe.results, Item ) then return true end
     if Recipe.normal and Recipe.normal.result == Item then return true end
-	if Recipe.normal and Recipe.normal.results and inRecipe( Recipe.normal.results, Item ) then return true end
+    if Recipe.normal and Recipe.normal.results and inRecipe( Recipe.normal.results, Item ) then return true end
     if Recipe.expensive and Recipe.expensive.result == Item then return true end
-	if Recipe.expensive and Recipe.expensive.results and inRecipe( Recipe.expensive.results, Item ) then return true end
-	return false
+    if Recipe.expensive and Recipe.expensive.results and inRecipe( Recipe.expensive.results, Item ) then return true end
+    return false
 end
 
 -- Call example. GPrefix.setResult( Recipe, Result )

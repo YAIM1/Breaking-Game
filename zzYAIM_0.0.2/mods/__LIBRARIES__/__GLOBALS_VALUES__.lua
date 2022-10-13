@@ -934,9 +934,11 @@ local function DataFinalFixes( )
     -- Inicializar las funciones
     GPrefix.addItem = function( NewItem, ThisMOD ) add( "Items", NewItem, ThisMOD ) end
     GPrefix.addFluid = function( NewFluid, ThisMOD ) add( "Fluids", NewFluid, ThisMOD ) end
-    GPrefix.addEntity = function( NewEntity, ThisMOD ) add( "Entities", NewEntity, ThisMOD ) end
     GPrefix.addRecipe = function( NewRecipe, ThisMOD ) addRecipe( NewRecipe, ThisMOD ) end
     GPrefix.addEquipament = function( NewEquipament, ThisMOD ) add( "Equipments", NewEquipament, ThisMOD ) end
+    GPrefix.addEntity = function( NewEntity, ThisMOD ) add( "Entities", NewEntity, ThisMOD )
+        if GPrefix.SlotWithFilters then GPrefix.SlotWithFilters.doChange( NewEntity ) end
+    end
 
     GPrefix.duplicateEntity = function ( Entity, ThisMOD ) duplicateEntity( Entity, ThisMOD ) end
 

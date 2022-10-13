@@ -36,18 +36,18 @@ function ThisMOD.Settings( )
     SettingOption.default_value  = true
     SettingOption.allowed_values = { "true", "false" }
 
-	local Name = { }
+    local Name = { }
     table.insert( Name, "" )
     table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
     table.insert( Name, { ThisMOD.Local .. "setting-name" } )
-	if ThisMOD.Requires then
-		Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
-	end SettingOption.localised_name = Name
+    if ThisMOD.Requires then
+        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
+    end SettingOption.localised_name = Name
 
-	local Description = { ThisMOD.Local .. "setting-description" }
-	if ThisMOD.Requires then
-		Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
-	end SettingOption.localised_description = Description
+    local Description = { ThisMOD.Local .. "setting-description" }
+    if ThisMOD.Requires then
+        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
+    end SettingOption.localised_description = Description
 
     data:extend( { SettingOption } )
 end
@@ -88,11 +88,13 @@ function ThisMOD.LoadInformation(  )
     -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     -- Establecer es el order
-    local Order = string.char( 64 + GPrefix.getLength( data.raw[ "damage-type" ] ) + 1 )
+    local Count = GPrefix.getLength( data.raw[ "damage-type" ] )
+    local Order = string.char( 64 + Count + 1 )
 
     -- Crear la mejor armadura 
     local UltimateArmor = ThisMOD.CreateArmor( Items, "ultimate" )
-    UltimateArmor.order = Order   GPrefix.AddIcon( UltimateArmor, ThisMOD )
+    GPrefix.AddIcon( UltimateArmor, ThisMOD )
+    UltimateArmor.order = Order
 
     -- Crear la receta de la mejor armadura
     local UltimateRecipe = ThisMOD.CreateRecipe( Recipes, "ultimate" )
@@ -109,7 +111,8 @@ function ThisMOD.LoadInformation(  )
 
         -- Crear la armadura imune a un daño
         local DamageArmor = ThisMOD.CreateArmor( Items, Damage )
-        DamageArmor.order = Order   GPrefix.AddIcon( DamageArmor, ThisMOD )
+        GPrefix.AddIcon( DamageArmor, ThisMOD )
+        DamageArmor.order = Order
 
         -- Agregar la inmunidad a las armaduras
         table.insert( DamageArmor.resistances, { type = Damage, decrease = 0, percent = 100 } )
