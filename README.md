@@ -106,24 +106,6 @@
 
 <br>
 
-<h3>Cola para investigar</h3>
-
-<p>Establecer la secuencia con la cual se investigarán las tecnologías disponibles usando unicamente el ratón; se puede Agregar, Priorizar y Retirar las tecnologías de la cola.</p>
-
-<p>Al agregar una tecnología a la cola, se agregarán automaticamente las tecnologías que tengan como prerequisitos, y que no se han investigado, antes que la tecnología seleccionada.</p>
-
-<p>Al retirar una tecnología de la cola, se retitarán de la cola las tecnologías que dependan de la tecnología a retirar.</p>
-
-<p>Al priorizar una tecnología de la cola, se moverán todas las tecnologías que tengan como prerequisitos, y que esten en la cola, a las primeras posiciones.</p>
-
-<p>En caso de intentar invetigar una tecnología que no este habilitada, esta será retirada de la cola y a todas las tecnologías que dependas de esta.</p>
-
-<p>Adicional, permite crear una ventan flotante en la cual se puede ver la información del MOD en forma compacta</p>
-
-<p>El MOD informa de cualquier cambio en la cola o el estado del mismo</p>
-
-<br>
-
 <h3>Hacer los recursos finitos</h3>
 
 <p>Hace lo que dice el titulo.</p>
