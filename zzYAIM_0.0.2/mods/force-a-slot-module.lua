@@ -1,165 +1,171 @@
 ---------------------------------------------------------------------------------------------------
 
---> force-a-slot-module.lua <--
+---> force-a-slot-module.lua <---
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Contenedor de este MOD
-local ThisMOD = { }
+--- Contenedor de este MOD
+local ThisMOD = GPrefix.getThisMOD( debug.getinfo( 1 ).short_src )
+local Private = { }
 
--- Cargar información de este MOD
-if true then
+--- Cargar la configuración del MOD
+GPrefix.CreateSetting( ThisMOD, "bool" )
 
-    -- Identifica el mod que se está usando
-    local NameMOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-    -- Crear la vareble si no existe
-    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
+--- Tipos a afectar
+Private.Types = { }
+table.insert( Private.Types, "lab" )
+table.insert( Private.Types, "furnace" )
+table.insert( Private.Types, "mining-drill" )
+table.insert( Private.Types, "assembling-machine" )
 
-    -- Guardar en el acceso rapido
-    ThisMOD = GPrefix.MODs[ NameMOD ]
+-- Lista de los efectos
+Private.Effects = { }
+table.insert( Private.Effects, "speed" )
+table.insert( Private.Effects, "pollution" )
+table.insert( Private.Effects, "consumption" )
+table.insert( Private.Effects, "productivity" )
+
+--- Sección para los prototipos
+function Private.DataFinalFixes( )
+    local FileValid = { "data-final-fixes" }
+    local Active = GPrefix.isActive( ThisMOD, FileValid )
+    if not Active then return end
+
+    --- Aplicar el efecto del MOD por fuera del mismo
+    --- @param TheMOD ThisMOD
+    function ThisMOD.DoEffect( TheMOD )
+        Private.DoEffect( TheMOD )
+    end
+
+    --- Procesar los prototipos del MOD
+    Private.LoadPropotypes( )
+    GPrefix.CreateNewElements( ThisMOD )
+
+    --- Crear acceso directo al MOD
+    GPrefix[ ThisMOD.MOD ] = ThisMOD
 end
 
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
+--- Procesar los prototipos cargados en el juego y
+--- cargar los prototipos del MOD
+function Private.LoadPropotypes( )
 
--- Configuración del MOD
-function ThisMOD.Settings( )
-    if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
+    --- Duplicar los accesos
+    --- @type ThisMOD
+    local TheMOD = { }
+    for Key, Value in pairs( ThisMOD ) do
+        TheMOD[ Key ] = Value
+    end
 
-    local SettingOption =  { }
-    SettingOption.name  = ThisMOD.Prefix_MOD
-    SettingOption.type  = "bool-setting"
-    SettingOption.order = ThisMOD.Char
-    SettingOption.setting_type   = "startup"
-    SettingOption.default_value  = true
-    SettingOption.allowed_values = { "true", "false" }
+    --- Remplazar los prototipos
+    TheMOD.NewEntities = GPrefix.Entities
+    TheMOD.NewRecipes = GPrefix.Recipes
+    TheMOD.NewItems = GPrefix.Items
 
-    local Name = { }
-    table.insert( Name, "" )
-    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
-    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
-    if ThisMOD.Requires then
-        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
-    end SettingOption.localised_name = Name
-
-    local Description = { ThisMOD.Local .. "setting-description" }
-    if ThisMOD.Requires then
-        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
-    end SettingOption.localised_description = Description
-
-    data:extend( { SettingOption } )
+    --- Aplicar los efectos
+    ThisMOD.DoEffect( TheMOD )
 end
 
--- Cargar la configuración
-ThisMOD.Settings( )
+--- Aplicar el efecto del MOD por fuera del mismo
+--- @param TheMOD ThisMOD
+function Private.DoEffect( TheMOD )
 
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
+    --- Contenedor de los objetos a afectar
+    local Names = { }
 
--- Cargar las entidades
-function ThisMOD.LoadInformation( )
+    --- Recorrer las entidades disponibles
+    for _, Entity in pairs( TheMOD.NewEntities ) do
 
-    -- Tipos a afectar
-    local Types = { }
-    table.insert( Types, "lab" )
-    table.insert( Types, "furnace" )
-    table.insert( Types, "mining-drill" )
-    table.insert( Types, "assembling-machine" )
-
-    -- Buscar las entidades a afectar
-    for _, Entity in pairs( GPrefix.Entities ) do
-
-        -- Renombrar la variable
+        --- Renombrar la variable
         local Module = Entity.module_specification
 
-        -- Validación básica
-        if not GPrefix.getKey( Types, Entity.type ) then goto JumpEntity end
+        --- Evitar estos elementos
+        local MODs = { ThisMOD, GPrefix.IC }
+        for _, MOD in pairs( MODs ) do
+            local isMOD = GPrefix.hasPrefixMOD( Entity, MOD )
+            if isMOD then goto JumpEntity end
+        end
+
+        --- Validación básica
+        if not Entity.minable then goto JumpEntity end
+        if not Entity.minable.result then goto JumpEntity end
+
+        --- Objeto buscado
+        if not GPrefix.getKey( Private.Types, Entity.type ) then goto JumpEntity end
         if Module and Module.module_slots > 0 then goto JumpEntity end
 
-        -- Validar elemento
-        local Alias = nil
-        if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
-        if Alias and Alias( Entity.name ) then goto JumpEntity end
+        --- Agregar el objeto a la lista
+        table.insert( Names, Entity.minable.result )
 
-        -- Duplicar la información relacionada
-        GPrefix.duplicateEntity( Entity, ThisMOD )
-
-        -- Recepción del salto
+        --- Recepción del salto
         :: JumpEntity ::
     end
 
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Inicializar y renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Inicializar y renombrar la variable
-    local Entities = Info.Entities or { }
-    Info.Entities = Entities
-
-    -- Crear los efectos
-    local Effects = { }
-    table.insert( Effects, "speed" )
-    table.insert( Effects, "pollution" )
-    table.insert( Effects, "consumption" )
-    table.insert( Effects, "productivity" )
-
-    -- Hacer los cambios
-    for _, Entity in pairs( Entities ) do
-
-        -- Crear el slot
-        local Module = { module_slots = 1 }
-        Entity.module_specification = Module
-
-        -- Hacer la entidad predispuesta a los efectos de los modulos
-        Entity.allowed_effects = GPrefix.DeepCopy( Effects )
+    --- Modificar los objetos enlistados
+    for _, Name in pairs( Names ) do
+        Private.doChange( Name, TheMOD )
     end
+end
 
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+--- Aplicar el efecto del MOD
+--- @param Name string
+--- @param TheMOD ThisMOD
+function Private.doChange( Name, TheMOD )
 
-    -- Eliminar las demas recetas
-    for _, Recipes in pairs( Info.Recipes ) do
-        for i = 2, #Recipes, 1 do
-            Recipes[ i ] = nil
+    --- Duplicar el objeto
+    local New = GPrefix.DuplicateItem( Name, TheMOD )
+    if not New then return end
+
+    --- Aplciar el cambio
+    New.Entity.module_specification = { module_slots = 1 } --- Crear un slot
+    New.Entity.allowed_effects = GPrefix.DeepCopy( Private.Effects ) --- Permitir efectos
+
+    --- Incluir más información
+    New.Name = Name
+    New.TheMOD = TheMOD
+    Private.SaveData( New )
+end
+
+--- Guardar la información
+--- @param New table
+function Private.SaveData( New )
+
+    --- Renombrar las variables
+    local Table = GPrefix.Recipes[ New.Name ] or New.TheMOD.NewRecipes[ New.Name ]
+    local RecipeName = Table[ 1 ].name
+    local NewRecipe = New.Recipes[ #New.Recipes ]
+
+    local NewEntities = New.TheMOD.NewElements.NewEntities
+    local NewItems = New.TheMOD.NewElements.NewItems
+    local NewRecipes = New.TheMOD.NewElements.NewRecipes[ RecipeName ] or { }
+    New.TheMOD.NewElements.NewRecipes[ RecipeName ] = NewRecipes
+
+    --- Guardar los cambios
+    NewEntities[ New.Entity.name ] = New.Entity
+    NewItems[ New.Item.name ] = New.Item
+    table.insert( NewRecipes, NewRecipe )
+
+    --- Agregar la imagen de referencia
+    GPrefix.AddIcon( New.Item, ThisMOD )
+
+    --- Actualizar la receta
+    local Recipes = { }
+    table.insert( Recipes, NewRecipe )
+    table.insert( Recipes, NewRecipe.normal )
+    table.insert( Recipes, NewRecipe.expensive )
+    for _, Recipe in ipairs( Recipes ) do
+        for _, Result in ipairs( Recipe.results or { } ) do
+            if Result.name == New.Name then
+                Result.name = New.Item.name
+            end
         end
     end
-
-    -- Actualizar el resultado de las recetas
-    GPrefix.updateResults( ThisMOD )
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Inicializar y renombrar la variable
-    local Items = Info.Items or { }
-    Info.Items = Items
-
-    -- Asignar la marca del MOD
-    for _, Item in pairs( Items ) do
-        GPrefix.AddIcon( Item, ThisMOD )
-    end
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Inicializar y renombrar la variable
-    local Item = Info.Item or { }
-    Info.Item = Item
 end
 
--- Configuración del MOD
-function ThisMOD.DataFinalFixes( )
-    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
-    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
-    if not ThisMOD.Active then return end
-
-    ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
-end
-
--- Cargar la configuración
-ThisMOD.DataFinalFixes( )
+--- Sección para los prototipos
+Private.DataFinalFixes( )
 
 ---------------------------------------------------------------------------------------------------

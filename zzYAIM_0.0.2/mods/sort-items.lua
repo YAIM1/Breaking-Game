@@ -1,65 +1,22 @@
 ---------------------------------------------------------------------------------------------------
 
---> sort-item.lua <--
+---> sort-item.lua <---
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Contenedor de este MOD
-local ThisMOD = { }
+--- Contenedor de este MOD
+local ThisMOD = GPrefix.getThisMOD( debug.getinfo( 1 ).short_src )
+local Private = { }
 
--- Cargar información de este MOD
-if true then
-
-    -- Identifica el mod que se está usando
-    local NameMOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
-
-    -- Crear la vareble si no existe
-    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
-
-    -- Guardar en el acceso rapido
-    ThisMOD = GPrefix.MODs[ NameMOD ]
-end
+--- Cargar la configuración del MOD
+GPrefix.CreateSetting( ThisMOD, "bool" )
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Configuración del MOD
-function ThisMOD.Settings( )
-    if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
-
-    local SettingOption =  { }
-    SettingOption.name  = ThisMOD.Prefix_MOD
-    SettingOption.type  = "bool-setting"
-    SettingOption.order = ThisMOD.Char
-    SettingOption.setting_type   = "startup"
-    SettingOption.default_value  = true
-    SettingOption.allowed_values = { "true", "false" }
-
-    local Name = { }
-    table.insert( Name, "" )
-    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
-    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
-    if ThisMOD.Requires then
-        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
-    end SettingOption.localised_name = Name
-
-    local Description = { ThisMOD.Local .. "setting-description" }
-    if ThisMOD.Requires then
-        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
-    end SettingOption.localised_description = Description
-
-    data:extend( { SettingOption } )
-end
-
--- Cargar la configuración
-ThisMOD.Settings( )
-
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
-
--- Inventarios a ordenar
-ThisMOD.EntitysToSort = {
+--- Inventarios a ordenar
+Private.EntitysToSort = {
     [ "car" ] = defines.inventory.car_trunk,
     [ "container" ] = defines.inventory.chest,
     [ "cargo-wagon" ] = defines.inventory.cargo_wagon,
@@ -71,58 +28,102 @@ ThisMOD.EntitysToSort = {
     }
 }
 
--- Cargar las infomación
-function ThisMOD.LoadInformation( )
+--- Sección para los prototipos
+function Private.DataFinalFixes( )
+    local FileValid = { "data-final-fixes" }
+    local Active = GPrefix.isActive( ThisMOD, FileValid )
+    if not Active then return end
 
-    -- Contenedor
-    local Table = { }
+    --- Aplicar el efecto del MOD por fuera del mismo
+    --- @param TheMOD ThisMOD
+    function ThisMOD.DoEffect( TheMOD )
+        Private.DoEffect( TheMOD )
+    end
 
-    -- Recorrer las entidades
-    for _, Entity in pairs( GPrefix.Entities ) do
+    --- Procesar los prototipos del MOD
+    Private.LoadPropotypes( )
+    GPrefix.CreateNewElements( ThisMOD )
 
-        -- Validación básica
-        Table.flag = ThisMOD.EntitysToSort[ Entity.type ]
-        if not Table.flag then goto JumpEntity end
-        if not Entity.minable then goto JumpEntity end
-        if not Entity.minable.result then goto JumpEntity end
+    --- Crear acceso directo al MOD
+    GPrefix[ ThisMOD.MOD ] = ThisMOD
+end
 
-        -- Cargar el objeto a modificar
-        Table.ItemName = Entity.minable.result
-        Table.Recipes = GPrefix.Recipes[ Table.ItemName ]
-        Table.Item = GPrefix.Items[ Table.ItemName ]
+--- Procesar los prototipos cargados en el juego y
+--- cargar los prototipos del MOD
+function Private.LoadPropotypes( )
+    ThisMOD.DoEffect( {
+        NewEntities = GPrefix.Entities,
+        NewRecipes = GPrefix.Recipes,
+        NewItems = GPrefix.Items,
+    } )
+end
 
-        -- Agregar la letra
-        GPrefix.addLetter( Entity, ThisMOD.Char )
-        GPrefix.addLetter( Table.Item, ThisMOD.Char )
-        for _, Recipe in pairs( Table.Recipes or { } ) do
-            GPrefix.addLetter( Recipe, ThisMOD.Char )
-        end
-
-        if GPrefix.Compact then
-            GPrefix.Compact.UpdateDescription( Table.Item, ThisMOD )
-        end
-
-        -- Recepción del salto
-        :: JumpEntity ::
+--- Aplicar el efecto del MOD por fuera del mismo
+--- @param TheMOD ThisMOD
+function Private.DoEffect( TheMOD )
+    for _, Entity in pairs( TheMOD.NewEntities ) do
+        Private.doChange( Entity, TheMOD )
     end
 end
 
--- Configuración del MOD
-function ThisMOD.DataFinalFixes( )
-    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
-    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
-    if not ThisMOD.Active then return end
+--- Aplicar el efecto del MOD
+--- @param Entity table
+--- @param TheMOD ThisMOD
+function Private.doChange( Entity, TheMOD )
 
-    ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
+    --- Validación básica
+    if not Entity then return end
+    if not Entity.type then return end
+    if not Entity.minable then return end
+    if not Entity.minable.result then return end
+    if not Private.EntitysToSort[ Entity.type ] then return end
+
+    --- Cargar el objeto a modificar
+    local ItemName = Entity.minable.result
+    local Item = TheMOD.NewItems[ ItemName ]
+
+    --- Agregar la letra
+    GPrefix.addLetter( Entity, ThisMOD.Char )
+    GPrefix.addLetter( Item, ThisMOD.Char )
+    for _, Recipes in pairs( TheMOD.NewRecipes ) do
+        for _, Recipe in pairs( Recipes ) do
+            local Results = GPrefix.getResults( Recipe ) or { }
+            if GPrefix.inTable( Results, Item ) then
+                GPrefix.addLetter( Recipe, ThisMOD.Char )
+            end
+        end
+    end
+
+    --- Modificar las descripción del objeto
+    if GPrefix.CI then GPrefix.CI.UpdateDescription( Item, ThisMOD ) end
 end
 
--- Cargar la configuración
-ThisMOD.DataFinalFixes( )
+--- Sección para los prototipos
+Private.DataFinalFixes( )
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
-function ThisMOD.InventorySort( Event )
+--- Sección para los eventos
+function Private.Control( )
+    local FileValid = { "control" }
+    local Active = GPrefix.isActive( ThisMOD, FileValid )
+    if not Active then return end
+
+    Private.LoadEvents( )
+end
+
+--- Cargar los eventos del MOD
+function Private.LoadEvents( )
+    GPrefix.addEventOnControl( {
+        ID = defines.events.on_gui_opened,
+        Function = Private.InventorySort,
+    } )
+end
+
+--- Aplicar el efecto del MOD
+--- @param Event table
+function Private.InventorySort( Event )
 
     -- Renombrar la variable
     local Entity = Event.entity
@@ -131,7 +132,7 @@ function ThisMOD.InventorySort( Event )
     if not Entity then return end
 
     -- Identificar el inventario
-    local Inventory = ThisMOD.EntitysToSort[ Entity.type ]
+    local Inventory = Private.EntitysToSort[ Entity.type ]
 
     -- Inventario no encontrado
     if not Inventory then return end
@@ -145,17 +146,7 @@ function ThisMOD.InventorySort( Event )
     end
 end
 
-function ThisMOD.Control( )
-    if not GPrefix.getKey( { "control" }, GPrefix.File ) then return end
-    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
-    if not ThisMOD.Active then return end
-
-    GPrefix.addEvent( {
-        [ { "on_event", defines.events.on_gui_opened } ] = ThisMOD.InventorySort,
-    } )
-end
-
--- Cargar los eventos
-ThisMOD.Control( )
+--- Sección para los eventos
+Private.Control( )
 
 ---------------------------------------------------------------------------------------------------

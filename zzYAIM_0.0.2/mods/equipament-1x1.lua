@@ -1,140 +1,149 @@
 ---------------------------------------------------------------------------------------------------
 
---> equipament-1x1.lua <--
+---> equipament-1x1.lua <---
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Contenedor de este MOD
-local ThisMOD = { }
+--- Contenedor de este MOD
+local ThisMOD = GPrefix.getThisMOD( debug.getinfo( 1 ).short_src )
+local Private = { }
 
--- Cargar información de este MOD
-if true then
+--- Cargar la configuración del MOD
+GPrefix.CreateSetting( ThisMOD, "bool" )
 
-    -- Identifica el mod que se está usando
-    local NameMOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-    -- Crear la vareble si no existe
-    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
+--- Sección para los prototipos
+function Private.DataFinalFixes( )
+    local FileValid = { "data-final-fixes" }
+    local Active = GPrefix.isActive( ThisMOD, FileValid )
+    if not Active then return end
 
-    -- Guardar en el acceso rapido
-    ThisMOD = GPrefix.MODs[ NameMOD ]
+    --- Aplicar el efecto del MOD por fuera del mismo
+    --- @param TheMOD ThisMOD
+    function ThisMOD.DoEffect( TheMOD )
+        Private.DoEffect( TheMOD )
+    end
+
+    --- Procesar los prototipos del MOD
+    Private.LoadPropotypes( )
+    GPrefix.CreateNewElements( ThisMOD )
+
+    --- Crear acceso directo al MOD
+    GPrefix[ ThisMOD.MOD ] = ThisMOD
 end
 
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
+--- Procesar los prototipos cargados en el juego y
+--- cargar los prototipos del MOD
+function Private.LoadPropotypes( )
 
--- Configuración del MOD
-function ThisMOD.Settings( )
-    if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
+    --- Duplicar los accesos
+    --- @type ThisMOD
+    local TheMOD = { }
+    for Key, Value in pairs( ThisMOD ) do
+        TheMOD[ Key ] = Value
+    end
 
-    local SettingOption =  { }
-    SettingOption.name  = ThisMOD.Prefix_MOD
-    SettingOption.type  = "bool-setting"
-    SettingOption.order = ThisMOD.Char
-    SettingOption.setting_type   = "startup"
-    SettingOption.default_value  = true
-    SettingOption.allowed_values = { "true", "false" }
+    --- Remplazar los prototipos
+    TheMOD.NewEquipaments = GPrefix.Equipaments
+    TheMOD.NewRecipes = GPrefix.Recipes
+    TheMOD.NewItems = GPrefix.Items
 
-    local Name = { }
-    table.insert( Name, "" )
-    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
-    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
-    if ThisMOD.Requires then
-        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
-    end SettingOption.localised_name = Name
-
-    local Description = { ThisMOD.Local .. "setting-description" }
-    if ThisMOD.Requires then
-        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
-    end SettingOption.localised_description = Description
-
-    data:extend( { SettingOption } )
+    --- Aplicar los efectos
+    ThisMOD.DoEffect( TheMOD )
 end
 
--- Cargar la configuración
-ThisMOD.Settings( )
+--- Aplicar el efecto del MOD por fuera del mismo
+--- @param TheMOD ThisMOD
+function Private.DoEffect( TheMOD )
 
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
+    --- Contenedor de los objetos a afectar
+    local Names = { }
 
--- Cargar las infomación
-function ThisMOD.LoadInformation( )
+    --- Recorrer los equipos disponibles
+    for _, Equipament in pairs( TheMOD.NewEquipaments ) do
 
-    -- Renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    local Equipaments = Info.Equipaments or { }
-    Info.Equipaments = Equipaments
-
-    local Items = Info.Items or { }
-    Info.Items = Items
-
-    local Recipes = Info.Recipes or { }
-    Info.Recipes = Recipes
-
-    -- Redimencionar el tamñao del equipamento
-    for _, Equipament in pairs( GPrefix.Equipaments ) do
-
-        -- Validar elemento
-        local Alias = nil
-        if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
-        if Alias and Alias( Equipament.name ) then goto JumpEquipament end
-
-        -- Validar las dimensiones
-        if Equipament.shape.width > 1 then
-            Equipaments[ Equipament.name ] = Equipament
-        elseif Equipament.shape.height > 1 then
-            Equipaments[ Equipament.name ] = Equipament
+        --- Evitar estos elementos
+        local MODs = { ThisMOD, GPrefix.IC }
+        for _, MOD in pairs( MODs ) do
+            local isMOD = GPrefix.hasPrefixMOD( Equipament, MOD )
+            if isMOD then goto JumpEquipament end
         end
 
-        -- Recepción del salto
+        --- Validar las dimensiones
+        if Equipament.shape.width > 1 or Equipament.shape.height > 1 then
+            table.insert( Names, Equipament.name )
+        end
+
+        --- Recepción del salto
         :: JumpEquipament ::
     end
 
-    -- Hacer una copia de los equipos
-    for Name, Equipament in pairs( Equipaments ) do
-        Equipaments[ Name ] = GPrefix.DeepCopy( Equipament )
-        Items[ Name ] = GPrefix.DeepCopy( GPrefix.Items[ Name ] )
-        Recipes[ Name ] = GPrefix.DeepCopy( GPrefix.Recipes[ Name ] )
-        GPrefix.AddIcon( Items[ Name ], ThisMOD )
+    --- Modificar los objetos enlistados
+    for _, Name in pairs( Names ) do
+        Private.doChange( Name, TheMOD )
+    end
+end
 
-        -- Eliminar los ingredientes
-        local Recipe = Recipes[ Name ][ 1 ]
-        for _, Table in ipairs( { Recipe, Recipe.normal, Recipe.expensive } ) do
-            if Table.ingredients then
+--- Aplicar el efecto del MOD
+--- @param Name string
+--- @param TheMOD ThisMOD
+function Private.doChange( Name, TheMOD )
 
-                -- Nombre del objeto
-                local name = GPrefix.Prefix_
-                name = string.gsub( name, "-", "%%-" )
-                name = string.gsub( Recipe.name, name, "" )
+    --- Duplicar el objeto
+    local New = GPrefix.DuplicateItem( Name, TheMOD )
+    if not New then return end
 
-                -- Establecer el resultado
-                Table.result = ThisMOD.Prefix_MOD_ .. name
-                Table.results = nil
+    --- Aplciar el cambio
+    New.Equipament.take_result = nil
+    New.Equipament.shape.width = 1
+    New.Equipament.shape.height = 1
+
+    --- Incluir más información
+    New.Name = Name
+    New.TheMOD = TheMOD
+    Private.SaveData( New )
+end
+
+--- Guardar la información
+--- @param New table
+function Private.SaveData( New )
+
+    --- Renombrar las variables
+    local Table = GPrefix.Recipes[ New.Name ] or New.TheMOD.NewRecipes[ New.Name ]
+    local RecipeName = Table[ 1 ].name
+    local NewRecipe = New.Recipes[ #New.Recipes ]
+
+    local NewItems = New.TheMOD.NewElements.NewItems
+    local NewEquipaments = New.TheMOD.NewElements.NewEquipaments
+    local NewRecipes = New.TheMOD.NewElements.NewRecipes[ RecipeName ] or { }
+    New.TheMOD.NewElements.NewRecipes[ RecipeName ] = NewRecipes
+
+    --- Guardar los cambios
+    NewEquipaments[ New.Equipament.name ] = New.Equipament
+    NewItems[ New.Item.name ] = New.Item
+    table.insert( NewRecipes, NewRecipe )
+
+    --- Agregar la imagen de referencia
+    GPrefix.AddIcon( New.Item, ThisMOD )
+
+    --- Actualizar la receta
+    local Recipes = { }
+    table.insert( Recipes, NewRecipe )
+    table.insert( Recipes, NewRecipe.normal )
+    table.insert( Recipes, NewRecipe.expensive )
+    for _, Recipe in ipairs( Recipes ) do
+        for _, Result in ipairs( Recipe.results or { } ) do
+            if Result.name == New.Name then
+                Result.name = New.Item.name
             end
         end
     end
-
-    -- Hacer el cambio
-    for _, Equipament in pairs( Equipaments ) do
-        Equipament.take_result = nil
-        Equipament.shape.width = 1
-        Equipament.shape.height = 1
-    end
 end
 
--- Configuración del MOD
-function ThisMOD.DataFinalFixes( )
-    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
-    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
-    if not ThisMOD.Active then return end
-
-    ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
-end
-
--- Cargar la configuración
-ThisMOD.DataFinalFixes( )
+--- Sección para los prototipos
+Private.DataFinalFixes( )
 
 ---------------------------------------------------------------------------------------------------

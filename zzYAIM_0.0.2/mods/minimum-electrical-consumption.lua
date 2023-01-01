@@ -1,190 +1,204 @@
 ---------------------------------------------------------------------------------------------------
 
---> minimum-electrical-consumption.lua <--
+---> minimum-electrical-consumption.lua <---
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Contenedor de este MOD
-local ThisMOD = { }
+--- Contenedor de este MOD
+local ThisMOD = GPrefix.getThisMOD( debug.getinfo( 1 ).short_src )
+local Private = { }
 
--- Cargar información de este MOD
-if true then
-
-    -- Identifica el mod que se está usando
-    local NameMOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
-
-    -- Crear la vareble si no existe
-    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
-
-    -- Guardar en el acceso rapido
-    ThisMOD = GPrefix.MODs[ NameMOD ]
-end
+--- Cargar la configuración del MOD
+GPrefix.CreateSetting( ThisMOD, "bool" )
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Configuración del MOD
-function ThisMOD.Settings( )
-    if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
+--- propiedades a Cambiar
+Private.Properties = { }
+table.insert( Private.Properties, "energy_usage"                ) --- Para todas las entidades
+table.insert( Private.Properties, "active_energy_usage"         ) --- Entidades logicas
+table.insert( Private.Properties, "energy_per_nearby_scan"      ) --- Radar
+table.insert( Private.Properties, "energy_per_sector"           ) --- Radar
+table.insert( Private.Properties, "energy_per_movement"         ) --- Insertador
+table.insert( Private.Properties, "energy_per_rotation"         ) --- Insertador
+table.insert( Private.Properties, "energy_usage_per_tick"       ) --- Lamaparas y altavoz
+table.insert( Private.Properties, "movement_energy_consumption" ) --- Spidertron
 
-    local SettingOption =  { }
-    SettingOption.name  = ThisMOD.Prefix_MOD
-    SettingOption.type  = "bool-setting"
-    SettingOption.order = ThisMOD.Char
-    SettingOption.setting_type   = "startup"
-    SettingOption.default_value  = true
-    SettingOption.allowed_values = { "true", "false" }
+--- Sección para los prototipos
+function Private.DataFinalFixes( )
+    local FileValid = { "data-final-fixes" }
+    local Active = GPrefix.isActive( ThisMOD, FileValid )
+    if not Active then return end
 
-    local Name = { }
-    table.insert( Name, "" )
-    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
-    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
-    if ThisMOD.Requires then
-        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
-    end SettingOption.localised_name = Name
-
-    local Description = { ThisMOD.Local .. "setting-description" }
-    if ThisMOD.Requires then
-        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
-    end SettingOption.localised_description = Description
-
-    data:extend( { SettingOption } )
-end
-
--- Cargar la configuración
-ThisMOD.Settings( )
-
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
-
--- Cargar la infomación
-function ThisMOD.LoadInformation( )
-
-    -- Inicializar y renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Inicializar y renombrar la variable
-    local Entities = Info.Entities or { }
-    Info.Entities = Entities
-
-    -- Establecer electricidad minima
-    local function Min( OldValue )
-       return tostring( 10 ^ 1 ) .. GPrefix.getUnit( OldValue )
+    --- Aplicar el efecto del MOD por fuera del mismo
+    --- @param TheMOD ThisMOD
+    function ThisMOD.DoEffect( TheMOD )
+        Private.DoEffect( TheMOD )
     end
 
-    -- Agregar a los prototipos del juego
-    local function add( Entity )
-        if not Entities[ Entity.name ] then
-            GPrefix.duplicateEntity( Entity, ThisMOD )
-        end return Entities[ Entity.name ]
+    --- Procesar los prototipos del MOD
+    Private.LoadPropotypes( )
+    GPrefix.CreateNewElements( ThisMOD )
+
+    --- Crear acceso directo al MOD
+    GPrefix[ ThisMOD.MOD ] = ThisMOD
+end
+
+--- Procesar los prototipos cargados en el juego y
+--- cargar los prototipos del MOD
+function Private.LoadPropotypes( )
+
+    --- Duplicar los accesos
+    --- @type ThisMOD
+    local TheMOD = { }
+    for Key, Value in pairs( ThisMOD ) do
+        TheMOD[ Key ] = Value
     end
 
-    -- Buscar las entidades a afectar
-    for _, Entity in pairs( GPrefix.Entities ) do
-        local Table = { }
+    --- Remplazar los prototipos
+    TheMOD.NewEntities = GPrefix.Entities
+    TheMOD.NewRecipes = GPrefix.Recipes
+    TheMOD.NewItems = GPrefix.Items
 
-        -- Validar elemento
-        local Alias = nil
-        if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
-        if Alias and Alias( Entity.name ) then goto JumpEntity end
+    --- Aplicar los efectos
+    ThisMOD.DoEffect( TheMOD )
+end
 
-        -- Todos
-        repeat
-            if not Entity.energy_source then break end
-            Table = Entity.energy_source
-            if not Table.type then goto JumpEntity end
-            if Table.type ~= "electric" then goto JumpEntity end
-            if not Table.drain then break end
+--- Aplicar el efecto del MOD por fuera del mismo
+--- @param TheMOD ThisMOD
+function Private.DoEffect( TheMOD )
 
-            Entity = add( Entity )
-            Entity.energy_source.drain = Min( Entity.energy_source.drain )
-        until true
+    --- Contenedor de los objetos a afectar
+    local Names = { }
 
-        if Entity.energy_usage then   Entity = add( Entity )
-            Entity.energy_usage = Min( Entity.energy_usage )
+    --- Recorret las entidades disponibles
+    for _, Entity in pairs( TheMOD.NewEntities ) do
+        local Temporal = Entity
+
+        --- Evitar estos elementos
+        local MODs = { ThisMOD, GPrefix.IC }
+        for _, MOD in pairs( MODs ) do
+            local isMOD = GPrefix.hasPrefixMOD( Entity, MOD )
+            if isMOD then goto JumpEntity end
         end
 
-        -- Entidades logicas
-        if Entity.active_energy_usage then   Entity = add( Entity )
-            Entity.active_energy_usage = Min( Entity.active_energy_usage )
-        end
+        --- Validación básica
+        if not Entity.minable then goto JumpEntity end
+        if not Entity.minable.result then goto JumpEntity end
 
-        -- Radar
-        if Entity.energy_per_nearby_scan then   Entity = add( Entity )
-            Entity.energy_per_nearby_scan = Min( Entity.energy_per_nearby_scan )
-        end
+        --- Agregar el objeto a la lista
+        table.insert( Names, Entity.minable.result )
 
-        if Entity.energy_per_sector then   Entity = add( Entity )
-            Entity.energy_per_sector = Min( Entity.energy_per_sector )
-        end
-
-        -- Insertador
-        if Entity.energy_per_movement then   Entity = add( Entity )
-            Entity.energy_per_movement = Min( Entity.energy_per_movement )
-        end
-
-        if Entity.energy_per_rotation then   Entity = add( Entity )
-            Entity.energy_per_rotation = Min( Entity.energy_per_rotation )
-        end
-
-        -- Lamaparas y altavoz
-        if Entity.energy_usage_per_tick then   Entity = add( Entity )
-            Entity.energy_usage_per_tick = Min( Entity.energy_usage_per_tick )
-        end
-
-        -- Spidertron
-        if Entity.movement_energy_consumption then   Entity = add( Entity )
-            Entity.movement_energy_consumption = Min( Entity.movement_energy_consumption )
-        end
-
-        -- Arma de energía
-        repeat
-            if not Entity.attack_parameters then break end
-            Table = Entity.attack_parameters
-            if not Table.ammo_type then break end
-            Table = Table.ammo_type
-            if not Table.energy_consumption then break end
-
-            Entity = add( Entity )
-            Table = Entity.attack_parameters.ammo_type
-            Table.energy_consumption = Min( Table.energy_consumption )
-        until true
-
-        -- Recepción del salto
+        --- Recepción del salto
         :: JumpEntity ::
     end
 
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Actualizar el resultado de las recetas
-    GPrefix.updateResults( ThisMOD )
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Inicializar y renombrar la variable
-    local Items = Info.Items or { }
-    Info.Items = Items
-
-    -- Asignar la marca del MOD
-    for _, Item in pairs( Items ) do
-        GPrefix.AddIcon( Item, ThisMOD )
+    --- Modificar los objetos enlistados
+    for _, Name in pairs( Names ) do
+        Private.doChange( Name, TheMOD )
     end
 end
 
--- Configuración del MOD
-function ThisMOD.DataFinalFixes( )
-    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
-    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
-    if not ThisMOD.Active then return end
+--- Aplicar el efecto del MOD
+--- @param Name string
+--- @param TheMOD ThisMOD
+function Private.doChange( Name, TheMOD )
 
-    ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
+    --- Duplicar el objeto
+    local New = GPrefix.DuplicateItem( Name, TheMOD )
+    if not New then return end
+
+    --- Aplciar el cambio
+    local Before = GPrefix.toString( New.Entity )
+    Private.ApplyEffect( New.Entity )
+    local After = GPrefix.toString( New.Entity )
+    if Before == After then return end
+
+    --- Incluir más información
+    New.Name = Name
+    New.TheMOD = TheMOD
+    Private.SaveData( New )
 end
 
--- Cargar la configuración
-ThisMOD.DataFinalFixes( )
+--- Guardar la información
+--- @param New table
+function Private.SaveData( New )
+
+    --- Renombrar las variables
+    local Table = GPrefix.Recipes[ New.Name ] or New.TheMOD.NewRecipes[ New.Name ]
+    local RecipeName = Table[ 1 ].name
+    local NewRecipe = New.Recipes[ #New.Recipes ]
+
+    local NewEntities = New.TheMOD.NewElements.NewEntities
+    local NewItems = New.TheMOD.NewElements.NewItems
+    local NewRecipes = New.TheMOD.NewElements.NewRecipes[ RecipeName ] or { }
+    New.TheMOD.NewElements.NewRecipes[ RecipeName ] = NewRecipes
+
+    --- Guardar los cambios
+    NewEntities[ New.Entity.name ] = New.Entity
+    NewItems[ New.Item.name ] = New.Item
+    table.insert( NewRecipes, NewRecipe )
+
+    --- Agregar la imagen de referencia
+    GPrefix.AddIcon( New.Item, ThisMOD )
+
+    --- Actualizar la receta
+    local Recipes = { }
+    table.insert( Recipes, NewRecipe )
+    table.insert( Recipes, NewRecipe.normal )
+    table.insert( Recipes, NewRecipe.expensive )
+    for _, Recipe in ipairs( Recipes ) do
+        for _, Result in ipairs( Recipe.results or { } ) do
+            if Result.name == New.Name then
+                Result.name = New.Item.name
+            end
+        end
+    end
+end
+
+--- Establece el valor minimo
+function Private.setEnergyValue( Unit )
+    return tostring( 10 ^ 1 ) .. GPrefix.getUnit( Unit )
+end
+
+--- Cambiar las propiedades de la entidad
+function Private.ApplyEffect( Entity )
+
+    --- Validación básica
+    if not Entity then return end
+
+    repeat --- Todas las entidades
+        if not Entity.energy_source then break end
+        local Table = Entity.energy_source
+        if not Table.type then return end
+        if Table.type ~= "electric" then return end
+        if not Table.drain then break end
+
+        Entity.energy_source.drain = Private.setEnergyValue( Entity.energy_source.drain )
+    until true
+
+    --- Buscar y modificar las propiedades
+    for _, Propiety in pairs( Private.Properties ) do
+        if Entity[ Propiety ] then
+            Entity[ Propiety ] = Private.setEnergyValue( Entity[ Propiety ] )
+        end
+    end
+
+    repeat --- Arma de energía
+        if not Entity.attack_parameters then break end
+        local Table = Entity.attack_parameters
+        if not Table.ammo_type then break end
+        Table = Table.ammo_type
+        if not Table.energy_consumption then break end
+
+        Table = Entity.attack_parameters.ammo_type
+        Table.energy_consumption = Private.setEnergyValue( Table.energy_consumption )
+    until true
+end
+
+--- Sección para los prototipos
+Private.DataFinalFixes( )
 
 ---------------------------------------------------------------------------------------------------

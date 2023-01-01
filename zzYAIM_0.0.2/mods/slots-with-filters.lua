@@ -1,83 +1,138 @@
 ---------------------------------------------------------------------------------------------------
 
---> slots-with-filters.lua <--
+---> slots-with-filters.lua <---
+
+---------------------------------------------------------------------------------------------------
+--- Contenedor de este MOD
+local ThisMOD = GPrefix.getThisMOD( debug.getinfo( 1 ).short_src )
+local Private = { }
+
+--- Cargar la configuración del MOD
+GPrefix.CreateSetting( ThisMOD, "bool" )
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Contenedor de este MOD
-local ThisMOD = { }
+--- Tipo de entidades a las que afectar
+Private.Affected = { }
+table.insert( Private.Affected, "container" )
+table.insert( Private.Affected, "logistic-container" )
 
--- Cargar información de este MOD
-if true then
+--- Nuevos typo del contenedor
+Private.Type = "with_filters_and_bar"
 
-    -- Identifica el mod que se está usando
-    local NameMOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
+--- Sección para los prototipos
+function Private.DataFinalFixes( )
+    local FileValid = { "data-final-fixes" }
+    local Active = GPrefix.isActive( ThisMOD, FileValid )
+    if not Active then return end
 
-    -- Crear la vareble si no existe
-    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
+    --- Aplicar el efecto del MOD por fuera del mismo
+    --- @param TheMOD ThisMOD
+    function ThisMOD.DoEffect( TheMOD )
+        Private.DoEffect( TheMOD )
+    end
 
-    -- Guardar en el acceso rapido
-    ThisMOD = GPrefix.MODs[ NameMOD ]
+    --- Procesar los prototipos del MOD
+    Private.LoadPropotypes( )
+    GPrefix.CreateNewElements( ThisMOD )
+
+    --- Crear acceso directo al MOD
+    GPrefix[ ThisMOD.MOD ] = ThisMOD
 end
 
--- Configuración del MOD
-local function Settings( )
-    if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
+--- Procesar los prototipos cargados en el juego y
+--- cargar los prototipos del MOD
+function Private.LoadPropotypes( )
 
-    local SettingOption =  { }
-    SettingOption.name  = ThisMOD.Prefix_MOD
-    SettingOption.type  = "bool-setting"
-    SettingOption.order = ThisMOD.Char
-    SettingOption.setting_type   = "startup"
-    SettingOption.default_value  = true
-    SettingOption.allowed_values = { "true", "false" }
+    --- Duplicar los accesos
+    --- @type ThisMOD
+    local TheMOD = { }
+    for Key, Value in pairs( ThisMOD ) do
+        TheMOD[ Key ] = Value
+    end
 
-    local Name = { }
-    table.insert( Name, "" )
-    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
-    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
-    if ThisMOD.Requires then
-        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
-    end SettingOption.localised_name = Name
+    --- Remplazar los prototipos
+    TheMOD.NewEntities = GPrefix.Entities
+    TheMOD.NewRecipes = GPrefix.Recipes
+    TheMOD.NewItems = GPrefix.Items
 
-    local Description = { ThisMOD.Local .. "setting-description" }
-    if ThisMOD.Requires then
-        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
-    end SettingOption.localised_description = Description
-
-    data:extend( { SettingOption } )
-    if true then return end
+    --- Aplicar los efectos
+    ThisMOD.DoEffect( TheMOD )
 end
 
--- Cargar la configuración
-Settings( )
+--- Aplicar el efecto del MOD por fuera del mismo
+--- @param TheMOD ThisMOD
+function Private.DoEffect( TheMOD )
 
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
+    --- Contenedor de los objetos a afectar
+    local Names = { }
 
--- Agrega el filtro a los contenedores
-function ThisMOD.doChange( Entity )
+    --- Recorrer las entidades disponibles
+    for _, Entity in pairs( TheMOD.NewEntities ) do
+
+        --- Evitar estos elementos
+        local MODs = { ThisMOD }
+        for _, MOD in pairs( MODs ) do
+            local isMOD = GPrefix.hasPrefixMOD( Entity, MOD )
+            if isMOD then goto JumpEntity end
+        end
+
+        --- Validación básica
+        if not Entity.minable then goto JumpEntity end
+        if not Entity.minable.result then goto JumpEntity end
+
+        --- Validar la entidad
+        if not GPrefix.getKey( Private.Affected, Entity.type ) then goto JumpEntity end
+
+        --- Agregar el objeto a la lista
+        table.insert( Names, Entity.minable.result )
+
+        --- Recepción del salto
+        :: JumpEntity ::
+    end
+
+    --- Modificar los objetos enlistados
+    for _, Name in pairs( Names ) do
+        Private.doChange( Name, TheMOD )
+    end
+end
+
+--- Aplicar el efecto del MOD
+--- @param Name table
+--- @param TheMOD ThisMOD
+function Private.doChange( Name, TheMOD )
+
+    --- Cargar el objeto a modificar
+    local Item = GPrefix.Items[ Name ] or TheMOD.NewItems[ Name ]
+    if not Item then return end
+    if not Item.place_result then return end
+
+    --- Actualizar la entidad
+    local Entity = GPrefix.Entities[ Item.place_result ] or TheMOD.NewEntities[ Item.place_result ]
     if not Entity then return end
-    if not GPrefix.isTable( Entity ) then return end
-    if not Entity.type then return end
-    if Entity.type ~= "container" then return end
+    Entity.inventory_type = Private.Type
 
-    Entity.inventory_type = "with_filters_and_bar"
+    --- Agregar la letra
+    GPrefix.addLetter( Item, ThisMOD.Char )
+    GPrefix.addLetter( Entity, ThisMOD.Char )
+    for _, Recipe in pairs( GPrefix.Recipes[ Item.name ] or { } ) do
+        GPrefix.addLetter( Recipe, ThisMOD.Char )
+    end
+    for _, Recipes in pairs( TheMOD.NewRecipes ) do
+        for _, Recipe in pairs( Recipes ) do
+            local Results = GPrefix.getResults( Recipe ) or { }
+            if GPrefix.inTable( Results, Item ) then
+                GPrefix.addLetter( Recipe, ThisMOD.Char )
+            end
+        end
+    end 
+
+    --- Actualizar la descripción de los compactados
+    if GPrefix.CI then GPrefix.CI.UpdateDescription( Item, ThisMOD ) end
 end
 
--- Configuración del MOD
-function ThisMOD.DataFinalFixes( )
-    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
-    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
-    if not ThisMOD.Active then return end
-
-    for _, Entity in pairs( GPrefix.Entities ) do
-        ThisMOD.doChange( Entity )
-    end GPrefix.SlotWithFilters = ThisMOD
-end
-
--- Cargar la configuración
-ThisMOD.DataFinalFixes( )
+--- Sección para los prototipos
+Private.DataFinalFixes( )
 
 ---------------------------------------------------------------------------------------------------

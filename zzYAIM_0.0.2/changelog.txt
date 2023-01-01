@@ -2,13 +2,12 @@
 Version: 0.2.0
 Date: 2022.04.25
   Created:
-    - queue-to-research
     - minimum-electrical-consumption
     - pollution-free-burner
     - start-with-items
   Changed:
-	- All
-		Restructure code
+    - All
+        Restructure code
         Each duplicated entity and object creates its respective recipes
         Replaced the plus sign with a letter that can be seen in the MOD settings
     - improve-compaction
@@ -24,10 +23,10 @@ Date: 2022.04.25
     - force-a-slot-modules
         Name change to "force-a-modules-slot"
         Duplicate each affected entities
-	- unlimited-robot
+    - unlimited-robot
         Name change to "Robots-with-unlimited-electricity"
         Duplicate each affected entities
-	- stack-size
+    - stack-size
         Name change to "Maximum-stack-size"
     - equipment-1x1
         Duplicate each affected equipments
@@ -50,8 +49,8 @@ Date: 2022.01.02
     - force-production
     - force-a-slot-modules
     - free-fluids
-	- immune-armors
+    - immune-armors
     - inventory-sort
     - pollution-free-electricity
-	- stack-size
-	- unlimited-robot
+    - stack-size
+    - unlimited-robot

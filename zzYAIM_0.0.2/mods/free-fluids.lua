@@ -1,124 +1,196 @@
 ---------------------------------------------------------------------------------------------------
 
---> free-fluids.lua <--
+---> free-fluids.lua <---
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Contenedor de este MOD
-local ThisMOD = { }
+--- Contenedor de este MOD
+local ThisMOD = GPrefix.getThisMOD( debug.getinfo( 1 ).short_src )
+local Private = { }
 
--- Cargar información de este MOD
-if true then
+--- Cargar la configuración del MOD
+GPrefix.CreateSetting( ThisMOD, "int" )
 
-    -- Identifica el mod que se está usando
-    local NameMOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-    -- Crear la vareble si no existe
-    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
+--- Valores de referencia
+Private.Base = "assembling-machine-2"
+Private.Localised = "machine"
+Private.subGroup = "create"
 
-    -- Guardar en el acceso rapido
-    ThisMOD = GPrefix.MODs[ NameMOD ]
+--- Sección para los prototipos
+function Private.DataFinalFixes( )
+    local FileValid = { "data-final-fixes" }
+    local Active = GPrefix.isActive( ThisMOD, FileValid )
+    if not Active then return end
+
+    --- Procesar los prototipos del MOD
+    Private.LoadPropotypes( )
+    GPrefix.CreateNewElements( ThisMOD )
+
+    --- Crear acceso directo al MOD
+    GPrefix[ ThisMOD.MOD ] = ThisMOD
 end
 
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
+--- Procesar los prototipos cargados en el juego y
+--- cargar los prototipos del MOD
+function Private.LoadPropotypes( )
+    local Data = { }
+    Private.CreateMachine( Data )
+    if not Data.New then return end
+    Private.CreateCategory( )
 
--- Configuración del MOD
-function ThisMOD.Settings( )
-    if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
+    --- Cargar los fluidos
+    Private.LoadFluidFromRecipeResults( Data )
+    Private.LoadFluidFromRecipeIngredients( Data )
+    Private.LoadFluidFromEntites( Data )
 
-    local SettingOption =  { }
-    SettingOption.name  = ThisMOD.Prefix_MOD
-    SettingOption.type  = "bool-setting"
-    SettingOption.order = ThisMOD.Char
-    SettingOption.setting_type   = "startup"
-    SettingOption.default_value  = true
-    SettingOption.allowed_values = { "true", "false" }
+    --- Cargar los volres
+    Private.ConvertRange( Data )
+    Private.LoadDefaultTemperature( Data )
 
-    local Name = { }
-    table.insert( Name, "" )
-    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
-    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
-    if ThisMOD.Requires then
-        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
-    end SettingOption.localised_name = Name
-
-    local Description = { ThisMOD.Local .. "setting-description" }
-    if ThisMOD.Requires then
-        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
-    end SettingOption.localised_description = Description
-
-    data:extend( { SettingOption } )
+    Private.CreateRecipes( Data )
 end
 
--- Cargar la configuración
-ThisMOD.Settings( )
+--- Cargar la información de la maquina
+--- @param Data table
+function Private.CreateMachine( Data )
 
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
+    --- Duplicar la entidad base
+    local New = GPrefix.DuplicateItem( Private.Base, ThisMOD )
+    if not New then return end
+    Data.New = New
 
--- Cargar los fuidos de las recetas
-function ThisMOD.FluidWithRecibe( )
+    --- Inicializar y renombrar la variable
+    local Entity = New.Entity
 
-    -- Renombrar la variable
-    local Info = ThisMOD.InformationFluid or { }
-    ThisMOD.InformationFluid = Info
+    --- Modificar la entidad
+    Entity.energy_usage = "10W"
+    Entity.next_upgrade = nil
+    Entity.collision_mask = nil
+    Entity.energy_source = { type = "void" }
+    Entity.crafting_categories = { ThisMOD.Prefix_MOD }
+    Entity.resource_categories = nil
 
-    local Fluids = Info.Fluids or { }
-    Info.Fluids = Fluids
+    --- Eliminar los ingredientes
+    local Recipe = New.Recipes[ 1 ]
+    local Array = { Recipe, Recipe.normal, Recipe.expensive }
+    for _, Table in ipairs( Array ) do
+        if Table.ingredients then
+            Table.ingredients = { }
+        end
+    end
 
-    local Ranges = Info.Ranges or { }
-    Info.Ranges = Ranges
+    --- Establecer el resultado
+    local Results = { ThisMOD.Prefix_MOD_ .. Private.Base, 1 }
+    GPrefix.setResults( Recipe, { Results } )
 
-    -- Cargar los fluidos de los ingredientes y resultados
-    for _, recipes in pairs( GPrefix.Recipes ) do
-        for _, recipe in pairs( recipes ) do
+    --- Establecer el apodo
+    --- @type table
+    local Item = New.Item
+    Item.localised_description = nil
+    Item.localised_name[ 2 ] = { ThisMOD.Local .. Private.Localised }
+    Entity.localised_name = GPrefix.DeepCopy( Item.localised_name )
+    Recipe.localised_name = GPrefix.DeepCopy( Item.localised_name )
 
-            -- Variable contenedora
-            local _recipes = { recipe, recipe.expensive, recipe.normal }
+    --- Eliminar la investigación
+    ThisMOD.NewRecipes[ Private.Base ] = nil
+    local Recipes = ThisMOD.NewRecipes[ "" ] or { }
+    ThisMOD.NewRecipes[ "" ] = Recipes
+    table.insert( Recipes, Recipe )
 
-            -- Resultados de la recera
+    --- Agregar el referencia
+    local List = { }
+
+    List = { icon = "" }
+    List.icon = data.raw.fluid[ "crude-oil" ].icons[ 1 ].icon
+
+    List.scale = 0.3
+    List.icon_size = 64
+    List.icon_mipmaps = 4
+    List.shift = { -10, -8 }
+
+    table.insert( Item.icons, List )
+end
+
+--- Cargar la información de la maquina
+function Private.CreateCategory( )
+    local Category = { }
+    Category.name = ThisMOD.Prefix_MOD
+    Category.type = "recipe-category"
+    data:extend( { Category } )
+end
+
+--- Cargar los fluidos desde los resultados de las recestas
+--- @param Data table
+function Private.LoadFluidFromRecipeResults( Data )
+
+    --- Inicializar la variable
+    local Fluids = Data.Fluids or { }
+    Data.Fluids = Fluids
+
+    --- Recorrer las recetas
+    for _, Recipes in pairs( GPrefix.Recipes ) do
+        for _, Recipe in pairs( Recipes ) do
+
+            --- Variable contenedora
+            local recipes = { Recipe, Recipe.expensive, Recipe.normal }
+
+            --- Concentrar los resultados en una variable
             local Results = { }
-            for _, _recipe in pairs( _recipes ) do
-                if _recipe.result then
-                    local result = { }
-                    table.insert( Results, result )
-                    table.insert( result, _recipe.result )
-                    table.insert( result, _recipe.result_count or 1 )
-                end
-
-                if _recipe.results then
-                    for _, result in pairs( _recipe.results ) do
+            for _, recipe in pairs( recipes ) do
+                if recipe.results then
+                    for _, result in pairs( recipe.results ) do
                         table.insert( Results, result )
                     end
                 end
             end
 
+            --- Buscar en los resultados encontrados
             for _, Result in pairs( Results ) do
 
-                -- { name = Nombre, amount = Contidad }
-                -- { name = Nombre, amount = Contidad, type = "item" }
-                -- { name = Nombre, amount = Contidad, type ="fluid", temperature = Temperatura }
-                -- { name = Nombre, amount_min = Min, amount_max = Max, probability = [ Min: 0.01 - Max: 1 ] }
+                --- { name = Nombre, amount = Contidad }
+                --- { name = Nombre, amount = Contidad, type = "item" }
+                --- { name = Nombre, amount = Contidad, type ="fluid", temperature = Temperatura }
+                --- { name = Nombre, amount_min = Min, amount_max = Max, probability = [ Min: 0.01 - Max: 1 ] }
                 if Result.type == "fluid" then
 
-                    -- Preparar el espacio
+                    --- Preparar el espacio
                     Fluids[ Result.name ] = Fluids[ Result.name ] or { }
                     local newFluids = Fluids[ Result.name ]
 
-                    -- Guardar la temperatura
+                    --- Guardar la temperatura
                     if not GPrefix.getKey( newFluids, Result.temperature ) then
                         table.insert( newFluids, Result.temperature )
                     end
                 end
             end
+        end
+    end
+end
 
-            -- Ingredientes de la recera
+--- Cargar los fluidos desde los ingredientes de las recestas
+--- @param Data table
+function Private.LoadFluidFromRecipeIngredients( Data )
+
+    --- Inicializar la variable
+    local Ranges = Data.Ranges or { }
+    Data.Ranges = Ranges
+
+    --- Recorrer las recetas
+    for _, Recipes in pairs( GPrefix.Recipes ) do
+        for _, Recipe in pairs( Recipes ) do
+
+            --- Variable contenedora
+            local recipes = { Recipe, Recipe.expensive, Recipe.normal }
+
+            --- Ingredientes de la recera
             local Ingredients = { }
-            for _, _recipe in pairs( _recipes ) do
-                if _recipe.ingredients then
-                    for _, ingredient in pairs( _recipe.ingredients ) do
+            for _, recipe in pairs( recipes ) do
+                if recipe.ingredients then
+                    for _, ingredient in pairs( recipe.ingredients ) do
                         table.insert( Ingredients, ingredient )
                     end
                 end
@@ -126,20 +198,20 @@ function ThisMOD.FluidWithRecibe( )
 
             for _, Ingredient in pairs( Ingredients ) do
 
-                -- { name = Nombre, amount = Contidad }
-                -- { name = Nombre, amount = Contidad, type = "item" }
-                -- { name = Nombre, amount = Contidad, type ="fluid", temperature = Temperatura }
+                --- { name = Nombre, amount = Contidad }
+                --- { name = Nombre, amount = Contidad, type = "item" }
+                --- { name = Nombre, amount = Contidad, type ="fluid", temperature = Temperatura }
                 if Ingredient.maximum_temperature then
 
-                    -- Preparar el espacio
+                    --- Preparar el espacio
                     Ranges[ Ingredient.name ] = Ranges[ Ingredient.name ] or { }
                     local newFluids = Ranges[ Ingredient.name ]
 
-                    -- Establecer la temperaturas limites
+                    --- Establecer la temperaturas limites
                     local Max = Ingredient.maximum_temperature
                     local Min = Ingredient.minimum_temperature
 
-                    -- Temperatura minima no definida
+                    --- Temperatura minima no definida
                     if not Min then
                         local default = GPrefix.Fluids[ Ingredient.name ].default_temperature
                         local minimum = GPrefix.Fluids[ Ingredient.name ].min_temperature
@@ -150,43 +222,40 @@ function ThisMOD.FluidWithRecibe( )
                         if     minimum and not gas then Min = math.min( default, minimum ) end
                     end
 
-                    -- Guardar el rango
+                    --- Guardar el rango
                     table.insert( newFluids, { Min, Max } )
                 end
             end
-
         end
     end
 end
 
--- Cargar los fuidos sin recetas
-function ThisMOD.FluidWithoutRecibe( )
+--- Cargar los fluidos desde las entidades
+--- @param Data table
+function Private.LoadFluidFromEntites( Data )
 
-    -- Renombrar la variable
-    local Info = ThisMOD.InformationFluid or { }
-    ThisMOD.InformationFluid = Info
+    --- Inicializar la variable
+    local Fluids = Data.Fluids or { }
+    Data.Fluids = Fluids
 
-    local Fluids = Info.Fluids or { }
-    Info.Fluids = Fluids
-
-    -- Fluidos que se crean sin recetas
+    --- Fluidos que se crean sin recetas
     for _, Entity in pairs( GPrefix.Entities ) do
         repeat
 
-            -- Validación
+            --- Validación
             if not Entity.output_fluid_box then break end
             if #Entity.output_fluid_box.pipe_connections < 1 then break end
             if not Entity.output_fluid_box.filter then break end
             if not Entity.target_temperature then break end
 
-            -- Renombrar variable
+            --- Renombrar variable
             local Name = Entity.output_fluid_box.filter
 
-            -- Preparar el espacio
+            --- Preparar el espacio
             Fluids[ Name ] = Fluids[ Name ] or { }
             local newFluids = Fluids[ Name ]
 
-            -- Guardar la temperatura
+            --- Guardar la temperatura
             if not GPrefix.getKey( newFluids, Entity.target_temperature ) then
                 table.insert( newFluids, Entity.target_temperature )
             end
@@ -195,94 +264,87 @@ function ThisMOD.FluidWithoutRecibe( )
     end
 end
 
--- Verificar los rangos de temperaturas
-function ThisMOD.TemperatureRange( )
+--- Convierte los rangos de las temperaturas una unica
+--- @param Data table
+function Private.ConvertRange( Data )
 
-    -- Renombrar la variable
-    local Info = ThisMOD.InformationFluid or { }
-    ThisMOD.InformationFluid = Info
+    --- Inicializar la variable
+    local Fluids = Data.Fluids or { }
+    Data.Fluids = Fluids
 
-    local Fluids = Info.Fluids or { }
-    Info.Fluids = Fluids
+    --- Inicializar la variable
+    local Ranges = Data.Ranges or { }
+    Data.Ranges = Ranges
 
-    local Ranges = Info.Ranges or { }
-    Info.Ranges = Ranges
-
-    -- Verificar los rangos
+    --- Verificar los rangos
     for Name, Temperatures in pairs( Ranges ) do
 
-        -- Preparar el espacio
+        --- Preparar el espacio
         Fluids[ Name ] = Fluids[ Name ] or { }
         local NewFluids = Fluids[ Name ]
 
-        -- Verificar cada rango
+        --- Verificar cada rango
         for _, Range in pairs( Temperatures ) do
 
-            -- Bandera
+            --- Bandera
             local Add = true
 
-            -- Renombrar la variable
+            --- Renombrar la variable
             local Min = Range[ 1 ]
             local Max = Range[ 2 ]
 
-            -- Verificar cada temperatura
+            --- Verificar cada temperatura
             for _, Temperature in pairs( Fluids[ Name ] ) do
                 if Temperature >= Min and Temperature <= Max then
                     Add = false break
                 end
             end
 
-            -- Añadir si no existe
+            --- Añadir si no existe
             if Add then
 
-                -- Añadir el valor por defecto
+                --- Añadir el valor por defecto
                 local Default = GPrefix.Fluids[ Name ].default_temperature
                 if Add and Default >= Min and Default <= Max then
                     table.insert( NewFluids, false )
-                    Add = false
                 end
 
-                -- Añadir el valor medio
+                --- Añadir el valor medio
                 local Middle = math.ceil( ( Min + Max ) / 2 )
                 if Add and Default >= Min and Default <= Max then
                     table.insert( NewFluids, Middle )
-                    Add = false
                 end
             end
         end
     end
 end
 
--- Cargar las temperaturas por defecto
-function ThisMOD.TemperatureDefault( )
+--- Cargar las temperaturas
+--- @param Data table
+function Private.LoadDefaultTemperature( Data )
 
-    -- Renombrar la variable
-    local Info = ThisMOD.InformationFluid or { }
-    ThisMOD.InformationFluid = Info
+    --- Inicializar la variable
+    local Fluids = Data.Fluids or { }
+    Data.Fluids = Fluids
 
-    local Fluids = Info.Fluids or { }
-    Info.Fluids = Fluids
-
-    -- Cargar las temperaturas por defecto
+    --- Cargar las temperaturas por defecto
     for Name, Temperatures in pairs( Fluids ) do
         Fluids[ Name ] = #Temperatures > 0 and Temperatures or { true }
     end
 end
 
--- Crear los subgrupos y las recetas de los fluidos
-function ThisMOD.CreateFluidRecipe( )
+--- Crear una receta para cada fluido
+--- @param Data table
+function Private.CreateRecipes( Data )
 
-    -- Renombrar la variable
-    local Info = ThisMOD.InformationFluid or { }
-    ThisMOD.InformationFluid = Info
-
-    local Fluids = Info.Fluids or { }
-    Info.Fluids = Fluids
+    --- Inicializar la variable
+    local Fluids = Data.Fluids or { }
+    Data.Fluids = Fluids
 
     local Actions =  { "Create", "Delete" }
 
-    -- Crear el SubGrupo para los fluidos
-    -- con temperaturas unica
+    --- Crear el SubGrupo para los fluidos
+    --- con temperaturas unica
     for _, Action in pairs( Actions ) do
         local subGroup = { }
         subGroup.group = "fluids"
@@ -294,11 +356,11 @@ function ThisMOD.CreateFluidRecipe( )
         data:extend( { subGroup } )
     end
 
-    -- Crar cada uno de los fluidos
+    --- Crar cada uno de los fluidos
     for Name, Temperatures in pairs( Fluids ) do
 
-        -- Crear los SubGrupos para los fuidos
-        -- con varias temperaturas
+        --- Crear los SubGrupos para los fuidos
+        --- con varias temperaturas
         if #Temperatures > 0 then
             for _, Action in pairs( Actions ) do
                 local subGroup = { }
@@ -315,28 +377,27 @@ function ThisMOD.CreateFluidRecipe( )
         for Number, temperature in pairs( Temperatures ) do
             for _, Action in pairs( Actions ) do
 
-                -- Renombrar la variable
+                --- Renombrar la variable
                 local Fluid = GPrefix.Fluids[ Name ]
 
-                -- Fluido correspondiente
+                --- Fluido correspondiente
                 local fluid =  { }
                 fluid.type = "fluid"
                 fluid.name = Name
-                fluid.amount = 10^6
+                fluid.amount = ThisMOD.Value
 
-                -- Establecer la temperatura
+                --- Establecer la temperatura
                 if GPrefix.isNumber( temperature ) then
                     fluid.temperature = temperature
                 end
 
-                -- Receta del fluido
+                --- Receta del fluido
                 local Recipe = { }
                 Recipe.type = "recipe"
                 Recipe.icon = Fluid.icon
                 Recipe.icons = GPrefix.DeepCopy( Fluid.icons )
                 Recipe.icon_size = Fluid.icon_size
                 Recipe.icon_mipmaps = Fluid.icon_mipmaps
-                Recipe.hide_from_player_crafting = true
 
                 Recipe.enabled = true
                 Recipe.category = ThisMOD.Prefix_MOD
@@ -351,10 +412,10 @@ function ThisMOD.CreateFluidRecipe( )
                     Recipe.localised_name = { "fluid-name." .. Name }
                 end
 
-                -- Establecer el nombre de la receta
+                --- Establecer el nombre de la receta
                 Recipe.name = Action .. "-"
 
-                -- Fluido con varias temperaturas
+                --- Fluido con varias temperaturas
                 if GPrefix.isNumber( temperature ) then
                     Recipe.name = Recipe.name .. Name
                     local Subgroup = ThisMOD.Prefix_MOD_
@@ -362,20 +423,18 @@ function ThisMOD.CreateFluidRecipe( )
                     Recipe.name = Recipe.name .. "-" .. Number
                 end
 
-                -- Fluido con temperatura unica
+                --- Fluido con temperatura unica
                 if not GPrefix.isNumber( temperature ) then
                     local Subgroup = ThisMOD.Prefix_MOD_
                     Recipe.subgroup = Subgroup .. Recipe.name .. "0"
                     Recipe.name = Recipe.name .. Name
                 end
 
-                -- Establecer el orden
+                --- Establecer el orden
                 Recipe.order = Recipe.name
 
-                -- Agregar la equis
+                --- Agregar la equis
                 if Action == "Delete" then
-                    GPrefix.CreateIcons( Recipe )
-
                     local List = { }
                     List.icon = "__core__/graphics/cancel.png"
                     List.icon_size = 64
@@ -386,119 +445,14 @@ function ThisMOD.CreateFluidRecipe( )
                     table.insert( Recipe.icons, List )
                 end
 
-                -- Guardar el fluido
+                --- Guardar el fluido
                 GPrefix.addRecipe( Recipe, ThisMOD )
             end
         end
     end
 end
 
--- Cargar la información de la maquina
-function ThisMOD.LoadMachine( )
-
-    -- Inicializar las variables
-    local Base = "assembling-machine-2"
-    local Entity = GPrefix.Entities[ Base ]
-    local Category = { type = "recipe-category", name = ThisMOD.Prefix_MOD }
-    local Localised = "machine"
-
-    -- Duplicar la información relacionada
-    GPrefix.duplicateEntity( Entity, ThisMOD )
-
-    -- Crear la nueva categoria
-    data:extend( { Category } )
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Inicializar y renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Inicializar y renombrar la variable
-    local Entities = Info.Entities or { }
-    Info.Entities = Entities
-
-    -- Modificar la entidad
-    Entity = Entities[ Entity.name ]
-    Entity.energy_usage = "1W"
-    Entity.next_upgrade = nil
-    Entity.collision_mask = nil
-    Entity.energy_source = { type = "void" }
-    Entity.crafting_categories = { ThisMOD.Prefix_MOD }
-    Entity.resource_categories = nil
-    Entity.fast_replaceable_group = nil
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Actualizar el resultado de las recetas
-    GPrefix.updateResults( ThisMOD )
-
-    -- Inicializar y renombrar la variable
-    local Recipes = Info.Recipes or { }
-    Info.Recipes = Recipes
-
-    -- Eliminar los ingredientes
-    local Recipe = Recipes[ Base ][ 1 ]
-    for _, Table in ipairs( { Recipe, Recipe.normal, Recipe.expensive } ) do
-        if Table.ingredients then
-            Table.ingredients = { }
-            Table.results = nil
-        end
-    end
-
-    -- Eliminar las demas recetas
-    while #Recipes[ Base ] > 1 do
-        table.remove( Recipes[ Base ], 2 )
-    end
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Establecer el apodo
-    local Item = Info.Items[ Base ]
-    Item.localised_name = nil
-    Item.localised_description = nil
-    GPrefix.addLetter( Item, ThisMOD.Char )
-    Item.localised_name[ 2 ] = { ThisMOD.Local .. Localised }
-    Entity.localised_name = GPrefix.DeepCopy( Item.localised_name )
-    Recipe.localised_name = GPrefix.DeepCopy( Item.localised_name )
-    GPrefix.CreateIcons( Item )
-
-    -- Agregar el referencia
-    local List = { }
-
-    List = { icon = "" }
-    List.icon = data.raw.fluid[ "crude-oil" ].icon
-
-    List.scale = 0.3
-    List.icon_size = 64
-    List.icon_mipmaps = 4
-    List.shift = { -10, -8 }
-
-    table.insert( Item.icons, List )
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Habilitar la receta desde el inicia de la partida
-    Recipes[ "" ] = Recipes[ Base ]
-    Recipes[ Base ] = nil
-end
-
--- Configuración del MOD
-function ThisMOD.DataFinalFixes( )
-    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
-    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
-    if not ThisMOD.Active then return end
-
-    ThisMOD.FluidWithRecibe( )   ThisMOD.FluidWithoutRecibe( )
-    ThisMOD.TemperatureRange( )   ThisMOD.TemperatureDefault( )
-    ThisMOD.CreateFluidRecipe( )
-
-    ThisMOD.LoadMachine( )   GPrefix.createInformation( ThisMOD )
-end
-
--- Cargar la configuración
-ThisMOD.DataFinalFixes( )
+--- Sección para los prototipos
+Private.DataFinalFixes( )
 
 ---------------------------------------------------------------------------------------------------

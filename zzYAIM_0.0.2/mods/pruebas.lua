@@ -1,6 +1,14 @@
 ---------------------------------------------------------------------------------------------------
 
----> pollution-free-electricity.lua <---
+---> pruebas.lua <---
+
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- 
+--- Recepción del salto
+---> Modificar esto <---
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- 
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
@@ -64,7 +72,6 @@ function Private.DoEffect( TheMOD )
 
     --- Recorrer las entidades disponibles
     for _, Entity in pairs( TheMOD.NewEntities ) do
-        local Temporal = Entity
 
         --- Evitar estos elementos
         local MODs = { ThisMOD, GPrefix.IC }
@@ -76,13 +83,6 @@ function Private.DoEffect( TheMOD )
         --- Validación básica
         if not Entity.minable then goto JumpEntity end
         if not Entity.minable.result then goto JumpEntity end
-
-        --- Validar la entidad
-        if not Temporal.energy_source then goto JumpEntity end
-        Temporal = Temporal.energy_source
-        if not Temporal.type then goto JumpEntity end
-        if Temporal.type ~= "electric" then goto JumpEntity end
-        if not Temporal.emissions_per_minute then goto JumpEntity end
 
         --- Agregar el objeto a la lista
         table.insert( Names, Entity.minable.result )
@@ -107,10 +107,7 @@ function Private.doChange( Name, TheMOD )
     if not New then return end
 
     --- Aplciar el cambio
-    local Array = New.Entity.energy_source
-    if Array.emissions_per_minute > 0 then
-        Array.emissions_per_minute = nil
-    end
+
 
     --- Incluir más información
     New.Name = Name
@@ -154,7 +151,31 @@ function Private.SaveData( New )
     end
 end
 
---- Sección para los prototipos
-Private.DataFinalFixes( )
+-- --- Sección para los prototipos
+-- Private.DataFinalFixes( )
+
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+
+--- Sección para los eventos
+function Private.Control( )
+    local FileValid = { "control" }
+    local Active = GPrefix.isActive( ThisMOD, FileValid )
+    if not Active then return end
+
+    Private.LoadEvents( )
+end
+
+--- Cargar los eventos del MOD
+function Private.LoadEvents( )
+
+    -- GPrefix.addEventOnControl( {
+    --     ID = defines.events.on_gui_click,
+    --     Function = function ( ) end,
+    -- } )
+end
+
+--- Sección para los eventos
+Private.Control( )
 
 ---------------------------------------------------------------------------------------------------

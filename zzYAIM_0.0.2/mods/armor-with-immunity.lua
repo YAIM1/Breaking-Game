@@ -1,190 +1,148 @@
 ---------------------------------------------------------------------------------------------------
 
---> armor-with-immunity.lua <--
+---> armor-with-immunity.lua <---
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Contenedor de este MOD
-local ThisMOD = { }
+--- Contenedor de este MOD
+local ThisMOD = GPrefix.getThisMOD( debug.getinfo( 1 ).short_src )
+local Private = { }
 
--- Cargar información de este MOD
-if true then
+--- Cargar la configuración del MOD
+GPrefix.CreateSetting( ThisMOD, "bool" )
 
-    -- Identifica el mod que se está usando
-    local NameMOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-    -- Crear la vareble si no existe
-    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
+--- Valores de referencia
+Private.Base = "light-armor"
+Private.Ingredients = {
+    { "wood"      , 500 },
+    { "coal"      , 500 },
+    { "stone"     , 500 },
+    { "raw-fish"  ,  50 },
+    { "iron-ore"  , 500 },
+    { "copper-ore", 500 },
+}
 
-    -- Guardar en el acceso rapido
-    ThisMOD = GPrefix.MODs[ NameMOD ]
+--- Sección para los prototipos
+function Private.DataFinalFixes( )
+    local FileValid = { "data-final-fixes" }
+    local Active = GPrefix.isActive( ThisMOD, FileValid )
+    if not Active then return end
+
+    --- Procesar los prototipos del MOD
+    Private.LoadPropotypes( )
+    GPrefix.CreateNewElements( ThisMOD )
+
+    --- Crear acceso directo al MOD
+    GPrefix[ ThisMOD.MOD ] = ThisMOD
 end
 
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
+--- Procesar los prototipos cargados en el juego y
+--- cargar los prototipos del MOD
+function Private.LoadPropotypes( )
 
--- Configuración del MOD
-function ThisMOD.Settings( )
-    if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
+    --- Validación básica
+    if not GPrefix.Items[ Private.Base ] then return end
+    if not GPrefix.Recipes[ Private.Base ] then return end
 
-    local SettingOption =  { }
-    SettingOption.name  = ThisMOD.Prefix_MOD
-    SettingOption.type  = "bool-setting"
-    SettingOption.order = ThisMOD.Char
-    SettingOption.setting_type   = "startup"
-    SettingOption.default_value  = true
-    SettingOption.allowed_values = { "true", "false" }
+    --- Inicializar las variables
+    local Items = ThisMOD.NewItems
+    local Recipes = ThisMOD.NewRecipes
 
-    local Name = { }
-    table.insert( Name, "" )
-    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
-    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
-    if ThisMOD.Requires then
-        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
-    end SettingOption.localised_name = Name
-
-    local Description = { ThisMOD.Local .. "setting-description" }
-    if ThisMOD.Requires then
-        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
-    end SettingOption.localised_description = Description
-
-    data:extend( { SettingOption } )
-end
-
--- Cargar la configuración
-ThisMOD.Settings( )
-
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
-
--- Cargar la información para crear las armaduras
-function ThisMOD.LoadInformation(  )
-
-    -- Información base
-    ThisMOD.Base = { }
-    ThisMOD.Base.Name = "light-armor"
-    ThisMOD.Base.Ingredients = {
-        { "wood"      , 500 },
-        { "coal"      , 500 },
-        { "stone"     , 500 },
-        { "raw-fish"  ,  50 },
-        { "iron-ore"  , 500 },
-        { "copper-ore", 500 }
-    }
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Inicializar y renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
-
-    local Items = Info.Items or { }
-    Info.Items = Items
-
-    local Recipes = Info.Recipes or { }
-    Info.Recipes = Recipes
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Establecer es el order
+    --- Establecer es el order
     local Count = GPrefix.getLength( data.raw[ "damage-type" ] )
     local Order = string.char( 64 + Count + 1 )
 
-    -- Crear la mejor armadura 
-    local UltimateArmor = ThisMOD.CreateArmor( Items, "ultimate" )
+    --- Crear la mejor armadura 
+    local UltimateArmor = Private.CreateArmor( Items, "ultimate" )
     GPrefix.AddIcon( UltimateArmor, ThisMOD )
     UltimateArmor.order = Order
 
-    -- Crear la receta de la mejor armadura
-    local UltimateRecipe = ThisMOD.CreateRecipe( Recipes, "ultimate" )
+    --- Crear la receta de la mejor armadura
+    local UltimateRecipe = Private.CreateRecipe( Recipes, "ultimate" )
     UltimateRecipe.order = Order
 
-    -- Crear las demás armaduras
-    for Damage, _ in pairs( data.raw[ "damage-type" ] ) do
-        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
 
-        -- Orden de la receta y el objeto
+    --- Crear las demás armaduras
+    for Damage, _ in pairs( data.raw[ "damage-type" ] ) do
+
+        --- Orden de la receta y el objeto
         Order = string.char( 64 + GPrefix.getLength( Items ) )
 
-        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
 
-        -- Crear la armadura imune a un daño
-        local DamageArmor = ThisMOD.CreateArmor( Items, Damage )
+        --- Crear la armadura imune a un daño
+        local DamageArmor = Private.CreateArmor( Items, Damage )
         GPrefix.AddIcon( DamageArmor, ThisMOD )
         DamageArmor.order = Order
 
-        -- Agregar la inmunidad a las armaduras
+        --- Agregar la inmunidad a las armaduras
         table.insert( DamageArmor.resistances, { type = Damage, decrease = 0, percent = 100 } )
         table.insert( UltimateArmor.resistances, { type = Damage, decrease = 0, percent = 100 } )
 
-        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
 
-        -- Crear la receta para la armadura con inmunidad
-        local DamageRecipe = ThisMOD.CreateRecipe( Recipes, Damage )
+        --- Crear la receta para la armadura con inmunidad
+        local DamageRecipe = Private.CreateRecipe( Recipes, Damage )
         DamageRecipe.order = Order
 
-        -- Agregar los ingredientes a la receta
-        DamageRecipe.ingredients = GPrefix.DeepCopy( ThisMOD.Base.Ingredients )
+        --- Agregar los ingredientes a la receta
+        DamageRecipe.ingredients = GPrefix.DeepCopy( Private.Ingredients )
         table.insert( UltimateRecipe.ingredients, { ThisMOD.Prefix_MOD_ .. DamageArmor.name, 1 } )
-
-        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
     end
 end
 
--- Crear una armadura sin resistencia
-function ThisMOD.CreateArmor( Items, Name )
+--- Crear una armadura sin resistencia
+--- @param Items table
+--- @param Name string
+function Private.CreateArmor( Items, Name )
 
-    -- Inicializar la nueva armadura
-    local Item = GPrefix.Items[ ThisMOD.Base.Name ]
+    --- Inicializar la nueva armadura
+    local Item = GPrefix.Items[ Private.Base ]
     Item = GPrefix.DeepCopy( Item )
     Items[ Name ] = Item
 
-    -- Cambiar las propiedades
+    --- Cambiar las propiedades
     Item.name = Name
     Item.resistances = { }
     Item.localised_name = { ThisMOD.Local .. "item-name", { ThisMOD.Local .. Name } }
     Item.localised_description = { ThisMOD.Local .. "item-description", { ThisMOD.Local .. Name } }
 
-    -- Devolver los datos
+    --- Devolver los datos
     return Item
 end
 
--- Crear una receta para la armadura
-function ThisMOD.CreateRecipe( Recipes, Name )
+--- Crear una receta para la armadura
+--- @param Recipes table
+--- @param Name string
+function Private.CreateRecipe( Recipes, Name )
 
-    -- Inicializar la receta para la armadura
-    local Recipe = GPrefix.Recipes[ ThisMOD.Base.Name ]
+    --- Inicializar la receta para la armadura
+    local Recipe = GPrefix.Recipes[ Private.Base ]
     Recipe = GPrefix.DeepCopy( Recipe[ 1 ] )
     Recipes[ "" ] = Recipes[ "" ] or { }
     table.insert( Recipes[ "" ], Recipe )
 
-    -- Eliminar las propiedades inecesarios
+    --- Eliminar las propiedades inecesarios
     Recipe.normal = nil
     Recipe.results = nil
     Recipe.expensive = nil
-    Recipe.Localised_description = nil
 
-    -- Establece las propiedades basicas
+    --- Establece las propiedades basicas
     Recipe.name = Name
     Recipe.result = ThisMOD.Prefix_MOD_ .. Name
     Recipe.ingredients = { }
     Recipe.localised_name = { ThisMOD.Local .. "item-name", { ThisMOD.Local .. Name } }
 
-    -- Devolver los datos
+    --- Devolver los datos
     return Recipe
 end
 
--- Configuración del MOD
-function ThisMOD.DataFinalFixes( )
-    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
-    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
-    if not ThisMOD.Active then return end
-
-    ThisMOD.LoadInformation( )   GPrefix.createInformation( ThisMOD )
-end
-
--- Cargar la configuración
-ThisMOD.DataFinalFixes( )
+--- Sección para los prototipos
+Private.DataFinalFixes( )
 
 ---------------------------------------------------------------------------------------------------

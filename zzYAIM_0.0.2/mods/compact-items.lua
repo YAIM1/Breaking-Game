@@ -1,221 +1,195 @@
 ---------------------------------------------------------------------------------------------------
 
---> compact-items.lua <--
+---> compact-items.lua <---
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Contenedor de este MOD
-local ThisMOD = { }
+--- Contenedor de este MOD
+local ThisMOD = GPrefix.getThisMOD( debug.getinfo( 1 ).short_src )
+local Private = { }
 
--- Cargar información de este MOD
-if true then
+--- Cargar la configuración del MOD
+GPrefix.CreateSetting( ThisMOD, "int" )
 
-    -- Identifica el mod que se está usando
-    local NameMOD = GPrefix.getFile( debug.getinfo( 1 ).short_src )
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-    -- Crear la vareble si no existe
-    GPrefix.MODs[ NameMOD ] = GPrefix.MODs[ NameMOD ] or { }
+--- Valores de referencia
+ThisMOD.PrefixDo = "compact"
+ThisMOD.PrefixUndo = "uncompact"
 
-    -- Guardar en el acceso rapido
-    ThisMOD = GPrefix.MODs[ NameMOD ]
+Private.PrefixDo = "stacking"
+Private.PrefixUndo = "unstacking"
+
+Private.Categories = { Private.PrefixDo, Private.PrefixUndo }
+
+--- Sección para los prototipos
+function Private.DataFinalFixes( )
+    local FileValid = { "data-final-fixes" }
+    local Active = GPrefix.isActive( ThisMOD, FileValid )
+    if not Active then return end
+
+    --- El prototipo no existe
+    local Compact = GPrefix.Items[ "transport-belt-beltbox" ]
+    if not Compact then ThisMOD.Active = false return end
+
+    --- Aplicar el efecto del MOD por fuera del mismo
+    --- @param TheMOD ThisMOD
+    function ThisMOD.DoEffect( TheMOD )
+        Private.DoEffect( TheMOD )
+    end
+
+    --- Verificar si el objeto o la receta esta compactado
+    --- @param Element table
+    --- @param TheMOD ThisMOD
+    function ThisMOD.UpdateDescription( Element, TheMOD )
+        Private.UpdateDescription( Element, TheMOD )
+    end
+
+    --- Procesar los prototipos del MOD
+    Private.LoadPropotypes( )
+    GPrefix.CreateNewElements( ThisMOD )
+
+    --- Crear acceso directo al MOD
+    GPrefix[ ThisMOD.MOD ] = ThisMOD
 end
 
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
-
--- Configuración del MOD
-function ThisMOD.Settings( )
-    if not GPrefix.getKey( { "settings" }, GPrefix.File ) then return end
-    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
-
-    local SettingOption =  { }
-    SettingOption.name  = ThisMOD.Prefix_MOD
-    SettingOption.type  = "int-setting"
-    SettingOption.order = ThisMOD.Char
-    SettingOption.setting_type  = "startup"
-    SettingOption.default_value = 1000
-    SettingOption.minimum_value = 1
-    SettingOption.maximum_value = 65000
-
-    local Name = { }
-    table.insert( Name, "" )
-    table.insert( Name, { GPrefix.Local .. "setting-char", ThisMOD.Char } )
-    table.insert( Name, { ThisMOD.Local .. "setting-name" } )
-    if ThisMOD.Requires then
-        Name = { GPrefix.Local .. "setting-require-name", Name, ThisMOD.Requires.Char }
-    end SettingOption.localised_name = Name
-
-    local Description = { ThisMOD.Local .. "setting-description" }
-    if ThisMOD.Requires then
-        Description = { GPrefix.Local .. "setting-require-description", { ThisMOD.Requires.Local .. "setting-name" }, Description }
-    end SettingOption.localised_description = Description
-
-    data:extend( { SettingOption } )
+--- Procesar los prototipos cargados en el juego y
+--- cargar los prototipos del MOD
+function Private.LoadPropotypes( )
+    Private.CustomizeDeadlockStacking( )
+    Private.DuplicateItems( )
+    ThisMOD.DoEffect( ThisMOD )
+    Private.DeleteDuplicateItems( )
 end
 
--- Cargar la configuración
-ThisMOD.Settings( )
+--- Personalizar Deadlock's Stacking Beltboxes & Compact Loaders
+function Private.CustomizeDeadlockStacking( )
+    Private.newRecipeCategory( )
+    Private.setRecipeCategory( )
 
----------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------
-
--- Valores de referencia
-ThisMOD.Categories = { "stacking", "unstacking" }
-
--- Cargar las infomación
-function ThisMOD.LoadCompact( )
-    ThisMOD.newRecipeCategory( )
-    ThisMOD.setRecipeCategory( )
-    ThisMOD.removeRecipes( )
-    ThisMOD.removeItems( )
+    local Data = { }
+    Private.removeItems( Data )
+    Private.removeRecipes( Data )
 end
 
--- Crear las categorias para las recetas
-function ThisMOD.newRecipeCategory( )
+--- Crear las categorias para las recetas
+function Private.newRecipeCategory( )
 
-    -- Crear el sub grupo
-    data:extend( { {
-        [ 'type' ] = 'item-subgroup',
-        [ 'name' ] = ThisMOD.Prefix_MOD_ .. 'compacts',
-        [ 'group' ] = 'logistics',
-        [ 'order' ] = 'b[belt]-c',
-    } } )
-
-    -- Existen las categorias
+    --- Existen las categorias
     local RecipeCategory = data.raw[ 'recipe-category' ]
-    RecipeCategory = RecipeCategory[ ThisMOD.Prefix_MOD_ .. 'compact' ]
+    RecipeCategory = RecipeCategory[ ThisMOD.Prefix_MOD_ .. ThisMOD.PrefixDo ]
     if RecipeCategory then return end
 
-    -- Crear la categoria
+    --- Crear la categoria para hacer
     data:extend( { {
         [ 'type' ] = 'recipe-category',
-        [ 'name' ] = ThisMOD.Prefix_MOD_ .. 'compact',
+        [ 'name' ] = ThisMOD.Prefix_MOD_ .. ThisMOD.PrefixDo,
     } } )
 
+    --- Crear la categoria para deshacer
     data:extend( { {
         [ 'type' ] = 'recipe-category',
-        [ 'name' ] = ThisMOD.Prefix_MOD_ .. 'uncompact',
+        [ 'name' ] = ThisMOD.Prefix_MOD_ .. ThisMOD.PrefixUndo,
     } } )
 end
 
--- Establecer las nuevas recetas
-function ThisMOD.setRecipeCategory( )
+--- Establecer las nuevas recetas
+function Private.setRecipeCategory( )
 
-    -- Buscar las entidades
+    --- Buscar las entidades
     for _, Entity in pairs( GPrefix.Entities ) do
         if not Entity.crafting_categories then goto JumpEntity end
 
-        -- Validar las categorias disponibles
+        --- Validar las categorias disponibles
         for _, Category in pairs( Entity.crafting_categories ) do
-            if not GPrefix.getKey( ThisMOD.Categories, Category ) then goto JumpCategory end
+            if not GPrefix.getKey( Private.Categories, Category ) then goto JumpCategory end
 
-            -- Establecer el las nuevas recetas
+            --- Establecer el las nuevas recetas
             Entity.crafting_categories = {
-                ThisMOD.Prefix_MOD_ .. 'compact',
-                ThisMOD.Prefix_MOD_ .. 'uncompact',
-            } break
+                ThisMOD.Prefix_MOD_ .. ThisMOD.PrefixDo,
+                ThisMOD.Prefix_MOD_ .. ThisMOD.PrefixUndo,
+            } if true then break end
 
-            -- Recepción del salto
+            --- Recepción del salto
             :: JumpCategory ::
         end
 
-        -- Recepción del salto
+        --- Recepción del salto
         :: JumpEntity ::
     end
 end
 
--- Buscar las recetas
-function ThisMOD.removeRecipes( )
+--- Eliminar los objetos inecesarios
+--- @param Data table
+function Private.removeItems( Data )
 
-    -- Eliminar la categorias
+    --- Identificador los objetos
+    Data.Find = "deadlock%-stack%-"
+
+    --- Cargar los indices de los objetos
+    Data.Keys = { }
+    for Key, _ in pairs( GPrefix.Items ) do
+        if string.find( Key, Data.Find ) then
+            table.insert( Data.Keys, Key )
+        end
+    end
+
+    --- Eliminar los objetos
+    for _, ItemName in pairs( Data.Keys ) do
+        GPrefix.RemoveItem( ItemName )
+    end
+end
+
+--- Eliminar las recetas inecesarios
+--- @param Data table
+function Private.removeRecipes( Data )
+
+    --- No se tiene los objetos a eliminar
+    if not Data.Keys then return end
+
+    --- Eliminar la categorias
     local RecipeCategory = data.raw[ 'recipe-category' ]
-    for Key, _ in pairs( ThisMOD.Categories ) do
+    for Key, _ in pairs( Private.Categories ) do
         RecipeCategory[ Key ] = nil
     end
 
-    -- Buscar las recetas a eliminar
+    --- Listado de recetas a eliminar
+    local Delete = { }
+
+    --- Enlistar las recetas a eliminar
     for _, Recipe in pairs( data.raw.recipe ) do
-        if GPrefix.getKey( ThisMOD.Categories, Recipe.category ) then
-            GPrefix.removeTechnologies( Recipe )
+
+        --- Eliminar las recetas con esta categoria
+        if GPrefix.getKey( Private.Categories, Recipe.category ) then
+            table.insert( Delete, 1, Recipe.name )
         end
-    end
-end
 
--- Eliminar los objetos inecesarios
-function ThisMOD.removeItems( )
-
-    -- Contenedor de los valores
-    local Table = { }
-
-    -- Identificador los objetos
-    Table.Find = "deadlock%-stack%-"
-
-    -- Cargar los indices de los objetos
-    Table.Keys = { }
-    for Key, _ in pairs( GPrefix.Items ) do
-        if string.find( Key, Table.Find ) then
-            table.insert( Table.Keys, Key )
+        --- Elimnar las recetas que usan objetos comprimidos
+        local Recipes = { Recipe, Recipe.normal, Recipe.expensive }
+        for _, ItemName in pairs( Data.Keys ) do
+            for _, recipe in pairs( Recipes ) do
+                if GPrefix.inTable( recipe.ingredients, { name = ItemName } ) then
+                    if not GPrefix.getKey( Delete, Recipe.name ) then
+                        table.insert( Delete, 1, Recipe.name )
+                    end
+                end
+            end
         end
     end
 
-    -- Eliminar los objetos
-    for _, ItemName in pairs( Table.Keys or { } ) do
-        GPrefix.removeItem( ItemName )
+    --- Eliminar las recetas enlistadas
+    for _, RecipeName in pairs( Delete ) do
+        GPrefix.DeleteRecipeOfTechnologies( RecipeName )
     end
 end
 
+--- Validar si el objeto es compactable
+--- @param Item table
+function Private.ValidateItem( Item )
 
-
-
-
-
--- Identificar los objetos a compactar
-function ThisMOD.StartItems( )
-
-    -- Existen las categorias
-    local RecipeCategory = data.raw[ 'recipe-category' ]
-    RecipeCategory = RecipeCategory[ ThisMOD.Prefix_MOD_ .. 'compact' ]
-    if RecipeCategory then goto JumpRecipeCategory end
-
-    -- Crear la categoria
-    data:extend( {  {
-        [ 'type' ] = 'recipe-category',
-        [ 'name' ] = ThisMOD.Prefix_MOD_ .. 'compact',
-    } } )
-
-    data:extend( { {
-        [ 'type' ] = 'recipe-category',
-        [ 'name' ] = ThisMOD.Prefix_MOD_ .. 'uncompact',
-    } } )
-
-    -- Recepción del salto
-    :: JumpRecipeCategory ::
-
-    -- Contenedor de los items
-    local Items = GPrefix.DeepCopy( GPrefix.Items )
-
-    -- Crear los objetos compactados
-    ThisMOD.Information = { Break = true }
-    for _, Item in pairs( Items ) do
-        ThisMOD.Compact( Item, ThisMOD )
-    end GPrefix.createInformation( ThisMOD )
-
-    ThisMOD.Information = { Break = true }
-    for _, Item in pairs( Items ) do
-        ThisMOD.CreateRecipe( Item )
-    end GPrefix.createInformation( ThisMOD )
-end
-
--- Crear un item compactado
-function ThisMOD.Compact( OldItem, TheMOD )
-
-    -- Validar elemento
-    local Alias = nil
-    if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
-    if Alias and Alias( OldItem.name ) then return end
-
-    -- Tipos a evitar
+    --- Tipos a evitar
     local AvoidTypes = { }
     table.insert( AvoidTypes, "car" )
     table.insert( AvoidTypes, "gun" )
@@ -224,40 +198,108 @@ function ThisMOD.Compact( OldItem, TheMOD )
     table.insert( AvoidTypes, "spider-vehicle" )
     table.insert( AvoidTypes, "belt-immunity-equipment" )
 
-    -- Patrones a evitar
+    --- Evitar estos tipos
+    if GPrefix.getKey( AvoidTypes, Item.type ) then return false end
+
+    --- Evitar lo inapilable
+    if GPrefix.getKey( Item.flags, "hidden" ) then return false end
+    if GPrefix.getKey( Item.flags, "not-stackable" ) then return false end
+
+    --- Patrones a evitar
     local AvoidPatterns = { }
     table.insert( AvoidPatterns, "%-remote" )
 
-    -- Evitar estos tipos
-    if GPrefix.getKey( AvoidTypes, OldItem.type ) then return end
-
-    -- Evitar lo inapilable
-    if GPrefix.getKey( OldItem.flags, "hidden" ) then return end
-    if GPrefix.getKey( OldItem.flags, "not-stackable" ) then return end
-
-    -- Evitar estos patrones
+    --- Evitar estos patrones
     for _, Pattern in pairs( AvoidPatterns ) do
-        if string.find( OldItem.name, Pattern ) then return end
+        if string.find( Item.name, Pattern ) then return false end
     end
 
-    -- Crear el nuevo subgrupo
-    GPrefix.newItemSubgroup( OldItem, ThisMOD )
-
-    -- Crear los prototipos
-    ThisMOD.CreateItem( OldItem, TheMOD )
+    --- El objeto es compactable
+    return true
 end
 
--- Crear los objetos compactados
-function ThisMOD.CreateItem( OldItem, TheMOD )
+--- Duplicar los objetos que se compactaran
+function Private.DuplicateItems( )
 
-    -- Contenedor del nuevo objeto
-    local NewItem = { }
+    --- Buscar los objetos
+    for _, Item in pairs( GPrefix.Items ) do
+
+        --- El objetos no es compactable
+        if not Private.ValidateItem( Item ) then goto JumpItem end
+
+        --- Duplicar el objeto original
+        ThisMOD.NewItems[ Item.name ] = GPrefix.DeepCopy( Item )
+
+        --- Recepción del salto
+        :: JumpItem ::
+    end
+end
+
+--- Eliminar los objetos copiados y no afectados
+function Private.DeleteDuplicateItems( )
+    for Index, Item in pairs( ThisMOD.NewItems ) do
+        if not GPrefix.hasPrefixMOD( { name = Index }, ThisMOD ) then
+            ThisMOD.NewItems[ Index ] = nil
+        end
+    end
+end
+
+--- Aplicar el efecto del MOD por fuera del mismo
+--- @param TheMOD ThisMOD
+function Private.DoEffect( TheMOD )
+
+    --- Contenedor de los objetos a afectar
+    local Datas = { }
+
+    --- Enlistar los objetos a afectar
+    for _, Item in pairs( TheMOD.NewItems ) do
+
+        --- Evitar estos elementos
+        local MODs = { ThisMOD }
+        for _, MOD in pairs( MODs ) do
+            local isMOD = GPrefix.hasPrefixMOD( Item, MOD )
+            if isMOD then goto JumpItem end
+        end
+
+        --- El objetos no es compactable
+        if not Private.ValidateItem( Item ) then goto JumpItem end
+
+        --- Agregar el objeto a la lista
+        table.insert( Datas, { OldItem = Item } )
+
+        --- Recepción del salto
+        :: JumpItem ::
+    end
+
+    --- Modificar los objetos enlistados
+    for _, Data in pairs( Datas ) do
+
+        --- Inicializar las variables
+        Data.TheMOD = TheMOD
+        Data.NewItem = { }
+
+        --- Aplicar el efecto del MOD
+        Private.CreateCompactedItem( Data )
+        Private.CreateCompactedRecipe( Data )
+        GPrefix.CreateItemSubgroup( Data.OldItem, ThisMOD )
+    end
+end
+
+--- Crear el objeto compactado
+--- @param Data DataCompact
+function Private.CreateCompactedItem( Data )
+
+    --- Renombrar las variables
+    local TheMOD = Data.TheMOD
+    local NewItem = Data.NewItem
+    local OldItem = Data.OldItem
+
+    --- Contenedor del nuevo objeto
     NewItem.type = "item"
 
-    -- Duplicar las propiedades
+    --- Duplicar las propiedades
     local Properties = { }
     table.insert( Properties, "name" )
-    table.insert( Properties, "icon" )
     table.insert( Properties, "icons" )
     table.insert( Properties, "order" )
     table.insert( Properties, "subgroup" )
@@ -269,144 +311,136 @@ function ThisMOD.CreateItem( OldItem, TheMOD )
         NewItem[ Property ] = GPrefix.DeepCopy( OldItem[ Property ] )
     end
 
-    NewItem.subgroup = string.gsub( GPrefix.Prefix_, "-", "%%-" )
-    NewItem.subgroup = string.gsub( OldItem.subgroup, NewItem.subgroup, "" )
-    NewItem.subgroup = ThisMOD.Prefix_MOD_ .. NewItem.subgroup
+    --- Agregar el indicador del MOD al apodo
+    GPrefix.addLetter( NewItem, ThisMOD.Char )
 
-    -- Establecer el apodo
-    GPrefix.CreateLocalisedName( OldItem )
-    NewItem.localised_name = GPrefix.DeepCopy( OldItem.localised_name )
+    --- Asignaer el grupo donde se verá
+    NewItem.subgroup = GPrefix.addPrefixMOD( NewItem.subgroup, ThisMOD )
 
-    -- Sobre escribir las descripciones
-    ThisMOD.addDescription( NewItem )
+    --- Guardar el objeto en los MODs correspondientes
+    NewItem.name = GPrefix.addPrefixMOD( NewItem.name, ThisMOD )
+    ThisMOD.NewItems[ NewItem.name ] = NewItem
+    TheMOD.NewItems[ NewItem.name ] = NewItem
 
-    -- Concentras las imagenes en un campo
-    GPrefix.CreateIcons( NewItem )
+    --- Sobre escribir la descripcion
+    local Array = GPrefix.DeepCopy( NewItem.localised_name )
+    if Array[ 1 ] ~= "" then Array = { "", Array } end
+    NewItem.localised_description = Array
+    table.insert( Array, 2, { ThisMOD.Local .. "item-description" } )
+    table.insert( Array, 3, " " .. ThisMOD.Value .. " " )
+    table.insert( Array, 4, "[item=" .. OldItem.name .. "] " )
 
-    -- Ajustar los iconos a la imagen de referencia
+    --- Eliminar el indicador de este MOD
+    local Index = GPrefix.getKey( Array, " " .. ThisMOD.Char )
+    if Index then table.remove( Array, Index ) end
+
+    --- Eliminar los corchetes vacios
+    Index = #Array
+    if Array[ Index - 0 ] == " ]" and Array[ Index - 1 ] == " [" then
+        table.remove( Array, Index - 0)
+        table.remove( Array, Index - 1)
+    end
+
+    --- Ajustar los iconos a la imagen de referencia
     for _, Image in pairs( NewItem.icons ) do
 
-        -- Validar el tamaño completo 
+        --- Validar el tamaño completo 
         if not Image.icon_size then goto JumpImage end
         if Image.icon_size < 64 then goto JumpImage end
 
-        -- Establecer la escala inicial
+        --- Establecer la escala inicial
         if not Image.scale then Image.scale = 1 end
         if Image.scale < 1 then goto JumpImage end
 
-        -- Calcular la escala
+        --- Calcular la escala
         Image.scale = Image.scale / ( Image.icon_size / 32 )
 
-        -- Recepción del salto
+        --- Recepción del salto
         :: JumpImage ::
     end
 
-    -- Agregar la imagen de referencia
-    GPrefix.AddIcon( NewItem, TheMOD )
-
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Inicializar y renombrar la variable
-    local Info = TheMOD.Information or { }
-    TheMOD.Information = Info
-
-    local Items = Info.Items or { }
-    Info.Items = Items
-
-    -- Guardar el nuevo objeto
-    Items[ NewItem.name ] = NewItem
+    --- Agregar la imagen de referencia
+    GPrefix.AddIcon( NewItem, ThisMOD )
 end
 
+--- Crear el objeto compactado
+--- @param Data DataCompact
+function Private.CreateCompactedRecipe( Data )
 
--- Crear las recetas de compactado
-function ThisMOD.CreateRecipe( OldItem )
+    --- Renombrar las variables
+    local NewItem = Data.NewItem
+    local OldItem = Data.OldItem
 
-    -- Validar elemento
-    local Alias = nil
-    if GPrefix.Improve then Alias = GPrefix.Improve.AvoidElement end
-    if Alias and Alias( OldItem.name ) then return end
+    --- Evitar crear recetas para los compactados mejorados
+    if GPrefix.IC then
+        local Improve = GPrefix.IC
+        local isImprove = GPrefix.hasPrefixMOD( NewItem, Improve )
+        if isImprove then return end
+    end
 
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    --- Valores para la receta
+    local Table = { }
+    Table[ ThisMOD.PrefixDo   ] = { }
+    Table[ ThisMOD.PrefixUndo ] = { }
 
-    -- Inicializar y renombrar la variable
-    local Info = ThisMOD.Information or { }
-    ThisMOD.Information = Info
+    --- Nombre del objeto a compactar
+    local OldName = ThisMOD.Prefix_MOD_
+    OldName = string.gsub( OldName, "-", "%%-" )
+    OldName = string.gsub( NewItem.name, OldName, "" )
 
-    local Recipes = Info.Recipes or { }
-    Info.Recipes = Recipes
+    --- Nombre del objeto compactado
+    local NewName = GPrefix.addPrefixMOD( NewItem.name, ThisMOD )
 
-    -- Es compactable??
-    local NameWithOutPrefix = string.gsub( GPrefix.Prefix_, "-", "%%-" )
-    NameWithOutPrefix = string.gsub( OldItem.name, NameWithOutPrefix, "" )
-    local NewName = ThisMOD.Prefix_MOD_ .. NameWithOutPrefix
-    local Item = GPrefix.Items[ NewName ]
-    if not Item then return end
+    --- Valores para la descompresion
+    Table[ ThisMOD.PrefixUndo ].name        = ThisMOD.Prefix_MOD_ .. ThisMOD.PrefixUndo .. "-" .. OldName
+    Table[ ThisMOD.PrefixUndo ].results     = { { type = "item", amount = ThisMOD.Value, name = OldItem.name } }
+    Table[ ThisMOD.PrefixUndo ].ingredients = { { type = "item", amount = 1 , name = NewName } }
+    Table[ ThisMOD.PrefixUndo ].action      = false
 
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
-
-    -- Valores para la receta
-    local Table      = { }
-    Table.compact    = { }
-    Table.uncompact  = { }
-
-    -- Valores para la descompresion
-    Table.uncompact.name        = "uncompact-" .. NameWithOutPrefix
-    Table.uncompact.results     = { { type = "item", amount = ThisMOD.Value, name = OldItem.name } }
-    Table.uncompact.ingredients = { { type = "item", amount = 1 , name = Item.name } }
-    Table.uncompact.action      = true
-
-    -- Valores para la compresion
-    Table.compact.name        = "compact-" .. NameWithOutPrefix
-    Table.compact.results     = { { type = "item", amount = 1 , name = Item.name } }
-    Table.compact.ingredients = { { type = "item", amount = ThisMOD.Value, name = OldItem.name } }
+    --- Valores para la compresion
+    Table[ ThisMOD.PrefixDo ].name        = ThisMOD.Prefix_MOD_ .. ThisMOD.PrefixDo .. "-" .. OldName
+    Table[ ThisMOD.PrefixDo ].results     = { { type = "item", amount = 1 , name = NewName } }
+    Table[ ThisMOD.PrefixDo ].ingredients = { { type = "item", amount = ThisMOD.Value, name = OldItem.name } }
+    Table[ ThisMOD.PrefixDo ].action      = true
 
     for Category, Recipe in pairs( Table ) do
 
-        -- Copiar el objeto
+        --- Copiar el objeto
         local NewRecipe = { }
 
-        -- Crear las recetas
+        --- Crear las recetas
         NewRecipe.name = Recipe.name
         NewRecipe.type = "recipe"
 
-        NewRecipe.order    = Item.order
-        NewRecipe.enabled  = false
+        NewRecipe.order    = NewItem.order
         NewRecipe.category = ThisMOD.Prefix_MOD_ .. Category
-        local PrefixFind   = string.gsub( GPrefix.Prefix_, "-", "%%-" )
-        NewRecipe.subgroup = string.gsub( Item.subgroup, PrefixFind, "" )
-        NewRecipe.subgroup = GPrefix.Prefix_ .. NewRecipe.subgroup
+        NewRecipe.subgroup = NewItem.subgroup
 
         NewRecipe.results      = Recipe.results
         NewRecipe.ingredients  = Recipe.ingredients
         NewRecipe.main_product = ""
 
-
-        NewRecipe.allow_decomposition = not Recipe.action
-        NewRecipe.always_show_made_in = false
-        NewRecipe.always_show_products = false
-        NewRecipe.allow_as_intermediate = true
-
-
         NewRecipe.energy_required = 10
         NewRecipe.hide_from_player_crafting = not Recipe.action
-        NewRecipe.localised_name = GPrefix.DeepCopy( Item.localised_name )
+        NewRecipe.localised_name = GPrefix.DeepCopy( OldItem.localised_name )
         table.insert( NewRecipe.localised_name, 2, { ThisMOD.Local .. Category .. "-process" } )
         table.insert( NewRecipe.localised_name, 3, " " )
 
-        -- Duplicar la imagen del objeto
-        NewRecipe.icon = Item.icon
-        NewRecipe.icons = GPrefix.DeepCopy( Item.icons )
-        NewRecipe.icon_size = Item.icon_size
-        NewRecipe.icon_mipmaps = Item.icon_mipmaps
-        GPrefix.CreateIcons( NewRecipe )
+        --- Agregar el indicador del MOD al apodo
+        GPrefix.addLetter( NewRecipe, ThisMOD.Char )
 
-        -- Agregar la flecha
+        --- Duplicar la imagen del objeto
+        NewRecipe.icons = GPrefix.DeepCopy( NewItem.icons )
+        NewRecipe.icon_size = NewItem.icon_size
+        NewRecipe.icon_mipmaps = NewItem.icon_mipmaps
+
+        --- Agregar la flecha
         local List = { }
 
         List = { icon = "" }
         List.icon = List.icon .. ThisMOD.Patch
         List.icon = List.icon .. "icons/stacking-arrow-"
-        List.icon = List.icon .. ( Recipe.action and "u" or "d" )
+        List.icon = List.icon .. ( Recipe.action and "d" or "u" )
         List.icon = List.icon .. ".png"
 
         List.scale = 0.3
@@ -415,173 +449,216 @@ function ThisMOD.CreateRecipe( OldItem )
 
         table.insert( NewRecipe.icons, List )
 
-        -- -- -- -- -- -- -- -- -- -- -- -- -- --
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
 
-        -- Guardar la nueva recera
+        --- Renombrar las variables 
+        local newRecipes = { }
+        table.insert( newRecipes, ThisMOD.NewRecipes )
+        table.insert( newRecipes, Data.TheMOD.NewRecipes )
         local OldItemName = OldItem.name
-        Recipes[ OldItemName ] = Recipes[ OldItemName ] or { }
-        table.insert( Recipes[ OldItemName ], NewRecipe )
+
+        --- Guardar la nueva recera
+        for _, NewRecipes in pairs( newRecipes ) do
+
+            --- Buscar el lugar de la receta
+            NewRecipes[ OldItemName ] = NewRecipes[ OldItemName ] or { }
+            NewRecipes = NewRecipes[ OldItemName ]
+
+            --- Guardar la receta de la maquina
+            local Flag = not GPrefix.inTable( NewRecipes, NewRecipe )
+            if Flag then table.insert( NewRecipes, NewRecipe ) end
+        end
     end
 end
 
+--- Verificar si el objeto o la receta esta compactado
+--- @param Element table
+--- @param TheMOD ThisMOD
+function Private.UpdateDescription( Element, TheMOD )
 
--- Establecer la descricción
-function ThisMOD.addDescription( Table )
-    local Array = GPrefix.DeepCopy( Table.localised_name )
-    if Array[ 1 ] ~= "" then Array = { "", Array } end
-    Table.localised_description = Array
-    table.insert( Array, 2, { ThisMOD.Local .. "item-description" } )
-    table.insert( Array, 3, " " .. ThisMOD.Value .. " " )
-    table.insert( Array, 4, "[" .. Table.type .. "=" .. Table.name .. "] " )
-end
-
--- Verificar si el objeto o la receta esta compactado
-function ThisMOD.UpdateDescription( Table, TheMOD )
-
-    -- La descripción puede ser la que se busca
-    local Array = Table.localised_description
+    --- La descripción puede ser la que se busca
+    if not GPrefix.hasPrefixMOD( Element, ThisMOD ) then return end
+    local Array = Element.localised_description
     if not Array then return end
     if not GPrefix.isTable( Array ) then return end
     if #Array < 2 then return end
     if Array[ 1 ] ~= "" then return end
 
-    -- La descripción es la que se busca
+    --- La descripción es la que se busca
     if not GPrefix.isTable( Array[ 2 ] ) then return end
     local PrefixFind = ThisMOD.Local .. "item-description"
     if Array[ 2 ][ 1 ] ~= PrefixFind then return end
 
-    -- Se actualiza el cambio
+    --- Se actualiza el cambio
     Array = { localised_name = Array }
     GPrefix.addLetter( Array, TheMOD.Char )
 end
 
--- Validar si se debe evitar este elemento
-function ThisMOD.AvoidElement( Name )
-
-    -- Patron a buscar
-    local Find = ThisMOD.Prefix_MOD_
-    Find = string.gsub( Find, "-", "%%-" )
-
-    -- Ignonrar el elemento
-    if string.find( Name, Find ) then return true end
-
-    -- Elemento valido
-    return false
-end
-
--- Configuración del MOD
-function ThisMOD.DataFinalFixes( )
-    if not GPrefix.getKey( { "data-final-fixes" }, GPrefix.File ) then return end
-    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
-    if not ThisMOD.Active then return end
-
-    ThisMOD.LoadCompact( )   GPrefix.createInformation( ThisMOD )
-    ThisMOD.StartItems( )   GPrefix.Compact = ThisMOD
-end
-
--- Cargar la configuración
-ThisMOD.DataFinalFixes( )
+--- Sección para los prototipos
+Private.DataFinalFixes( )
 
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
 
--- Contenedor de los jugadores a inicializar
-ThisMOD.PlayersToInit = { }
+--- Configuración del MOD
+function Private.Control( )
+    local FileValid = { "control" }
+    local Active = GPrefix.isActive( ThisMOD, FileValid )
+    if not Active then return end
 
--- Lista de objetos a agregar
-ThisMOD.ItemsToAdd = { }
-table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "iron-plate" } )
-table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "copper-plate" } )
-table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "stone" } )
-table.insert( ThisMOD.ItemsToAdd, { count = 1, name = "coal" } )
+    --- Eventos a cargar
+    Private.LoadEvents( )
 
-function ThisMOD.CreateData( Event )
+    --- Guardar el MOD
+    GPrefix.CI = ThisMOD
+end
+
+--- Crea un consolidado de variables para
+--- usar en tiempo de ejecuión
+--- @param Event table
+--- @return DataThisMOD
+function Private.CreateData( Event )
     local Data = GPrefix.CreateData( Event, ThisMOD )
 
-    -- Crear el espacio para los objetos entregados
+    --- Crear el espacio para los objetos entregados
     Data.gGiven = Data.gForce[ Data.Player.index ] or { }
     Data.gForce[ Data.Player.index ] = Data.gGiven
 
+    --- Eliminar los espacios vacios
     Data.gMOD.Players = nil
     Data.gPlayers = nil
 
-    -- Devolver la información
+    --- Devolver la información
+    --- @cast Data +DataThisMOD
+    --- @cast Data -Data
     return Data
 end
 
--- Inicializa el evento
-function ThisMOD.Initialize( )
-    -- Variable contenedora
-    local Data = { Temporal = { }, Player = { index = 0 } }
-    local Here = { }
+--- Cargar los eventos a ejecutar
+function Private.LoadEvents( )
 
-    -- Reconstruir la ventana de estado
-    Here.Table = { }
-    Here.Table.Name = ThisMOD.Prefix_MOD_ .. "StartInitialize"
-    Here.Table.Function = ThisMOD.StartInitialize
-    table.insert( Data.Temporal, Here.Table )
-    GPrefix.addOnTick( Data )
+    --- Al crear el mapa
+    GPrefix.addEventOnControl( {
+        Name = "on_init",
+        Function = Private.Initialize,
+    } )
 
-    -- Revizar que todos los jugadores esten inicializados
-    ThisMOD.CheckAllPlayers = true
+    --- Al cargar el mapa
+    GPrefix.addEventOnControl( {
+        Name = "on_load",
+        Function = Private.Initialize,
+    } )
+
+    --- Antes de eliminar al jugador de la partida
+    GPrefix.addEventOnControl( {
+        ID = defines.events.on_pre_player_removed,
+        Function = function( Event )
+            Private.BeforeDelete( Private.CreateData( Event ) )
+        end,
+    } )
+
+    --- Antes de que el jugador salga de la partida
+    GPrefix.addEventOnControl( {
+        ID = defines.events.on_pre_player_left_game,
+        Function = function( Event )
+            Private.BeforeLogout( Private.CreateData( Event ) )
+        end,
+    } )
 end
 
--- Validación básica
-function ThisMOD.StartInitialize( )
+--- Inicializa el evento
+function Private.Initialize( )
 
-    -- Se añadé a todos los jugadores al cargar la partida y
-    -- verificar que a todos se les entregó los objetos
-    ThisMOD.addAllPlayers( )
+    --- Cargar el evento
+    GPrefix.addAutomaticFunction( {
+        Function = Private.ValidatePlayers,
+        Name = ThisMOD.Name .. ": Private.ValidatePlayers( )"
+    } )
 
-    -- Validación básica
-    if #ThisMOD.PlayersToInit < 1 then return end
-
-    -- Verificar cada jugador
-    for _, Data in pairs( ThisMOD.PlayersToInit ) do
-        ThisMOD.addItems( Data )
-    end
+    --- Indicador para revizar que todos
+    --- los jugadores esten inicializados
+    Private.CheckAllPlayers = true
 end
 
--- Agregar todos los jugadores para una validación
-function ThisMOD.addAllPlayers( )
 
-    -- Validación básica
-    if not ThisMOD.CheckAllPlayers then return end
 
-    -- Agregar los jugadores
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- 
+--- Funciones para agregar los objetos
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- 
+
+--- Contenedor de los jugadores a inicializar
+Private.PlayersToInitialize = { }
+
+--- Lista de objetos a agregar
+Private.ItemsToAdd = { }
+table.insert( Private.ItemsToAdd, { count = 1, name = "iron-plate" } )
+table.insert( Private.ItemsToAdd, { count = 1, name = "copper-plate" } )
+table.insert( Private.ItemsToAdd, { count = 1, name = "stone" } )
+table.insert( Private.ItemsToAdd, { count = 1, name = "coal" } )
+
+--- Función que ejecuta el evento
+function Private.ValidatePlayers( )
+
+    --- Agregar todos los jugadores para una validación
+    if not Private.CheckAllPlayers then goto JumpAllPlayers end
+
+    --- Agregar los jugadores
     for _, Player in pairs( game.players ) do
-        ThisMOD.addPlayer( { Player = Player } )
+        Private.addPlayer( { Player = Player } )
     end
 
-    -- Eliminar varible bandera
-    ThisMOD.CheckAllPlayers = nil
+    --- Eliminar el indicador
+    Private.CheckAllPlayers = nil
+
+    --- Recepción del salto
+    :: JumpAllPlayers ::
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
+
+    --- No hay jugadores por validar
+    if #Private.PlayersToInitialize < 1 then return end
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
+
+    --- Verificar cada jugador
+    for _, Data in pairs( Private.PlayersToInitialize ) do
+        Private.addItems( Data )
+    end
 end
 
--- Agregar los objetos al jugador
-function ThisMOD.addItems( Data )
+--- Agregar los jugadores a la cola
+--- @param Event table
+function Private.addPlayer( Event )
+    local Data = Private.CreateData( Event )
+    Private.PlayersToInitialize[ Data.Player.index ] = Data
+end
 
-    -- Validar el modo del jugador
+--- Agregar los objetos al jugador
+--- @param Data DataThisMOD
+function Private.addItems( Data )
+
+    --- Validar el modo del jugador
     local Controller = Data.Player.controller_type
     local isCharacter = Controller ~= defines.controllers.character
     local isGod = Controller ~= defines.controllers.god
     if isGod and isCharacter then return end
 
-    -- Renombrar las variables
+    --- Renombrar las variables
     local IDPlayer = Data.Player.index
     local Level = script.level.level_name
     local Beltbox = { count = 1, name = "express-transport-belt-beltbox" }
 
-    -- El jugador se desconectó
+    --- El jugador se desconectó
     if not Data.Player.connected then
-        ThisMOD.PlayersToInit[ IDPlayer ] = nil return
+        Private.PlayersToInitialize[ IDPlayer ] = nil return
     end
 
-    -- No hacer nada en los escesarios especificos
+    --- No hacer nada en los escesarios especificos
     if script.level.campaign_name then
-        ThisMOD.PlayersToInit[ IDPlayer ] = nil return
+        Private.PlayersToInitialize[ IDPlayer ] = nil return
     end
 
-    -- Esperar que esté en el destino final
+    --- Esperar que esté en el destino final
     local Flag = false
     Flag = Level == "wave-defense" and true or false
     Flag = Flag and Data.Player.surface.index < 2
@@ -591,60 +668,69 @@ function ThisMOD.addItems( Data )
     Flag = Flag and Data.Player.force.index < 2
     if Flag then return end
 
-    -- Validar los nombres de los objetos a entregar
-    for _, NewItem in pairs( ThisMOD.ItemsToAdd ) do
-        local Name = ThisMOD.Prefix_MOD_ .. "compact-" .. NewItem.name
+    --- El prototipo no existe
+    local Compact = game.item_prototypes[ "transport-belt-beltbox" ]
+    if not Compact then ThisMOD.Active = false return end
+
+    --- -- --- -- --- -- --- -- --- -- --- -- --- --
+
+    --- Validar los nombres de los objetos a entregar
+    for _, NewItem in pairs( Private.ItemsToAdd ) do
+        local Name = ""
+        Name = Name .. ThisMOD.Prefix_MOD_
+        Name = Name .. ThisMOD.PrefixDo .. "-"
+        Name = Name .. NewItem.name
         local Recipe = game.recipe_prototypes[ Name ]
         if Recipe then NewItem.name = Recipe.products[ 1 ].name end
     end
 
-    -- Validar si se entregarón todos los objetos
+    --- Validar si se entregarón todos los objetos
     local ItemsToAdd = { }
-    for _, NewItem in pairs( ThisMOD.ItemsToAdd ) do
+    for _, NewItem in pairs( Private.ItemsToAdd ) do
 
-        -- Objetos agregados
+        --- Objetos agregados
         local Start = #ItemsToAdd
 
-        -- Recorrer los objetos entregados
+        --- Recorrer los objetos entregados
         for _, OldItem in pairs( Data.gGiven ) do
 
-            -- Contenedor
+            --- Contenedor
             local Item = { }
 
-            -- Identificar al objeto
+            --- Identificar al objeto
             if NewItem.name ~= OldItem.name then goto JumpOldItem end
 
-            -- Calcular la cantidad de objetos a gregar
+            --- Calcular la cantidad de objetos a gregar
             Item.name = NewItem.name
             Item.count = NewItem.count - OldItem.count
 
-            -- No es necesario agregar el objeto
+            --- No es necesario agregar el objeto
             if Item.count < 1 then goto JumpNewItem end
 
-            -- Agregar el objeto  a la lista
+            --- Agregar el objeto  a la lista
             table.insert( ItemsToAdd, Item )
 
-            -- Recepción del salto
+            --- Recepción del salto
             :: JumpOldItem ::
         end
 
-        -- Agregar el objeto  a la lista
+        --- Agregar el objeto  a la lista
         if Start == #ItemsToAdd then
             table.insert( ItemsToAdd, NewItem )
         end
 
-        -- Recepción del salto
+        --- Recepción del salto
         :: JumpNewItem ::
     end
 
-    -- Se le ha dado los objetos con anterioridad
+    --- Se le ha dado los objetos con anterioridad
     if #ItemsToAdd < 1 then
-        ThisMOD.PlayersToInit[ IDPlayer ] = nil return
+        Private.PlayersToInitialize[ IDPlayer ] = nil return
     end
 
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    --- -- --- -- --- -- --- -- --- -- --- -- --- --
 
-    -- El jugador no tiene un cuerpo
+    --- El jugador no tiene un cuerpo
     if not Data.Player.character then
         Data.Player.insert( Beltbox )
         for _, Item in pairs( ItemsToAdd ) do
@@ -652,7 +738,7 @@ function ThisMOD.addItems( Data )
         end
     end
 
-    -- El jugador tiene un cuerpo
+    --- El jugador tiene un cuerpo
     if Data.Player.character then
         local Inventory = Data.Player.character
         local IDInvertory = defines.inventory.character_main
@@ -663,11 +749,11 @@ function ThisMOD.addItems( Data )
         end
     end
 
-    -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    --- -- --- -- --- -- --- -- --- -- --- -- --- --
 
-    -- Marcar cómo hecho
-    ThisMOD.PlayersToInit[ IDPlayer ] = nil
-    for _, NewItem in pairs( ThisMOD.ItemsToAdd ) do
+    --- Marcar cómo hecho
+    Private.PlayersToInitialize[ IDPlayer ] = nil
+    for _, NewItem in pairs( Private.ItemsToAdd ) do
         local AddItems = true
         for _, OldItem in pairs( Data.gGiven ) do
             if OldItem.name == NewItem.name then
@@ -681,56 +767,32 @@ function ThisMOD.addItems( Data )
     end
 end
 
--- Agregar los jugadores a la cola
-function ThisMOD.addPlayer( Event )
-    local Data = ThisMOD.CreateData( Event )
-    ThisMOD.PlayersToInit[ Data.Player.index ] = Data
-end
-
--- Hacer antes de borrar a un jugador
-function ThisMOD.BeforeDelete( Data )
+--- Hacer antes de borrar a un jugador
+--- @param Data DataThisMOD
+function Private.BeforeDelete( Data )
     local IDPlayer = Data.Player.index
     local IDForce = Data.Player.force.index
     Data.gForce[ IDForce ][ IDPlayer ] = nil
 end
 
--- Hacer antes e salir de la partida
-function ThisMOD.BeforeLogout( Data )
-    ThisMOD.PlayersToInit[ Data.Player.index ] = nil
+--- Hacer antes e salir de la partida
+--- @param Data DataThisMOD
+function Private.BeforeLogout( Data )
+    Private.PlayersToInitialize[ Data.Player.index ] = nil
 end
 
--- Configuración del MOD
-function ThisMOD.Control( )
-    if not GPrefix.getKey( { "control" }, GPrefix.File ) then return end
-    if ThisMOD.Requires and not ThisMOD.Requires.Active then return end
-    if not ThisMOD.Active then return end
+--- Cargar los eventos
+Private.Control( )
 
-    GPrefix.Compact = ThisMOD
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
-    GPrefix.addEvent( {
+--- @class DataCompact
+--- @field TheMOD ThisMOD
+--- @field NewItem table
+--- @field OldItem table
 
-        -- Al crear la partida
-        [ "on_init" ] = ThisMOD.Initialize,
-
-        -- Al cargar la partida
-        [ "on_load" ] = ThisMOD.Initialize,
-
-        -- Antes de eliminar un jugador
-        [ { "on_event", defines.events.on_pre_player_removed } ] = function( Event )
-            ThisMOD.BeforeDelete( ThisMOD.CreateData( Event ) )
-        end,
-
-        -- Antes de salir del juego
-        [ { "on_event", defines.events.on_pre_player_left_game } ] = function( Event )
-            ThisMOD.BeforeLogout( ThisMOD.CreateData( Event ) )
-        end,
-
-        -- Jugadores a inicializar
-        [ { "on_event", defines.events.on_player_created } ] = ThisMOD.addPlayer,
-    } )
-end
-
--- Cargar los eventos
-ThisMOD.Control( )
+--- @class DataThisMOD : Data
+--- @field gGiven table Lista de objetos entregados al jugador
 
 ---------------------------------------------------------------------------------------------------
